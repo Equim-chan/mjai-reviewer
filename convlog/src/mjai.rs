@@ -9,9 +9,7 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
 pub enum Event {
-    None {
-        actor: u8,
-    },
+    None,
 
     StartGame {
         kyoku_first: u8, // hanchan = 0, tonpu = 4
