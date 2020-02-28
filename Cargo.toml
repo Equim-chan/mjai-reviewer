@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "convlog",
+]
+
+[profile.release]
+lto = true
+debug = false
+codegen-units = 1
