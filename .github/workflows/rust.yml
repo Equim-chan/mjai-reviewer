@@ -1,17 +1,29 @@
 name: Rust
 
-on: [push]
+on:
+  - push
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Run lint
-      run: cargo clippy --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@v2
+
+      - name: Install Rust stable
+        run: |
+          rustup toolchain update --no-self-update stable
+          rustup default stable
+          rustup component add clippy rustfmt
+          rustup show
+
+      - name: Run rustfmt
+        run: cargo fmt -- --check --verbose
+
+      - name: Run clippy
+        run: cargo clippy --verbose --all --all-features -- -Dwarnings
+
+      - name: Run build
+        run: cargo build --verbose
+
+      - name: Run tests
+        run: cargo test --verbose
