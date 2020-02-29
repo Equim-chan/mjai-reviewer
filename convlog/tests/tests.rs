@@ -1,4 +1,4 @@
-use crate::*;
+use convlog::*;
 
 static TESTDATA: &[&str] = &[
     include_str!("testdata/chankan.json"),

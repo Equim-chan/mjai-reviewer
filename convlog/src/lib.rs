@@ -8,6 +8,3 @@ pub mod tenhou;
 
 pub use conv::{tenhou_to_mjai, ConvertError};
 pub use pai::Pai;
-
-#[cfg(test)]
-mod tests;
