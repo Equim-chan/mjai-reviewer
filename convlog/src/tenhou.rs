@@ -6,8 +6,15 @@ use serde_tuple::Deserialize_tuple as DeserializeTuple;
 /// The overview structure of log in tenhou.net/6 format.
 #[derive(Debug)]
 pub struct Log {
-    pub kyokus: Vec<Kyoku>,
     pub names: [String; 4],
+    pub rule: Rule,
+    pub kyokus: Vec<Kyoku>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Rule {
+    Hanchan = 0,
+    Tonpuu = 4,
 }
 
 /// Contains infomation about a kyoku.
@@ -98,11 +105,17 @@ mod json_scheme {
     }
 
     #[derive(Debug, Deserialize)]
+    pub struct Rule {
+        pub disp: String,
+    }
+
+    #[derive(Debug, Deserialize)]
     pub struct Log {
         #[serde(rename = "log")]
         pub logs: Vec<Kyoku>,
         #[serde(rename = "name")]
         pub names: [String; 4],
+        pub rule: Rule,
     }
 }
 
@@ -137,7 +150,13 @@ impl Log {
     }
 
     fn from_json_scheme(json_parsed: json_scheme::Log) -> Self {
-        let json_scheme::Log { logs, names } = json_parsed;
+        let json_scheme::Log { logs, names, rule } = json_parsed;
+
+        let rule = if rule.disp.contains('東') {
+            Rule::Tonpuu
+        } else {
+            Rule::Hanchan
+        };
 
         let kyokus = logs
             .into_iter()
@@ -206,6 +225,10 @@ impl Log {
             })
             .collect();
 
-        Log { kyokus, names }
+        Log {
+            names,
+            rule,
+            kyokus,
+        }
     }
 }

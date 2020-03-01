@@ -12,7 +12,7 @@ pub enum Event {
     None,
 
     StartGame {
-        kyoku_first: u8, // hanchan = 0, tonpu = 4
+        kyoku_first: u8,
         names: [String; 4],
     },
     StartKyoku {

@@ -31,7 +31,7 @@ pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
     let mut events = vec![];
 
     events.push(mjai::Event::StartGame {
-        kyoku_first: 0, // TODO: configure this?
+        kyoku_first: log.rule as u8,
         names: log.names.clone(),
     });
 
