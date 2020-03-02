@@ -1,4 +1,6 @@
+use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize, Serializer};
+use std::collections::HashMap;
 use std::fmt;
 
 /// [`Pai`](Pai) describes a pai in tenhou.net/6 format.
@@ -16,6 +18,23 @@ static MJAI_PAI_STRINGS: &[&str] = &[
     "?", "5mr", "5pr", "5sr", "?", "?", "?", "?", "?", "?", // 50~59
     "?", // 60
 ];
+
+lazy_static! {
+    static ref MJAI_PAI_STRINGS_MAP: HashMap<String, u8> = {
+        let mut m = HashMap::new();
+        for (i, &v) in MJAI_PAI_STRINGS.iter().enumerate() {
+            m.insert(v.to_owned(), i as u8);
+        }
+        m
+    };
+}
+
+impl From<&str> for Pai {
+    #[inline]
+    fn from(s: &str) -> Self {
+        Pai(*MJAI_PAI_STRINGS_MAP.get(s).unwrap_or(&0))
+    }
+}
 
 impl fmt::Display for Pai {
     #[inline]
