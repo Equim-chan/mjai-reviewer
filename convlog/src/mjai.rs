@@ -101,6 +101,7 @@ pub enum Event {
 }
 
 impl Event {
+    #[inline]
     pub fn actor(&self) -> Option<u8> {
         match self {
             Event::Tsumo { actor, .. }
@@ -117,6 +118,7 @@ impl Event {
         }
     }
 
+    #[inline]
     pub fn naki_target(&self) -> Option<u8> {
         match self {
             Event::Chi { target, .. }
