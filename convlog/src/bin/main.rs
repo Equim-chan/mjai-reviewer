@@ -1,4 +1,5 @@
-use convlog::{tenhou, tenhou_to_mjai};
+use convlog::tenhou;
+use convlog::tenhou_to_mjai;
 use serde_json;
 use std::io;
 

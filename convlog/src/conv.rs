@@ -1,6 +1,6 @@
-use crate::mjai;
-use crate::tenhou;
-use crate::Pai;
+use super::mjai;
+use super::tenhou;
+use super::Pai;
 use std::str;
 use thiserror::Error;
 
@@ -31,7 +31,8 @@ pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
     let mut events = vec![];
 
     events.push(mjai::Event::StartGame {
-        kyoku_first: log.rule as u8,
+        kyoku_first: log.game_length as u8,
+        aka_flag: log.has_aka,
         names: log.names.clone(),
     });
 
@@ -226,7 +227,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             .filter(|&i| i != actor)
             .find(|&i| {
                 if let Some(take) = take_events[i].peek() {
-                    if let Some(target) = take.get_naki_target() {
+                    if let Some(target) = take.naki_target() {
                         return target == actor as u8;
                     }
                 }

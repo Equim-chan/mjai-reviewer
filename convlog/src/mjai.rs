@@ -1,5 +1,6 @@
 use super::pai::Pai;
 use serde::{Deserialize, Serialize};
+use serde_json;
 
 /// Describes an event in mjlog format.
 ///
@@ -13,6 +14,7 @@ pub enum Event {
 
     StartGame {
         kyoku_first: u8,
+        aka_flag: bool,
         names: [String; 4],
     },
     StartKyoku {
@@ -85,11 +87,26 @@ pub enum Event {
 }
 
 impl Event {
-    pub fn get_naki_target(&self) -> Option<u8> {
+    pub fn actor(&self) -> Option<u8> {
         match self {
-            Event::Chi { target, .. } => Some(*target),
-            Event::Pon { target, .. } => Some(*target),
-            Event::Daiminkan { target, .. } => Some(*target),
+            Event::Tsumo { actor, .. }
+            | Event::Dahai { actor, .. }
+            | Event::Chi { actor, .. }
+            | Event::Pon { actor, .. }
+            | Event::Daiminkan { actor, .. }
+            | Event::Kakan { actor, .. }
+            | Event::Ankan { actor, .. }
+            | Event::Reach { actor, .. }
+            | Event::ReachAccepted { actor, .. } => Some(*actor),
+            _ => None,
+        }
+    }
+
+    pub fn naki_target(&self) -> Option<u8> {
+        match self {
+            Event::Chi { target, .. }
+            | Event::Pon { target, .. }
+            | Event::Daiminkan { target, .. } => Some(*target),
             _ => None,
         }
     }

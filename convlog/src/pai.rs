@@ -2,8 +2,10 @@ use serde::{Deserialize, Serialize, Serializer};
 use std::fmt;
 
 /// [`Pai`](Pai) describes a pai in tenhou.net/6 format.
-#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, Deserialize)]
 pub struct Pai(pub u8);
+
+impl Eq for Pai {}
 
 static MJAI_PAI_STRINGS: &[&str] = &[
     "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", // 0~9

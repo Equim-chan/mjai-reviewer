@@ -1,4 +1,4 @@
-use crate::Pai;
+use super::Pai;
 use serde::Deserialize;
 use serde_json::Value;
 use serde_tuple::Deserialize_tuple as DeserializeTuple;
@@ -7,12 +7,13 @@ use serde_tuple::Deserialize_tuple as DeserializeTuple;
 #[derive(Debug)]
 pub struct Log {
     pub names: [String; 4],
-    pub rule: Rule,
+    pub game_length: GameLength,
+    pub has_aka: bool,
     pub kyokus: Vec<Kyoku>,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum Rule {
+pub enum GameLength {
     Hanchan = 0,
     Tonpuu = 4,
 }
@@ -152,11 +153,12 @@ impl Log {
     fn from_json_scheme(json_parsed: json_scheme::Log) -> Self {
         let json_scheme::Log { logs, names, rule } = json_parsed;
 
-        let rule = if rule.disp.contains('東') {
-            Rule::Tonpuu
+        let game_length = if rule.disp.contains('東') {
+            GameLength::Tonpuu
         } else {
-            Rule::Hanchan
+            GameLength::Hanchan
         };
+        let has_aka = rule.disp.contains('赤');
 
         let kyokus = logs
             .into_iter()
@@ -227,7 +229,8 @@ impl Log {
 
         Log {
             names,
-            rule,
+            game_length,
+            has_aka,
             kyokus,
         }
     }
