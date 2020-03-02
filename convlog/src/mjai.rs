@@ -1,6 +1,5 @@
 use super::pai::Pai;
 use serde::{Deserialize, Serialize};
-use serde_json;
 
 /// Describes an event in mjlog format.
 ///
