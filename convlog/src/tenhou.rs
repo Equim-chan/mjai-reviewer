@@ -105,9 +105,14 @@ mod json_scheme {
         pub results: Vec<ResultItem>,
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Default, Deserialize)]
+    #[serde(default)]
     pub struct Rule {
         pub disp: String,
+        pub aka: u8,
+        pub aka51: u8,
+        pub aka52: u8,
+        pub aka53: u8,
     }
 
     #[derive(Debug, Deserialize)]
@@ -158,7 +163,7 @@ impl Log {
         } else {
             GameLength::Hanchan
         };
-        let has_aka = rule.disp.contains('赤');
+        let has_aka = rule.aka + rule.aka51 + rule.aka52 + rule.aka53 > 0;
 
         let kyokus = logs
             .into_iter()

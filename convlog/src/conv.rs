@@ -244,7 +244,7 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
     takes
         .iter()
         .map(|take| match take {
-            tenhou::ActionItem::Pai(pai) => Ok(mjai::Event::Tsumo { actor, pai: *pai }),
+            &tenhou::ActionItem::Pai(pai) => Ok(mjai::Event::Tsumo { actor, pai }),
             tenhou::ActionItem::Naki(naki_string) => {
                 let naki = naki_string.as_bytes();
 
@@ -366,10 +366,10 @@ fn discard_action_to_events(
 
     for discard in discards {
         match discard {
-            tenhou::ActionItem::Pai(pai) => {
+            &tenhou::ActionItem::Pai(pai) => {
                 let ev = mjai::Event::Dahai {
                     actor,
-                    pai: *pai, // must be filled later if it is tsumogiri
+                    pai, // must be filled later if it is tsumogiri
                     tsumogiri: pai.0 == 60,
                 };
 
