@@ -49,13 +49,13 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
     // first of all, transform all takes and discards to events.
     let mut take_events: Vec<_> = (0..4)
         .map(|i| take_action_to_events(i, &kyoku.action_tables[usize::from(i)].takes))
-        .collect::<std::result::Result<Vec<_>, _>>()?
+        .collect::<Result<Vec<_>>>()?
         .into_iter()
         .map(|v| v.into_iter().peekable())
         .collect();
     let mut discard_events: Vec<_> = (0..4)
         .map(|i| discard_action_to_events(i, &kyoku.action_tables[usize::from(i)].discards))
-        .collect::<std::result::Result<Vec<_>, _>>()?
+        .collect::<Result<Vec<_>>>()?
         .into_iter()
         .map(|v| v.into_iter().peekable())
         .collect();
