@@ -90,6 +90,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
 
     let mut actor = usize::from(oya);
     loop {
+        // start to process a take event.
         let take = take_events[actor]
             .next()
             .ok_or(ConvertError::InsufficientTakes {
@@ -108,15 +109,16 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             events.push(mjai::Event::ReachAccepted { actor: actor as u8 });
         }
 
-        // skip one discard if it is daiminkan.
+        // skip one discard if the take is daiminkan.
         // and then immediately consume the next take event from the same actor.
         if let mjai::Event::Daiminkan { .. } = take {
-            need_new_dora = true;
+            events.push(take);
             discard_events[actor].next(); // cannot use .skip(1) here as the types do not match
+            need_new_dora = true;
             continue;
         }
 
-        // emit the take event
+        // emit the take event.
         events.push(take);
 
         // check if the kyoku ends here, can be ryukyoku (九種九牌) or tsumo.
@@ -138,6 +140,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             break;
         }
 
+        // start to process a discard event.
         let discard = discard_events[actor]
             .next()
             .ok_or(ConvertError::InsufficientDiscards {
@@ -146,6 +149,8 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
                 actor: actor as u8,
             })?
             .fill_possible_tsumogiri(last_tsumo);
+
+        // emit the discard event.
         events.push(discard.clone());
 
         // process previous minkan.
