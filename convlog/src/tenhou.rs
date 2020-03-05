@@ -250,7 +250,7 @@ pub fn split_raw_logs(log: &Value) -> Vec<Value> {
             for kyoku in arr {
                 let mut kyoku_log = Map::new();
 
-                for (key, value) in log_map.iter().filter(|(k, _)| *k != "log") {
+                for (key, value) in log_map.iter().filter(|(k, _)| *k != "log" && *k != "sc") {
                     kyoku_log.insert(key.clone(), value.clone());
                 }
 
