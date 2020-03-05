@@ -271,10 +271,14 @@ mod test {
 
     #[test]
     fn test_split_raw_logs() {
-        let obj = json!({"log": [1,[],3,4,5,6,7,8,null,"10"], "names": ["A","B","C","D"]});
+        let obj = json!({"log": [1,["a"],null], "names": ["A","B","C","D"]});
 
         let logs = split_raw_logs(&obj);
 
-        assert_eq!(logs.len(), 10);
+        assert_eq!(logs.len(), 3);
+
+        assert_eq!(logs[0], json!({"log": [1], "names": ["A","B","C","D"]}));
+        assert_eq!(logs[1], json!({"log": [["a"]], "names": ["A","B","C","D"]}));
+        assert_eq!(logs[2], json!({"log": [null], "names": ["A","B","C","D"]}));
     }
 }
