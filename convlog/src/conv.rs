@@ -48,17 +48,17 @@ pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
 fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) -> Result<()> {
     // first of all, transform all takes and discards to events.
     let mut take_events: Vec<_> = (0..4)
-        .map(|i| take_action_to_events(i, &kyoku.action_tables[usize::from(i)].takes))
-        .collect::<Result<Vec<_>>>()?
-        .into_iter()
-        .map(|v| v.into_iter().peekable())
-        .collect();
+        .map(|i| {
+            take_action_to_events(i, &kyoku.action_tables[usize::from(i)].takes)
+                .map(|ev| ev.into_iter().peekable())
+        })
+        .collect::<Result<Vec<_>>>()?;
     let mut discard_events: Vec<_> = (0..4)
-        .map(|i| discard_action_to_events(i, &kyoku.action_tables[usize::from(i)].discards))
-        .collect::<Result<Vec<_>>>()?
-        .into_iter()
-        .map(|v| v.into_iter().peekable())
-        .collect();
+        .map(|i| {
+            discard_action_to_events(i, &kyoku.action_tables[usize::from(i)].discards)
+                .map(|ev| ev.into_iter().peekable())
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     // then emit the events in order.
     let oya = kyoku.meta.kyoku_num % 4;

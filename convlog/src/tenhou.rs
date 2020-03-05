@@ -1,6 +1,6 @@
 use super::Pai;
 use serde::Deserialize;
-use serde_json::Value;
+use serde_json::{Map, Value};
 use serde_tuple::Deserialize_tuple as DeserializeTuple;
 
 /// The overview structure of log in tenhou.net/6 format.
@@ -238,5 +238,43 @@ impl Log {
             has_aka,
             kyokus,
         }
+    }
+}
+
+/// Split one raw tenhou.net/6 log into many by kyokus.
+pub fn split_raw_logs(log: &Value) -> Vec<Value> {
+    let mut ret = vec![];
+
+    if let Value::Object(log_map) = log {
+        if let Some(Value::Array(arr)) = log_map.get("log") {
+            for kyoku in arr {
+                let mut kyoku_log = Map::new();
+
+                for (key, value) in log_map.iter().filter(|(k, _)| *k != "log") {
+                    kyoku_log.insert(key.clone(), value.clone());
+                }
+
+                kyoku_log.insert("log".to_owned(), Value::Array(vec![kyoku.clone()]));
+
+                ret.push(Value::Object(kyoku_log));
+            }
+        }
+    }
+
+    ret
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_split_raw_logs() {
+        let obj = json!({"log": [1,[],3,4,5,6,7,8,null,"10"], "names": ["A","B","C","D"]});
+
+        let logs = split_raw_logs(&obj);
+
+        assert_eq!(logs.len(), 10);
     }
 }

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fmt;
 
 /// Describes a pai in tenhou.net/6 format.
-#[derive(Debug, Clone, Copy, PartialEq, Default, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 pub struct Pai(pub u8);
 
 impl Eq for Pai {}
