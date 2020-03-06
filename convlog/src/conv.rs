@@ -266,7 +266,10 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                         actor,
                         target: (actor + 3) % 4,
                         pai: pai_from_bytes(&naki[1..3])?,
-                        consumed: [pai_from_bytes(&naki[3..5])?, pai_from_bytes(&naki[5..7])?],
+                        consumed: mjai::Consumed2([
+                            pai_from_bytes(&naki[3..5])?,
+                            pai_from_bytes(&naki[5..7])?,
+                        ]),
                     })
                 } else if let Some(idx) = naki_string.find('p') {
                     // pon
@@ -282,7 +285,10 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                             actor,
                             target: (actor + 3) % 4,
                             pai: pai_from_bytes(&naki[1..3])?,
-                            consumed: [pai_from_bytes(&naki[3..5])?, pai_from_bytes(&naki[5..7])?],
+                            consumed: mjai::Consumed2([
+                                pai_from_bytes(&naki[3..5])?,
+                                pai_from_bytes(&naki[5..7])?,
+                            ]),
                         }),
 
                         // from toimen
@@ -291,7 +297,10 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                             actor,
                             target: (actor + 2) % 4,
                             pai: pai_from_bytes(&naki[3..5])?,
-                            consumed: [pai_from_bytes(&naki[0..2])?, pai_from_bytes(&naki[5..7])?],
+                            consumed: mjai::Consumed2([
+                                pai_from_bytes(&naki[0..2])?,
+                                pai_from_bytes(&naki[5..7])?,
+                            ]),
                         }),
                         // from shimocha
                         // e.g. "3737p37" => pon 7s from shimocha
@@ -299,7 +308,10 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                             actor,
                             target: (actor + 1) % 4,
                             pai: pai_from_bytes(&naki[5..7])?,
-                            consumed: [pai_from_bytes(&naki[0..2])?, pai_from_bytes(&naki[2..4])?],
+                            consumed: mjai::Consumed2([
+                                pai_from_bytes(&naki[0..2])?,
+                                pai_from_bytes(&naki[2..4])?,
+                            ]),
                         }),
 
                         // ???
@@ -319,11 +331,11 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                             actor,
                             target: (actor + 3) % 4,
                             pai: pai_from_bytes(&naki[1..3])?,
-                            consumed: [
+                            consumed: mjai::Consumed3([
                                 pai_from_bytes(&naki[3..5])?,
                                 pai_from_bytes(&naki[5..7])?,
                                 pai_from_bytes(&naki[7..9])?,
-                            ],
+                            ]),
                         }),
 
                         // from toimen
@@ -332,11 +344,11 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                             actor,
                             target: (actor + 2) % 4,
                             pai: pai_from_bytes(&naki[3..5])?,
-                            consumed: [
+                            consumed: mjai::Consumed3([
                                 pai_from_bytes(&naki[0..2])?,
                                 pai_from_bytes(&naki[5..7])?,
                                 pai_from_bytes(&naki[7..9])?,
-                            ],
+                            ]),
                         }),
 
                         // from shimocha
@@ -345,11 +357,11 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                             actor,
                             target: (actor + 1) % 4,
                             pai: pai_from_bytes(&naki[7..9])?,
-                            consumed: [
+                            consumed: mjai::Consumed3([
                                 pai_from_bytes(&naki[0..2])?,
                                 pai_from_bytes(&naki[2..4])?,
                                 pai_from_bytes(&naki[4..6])?,
-                            ],
+                            ]),
                         }),
 
                         // ???
@@ -398,11 +410,11 @@ fn discard_action_to_events(
                         0 => mjai::Event::Kakan {
                             actor,
                             pai: pai_from_bytes(&naki[1..3])?,
-                            consumed: [
+                            consumed: mjai::Consumed3([
                                 pai_from_bytes(&naki[3..5])?,
                                 pai_from_bytes(&naki[5..7])?,
                                 pai_from_bytes(&naki[7..9])?,
-                            ],
+                            ]),
                         },
 
                         // previously pon from toimen
@@ -410,11 +422,11 @@ fn discard_action_to_events(
                         2 => mjai::Event::Kakan {
                             actor,
                             pai: pai_from_bytes(&naki[3..5])?,
-                            consumed: [
+                            consumed: mjai::Consumed3([
                                 pai_from_bytes(&naki[0..2])?,
                                 pai_from_bytes(&naki[5..7])?,
                                 pai_from_bytes(&naki[7..9])?,
-                            ],
+                            ]),
                         },
 
                         // previously pon from shimocha
@@ -422,11 +434,11 @@ fn discard_action_to_events(
                         4 => mjai::Event::Kakan {
                             actor,
                             pai: pai_from_bytes(&naki[5..7])?,
-                            consumed: [
+                            consumed: mjai::Consumed3([
                                 pai_from_bytes(&naki[0..2])?,
                                 pai_from_bytes(&naki[2..4])?,
                                 pai_from_bytes(&naki[7..9])?,
-                            ],
+                            ]),
                         },
 
                         // ???
@@ -448,12 +460,12 @@ fn discard_action_to_events(
                     let pai = pai_from_bytes(&naki[7..9])?;
                     let ev = mjai::Event::Ankan {
                         actor,
-                        consumed: [
+                        consumed: mjai::Consumed4([
                             pai_from_bytes(&naki[0..2])?,
                             pai_from_bytes(&naki[2..4])?,
                             pai_from_bytes(&naki[4..6])?,
                             pai,
-                        ],
+                        ]),
                     };
 
                     ret.push(ev);

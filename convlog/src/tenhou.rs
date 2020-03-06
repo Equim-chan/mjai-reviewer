@@ -158,6 +158,33 @@ mod json_scheme {
 
 pub use json_scheme::{Log as RawLog, PartialLog as RawPartialLog};
 
+impl RawLog {
+    /// Split one raw tenhou.net/6 log into many by kyokus.
+    pub fn split_by_kyoku<'a>(&'a self) -> Vec<RawPartialLog<'a>> {
+        let mut ret = vec![];
+
+        for kyoku in self.logs.chunks(1) {
+            let kyoku_log = RawPartialLog {
+                parent: &self,
+                logs: kyoku,
+            };
+
+            ret.push(kyoku_log);
+        }
+
+        ret
+    }
+}
+
+impl From<RawPartialLog<'_>> for RawLog {
+    fn from(partial_log: RawPartialLog) -> Self {
+        RawLog {
+            logs: partial_log.logs.to_vec(),
+            ..partial_log.parent.clone()
+        }
+    }
+}
+
 impl Log {
     /// Parse a tenhou.net/6 log from JSON string.
     #[inline]
@@ -253,29 +280,5 @@ impl From<RawLog> for Log {
             has_aka,
             kyokus,
         }
-    }
-}
-
-impl RawLog {
-    /// Split one raw tenhou.net/6 log into many by kyokus.
-    pub fn split_by_kyoku<'a>(&'a self) -> Vec<RawPartialLog<'a>> {
-        let mut ret = vec![];
-
-        for kyoku in self.logs.chunks(1) {
-            let kyoku_log = RawPartialLog {
-                parent: &self,
-                logs: kyoku,
-            };
-
-            ret.push(kyoku_log);
-        }
-
-        ret
-    }
-
-    /// Get the count of kyokus recorded in the log.
-    #[inline]
-    pub fn kyokus_count(&self) -> usize {
-        self.logs.len()
     }
 }
