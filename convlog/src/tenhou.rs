@@ -1,10 +1,11 @@
+use super::pai::{serialize_pai_literal, serialize_pai_slice_literal};
 use super::Pai;
-use serde::Deserialize;
-use serde_json::{Map, Value};
-use serde_tuple::Deserialize_tuple as DeserializeTuple;
+use serde::{Deserialize, Serialize};
+use serde_json::{Result, Value};
+use serde_tuple::{Deserialize_tuple as DeserializeTuple, Serialize_tuple as SerializeTuple};
 
 /// The overview structure of log in tenhou.net/6 format.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Log {
     pub names: [String; 4],
     pub game_length: GameLength,
@@ -19,7 +20,7 @@ pub enum GameLength {
 }
 
 /// Contains infomation about a kyoku.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Kyoku {
     pub meta: kyoku::Meta,
     pub scoreboard: [i32; 4],
@@ -34,20 +35,20 @@ pub struct Kyoku {
 pub mod kyoku {
     use super::*;
 
-    #[derive(Debug, DeserializeTuple)]
+    #[derive(Debug, Clone, SerializeTuple, DeserializeTuple)]
     pub struct Meta {
         pub kyoku_num: u8,
         pub honba: u8,
         pub kyotaku: u8,
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone, Copy)]
     pub enum EndStatus {
         Hora,
         Ryukyoku,
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone, Copy)]
     pub struct HoraDetail {
         pub who: u8,
         pub target: u8,
@@ -56,7 +57,7 @@ pub mod kyoku {
 
 /// A group of "配牌", "取" and "出", describing a player's
 /// gaming status and actions throughout a kyoku.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ActionTable {
     pub haipai: [Pai; 13],
     pub takes: Vec<ActionItem>,
@@ -64,9 +65,10 @@ pub struct ActionTable {
 }
 
 /// An item corresponding to each elements in "配牌", "取" and "出".
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ActionItem {
+    #[serde(serialize_with = "serialize_pai_literal")]
     Pai(Pai),
     Naki(String),
 }
@@ -74,89 +76,102 @@ pub enum ActionItem {
 mod json_scheme {
     use super::*;
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
     #[serde(untagged)]
-    pub enum ResultItem {
+    pub(super) enum ResultItem {
         Status(String),
         ScoreDeltas([i32; 4]),
         HoraDetail(Value),
     }
 
-    #[derive(Debug, DeserializeTuple)]
-    pub struct Kyoku {
-        pub meta: kyoku::Meta,
-        pub scoreboard: [i32; 4],
-        pub dora_indicators: Vec<Pai>,
-        pub ura_indicators: Vec<Pai>,
+    #[derive(Debug, Clone, SerializeTuple, DeserializeTuple)]
+    pub(super) struct Kyoku {
+        pub(super) meta: kyoku::Meta,
+        pub(super) scoreboard: [i32; 4],
+        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        pub(super) dora_indicators: Vec<Pai>,
+        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        pub(super) ura_indicators: Vec<Pai>,
 
-        pub haipai_0: [Pai; 13],
-        pub takes_0: Vec<ActionItem>,
-        pub discards_0: Vec<ActionItem>,
-        pub haipai_1: [Pai; 13],
-        pub takes_1: Vec<ActionItem>,
-        pub discards_1: Vec<ActionItem>,
-        pub haipai_2: [Pai; 13],
-        pub takes_2: Vec<ActionItem>,
-        pub discards_2: Vec<ActionItem>,
-        pub haipai_3: [Pai; 13],
-        pub takes_3: Vec<ActionItem>,
-        pub discards_3: Vec<ActionItem>,
+        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        pub(super) haipai_0: [Pai; 13],
+        pub(super) takes_0: Vec<ActionItem>,
+        pub(super) discards_0: Vec<ActionItem>,
 
-        pub results: Vec<ResultItem>,
+        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        pub(super) haipai_1: [Pai; 13],
+        pub(super) takes_1: Vec<ActionItem>,
+        pub(super) discards_1: Vec<ActionItem>,
+
+        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        pub(super) haipai_2: [Pai; 13],
+        pub(super) takes_2: Vec<ActionItem>,
+        pub(super) discards_2: Vec<ActionItem>,
+
+        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        pub(super) haipai_3: [Pai; 13],
+        pub(super) takes_3: Vec<ActionItem>,
+        pub(super) discards_3: Vec<ActionItem>,
+
+        pub(super) results: Vec<ResultItem>,
     }
 
-    #[derive(Debug, Default, Deserialize)]
+    #[derive(Debug, Clone, Default, Serialize, Deserialize)]
     #[serde(default)]
-    pub struct Rule {
-        pub disp: String,
-        pub aka: u8,
-        pub aka51: u8,
-        pub aka52: u8,
-        pub aka53: u8,
+    pub(super) struct Rule {
+        pub(super) disp: String,
+        pub(super) aka: u8,
+        pub(super) aka51: u8,
+        pub(super) aka52: u8,
+        pub(super) aka53: u8,
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Log {
         #[serde(rename = "log")]
-        pub logs: Vec<Kyoku>,
+        pub(super) logs: Vec<Kyoku>,
         #[serde(rename = "name")]
-        pub names: [String; 4],
-        pub rule: Rule,
+        pub(super) names: [String; 4],
+        pub(super) rule: Rule,
+
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(super) ratingc: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(super) lobby: Option<i32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(super) dan: Option<Vec<String>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(super) rate: Option<Vec<f64>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(super) sx: Option<Vec<String>>,
+    }
+
+    #[derive(Debug, Serialize)]
+    pub struct PartialLog<'a> {
+        #[serde(flatten)]
+        pub(super) parent: &'a Log,
+
+        #[serde(rename = "log")]
+        pub(super) logs: &'a [Kyoku],
     }
 }
+
+pub use json_scheme::{Log as RawLog, PartialLog as RawPartialLog};
 
 impl Log {
     /// Parse a tenhou.net/6 log from JSON string.
     #[inline]
-    pub fn from_json_string(json_string: &str) -> serde_json::Result<Self> {
-        Ok(Self::from_json_scheme(serde_json::from_str(json_string)?))
+    pub fn from_json_str(json_string: &str) -> Result<Self> {
+        let raw_log: RawLog = serde_json::from_str(json_string)?;
+        Ok(Self::from(raw_log))
     }
+}
 
-    /// Parse a tenhou.net/6 log from `&[u8]`.
-    #[inline]
-    pub fn from_json_slice(json_slice: &[u8]) -> serde_json::Result<Self> {
-        Ok(Self::from_json_scheme(serde_json::from_slice(json_slice)?))
-    }
-
-    /// Parse a tenhou.net/6 log from [`Read`].
-    #[inline]
-    pub fn from_json_reader<R>(json_reader: R) -> serde_json::Result<Self>
-    where
-        R: std::io::Read,
-    {
-        Ok(Self::from_json_scheme(serde_json::from_reader(
-            json_reader,
-        )?))
-    }
-
-    /// Parse a tenhou.net/6 log from [`serde_json::Value`].
-    #[inline]
-    pub fn from_json_value(json_value: serde_json::Value) -> serde_json::Result<Self> {
-        Ok(Self::from_json_scheme(serde_json::from_value(json_value)?))
-    }
-
-    fn from_json_scheme(json_parsed: json_scheme::Log) -> Self {
-        let json_scheme::Log { logs, names, rule } = json_parsed;
+impl From<RawLog> for Log {
+    fn from(raw_log: RawLog) -> Self {
+        let RawLog {
+            logs, names, rule, ..
+        } = raw_log;
 
         let game_length = if rule.disp.contains('東') {
             GameLength::Tonpuu
@@ -241,44 +256,26 @@ impl Log {
     }
 }
 
-/// Split one raw tenhou.net/6 log into many by kyokus.
-pub fn split_raw_logs(log: &Value) -> Vec<Value> {
-    let mut ret = vec![];
+impl RawLog {
+    /// Split one raw tenhou.net/6 log into many by kyokus.
+    pub fn split_by_kyoku<'a>(&'a self) -> Vec<RawPartialLog<'a>> {
+        let mut ret = vec![];
 
-    if let Value::Object(log_map) = log {
-        if let Some(Value::Array(arr)) = log_map.get("log") {
-            for kyoku in arr {
-                let mut kyoku_log = Map::new();
+        for kyoku in self.logs.chunks(1) {
+            let kyoku_log = RawPartialLog {
+                parent: &self,
+                logs: kyoku,
+            };
 
-                for (key, value) in log_map.iter().filter(|(k, _)| *k != "log" && *k != "sc") {
-                    kyoku_log.insert(key.clone(), value.clone());
-                }
-
-                kyoku_log.insert("log".to_owned(), Value::Array(vec![kyoku.clone()]));
-
-                ret.push(Value::Object(kyoku_log));
-            }
+            ret.push(kyoku_log);
         }
+
+        ret
     }
 
-    ret
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn test_split_raw_logs() {
-        let obj = json!({"log": [1,["a"],null], "names": ["A","B","C","D"]});
-
-        let logs = split_raw_logs(&obj);
-
-        assert_eq!(logs.len(), 3);
-
-        assert_eq!(logs[0], json!({"log": [1], "names": ["A","B","C","D"]}));
-        assert_eq!(logs[1], json!({"log": [["a"]], "names": ["A","B","C","D"]}));
-        assert_eq!(logs[2], json!({"log": [null], "names": ["A","B","C","D"]}));
+    /// Get the count of kyokus recorded in the log.
+    #[inline]
+    pub fn kyokus_count(&self) -> usize {
+        self.logs.len()
     }
 }

@@ -129,7 +129,7 @@ impl Event {
     }
 }
 
-macro_rules! make_pai_array {
+macro_rules! make_pai_array_from_string_array {
     ($array:ident, $($index:expr),*) => {
         [$(Pai::from(&*$array[$index])),*]
     };
@@ -152,7 +152,7 @@ where
     D: Deserializer<'de>,
 {
     let s = <[String; 2]>::deserialize(deserializer)?;
-    Ok(make_pai_array!(s, 0, 1))
+    Ok(make_pai_array_from_string_array!(s, 0, 1))
 }
 
 #[inline]
@@ -161,7 +161,7 @@ where
     D: Deserializer<'de>,
 {
     let s = <[String; 3]>::deserialize(deserializer)?;
-    Ok(make_pai_array!(s, 0, 1, 2))
+    Ok(make_pai_array_from_string_array!(s, 0, 1, 2))
 }
 
 #[inline]
@@ -170,7 +170,7 @@ where
     D: Deserializer<'de>,
 {
     let s = <[String; 4]>::deserialize(deserializer)?;
-    Ok(make_pai_array!(s, 0, 1, 2, 3))
+    Ok(make_pai_array_from_string_array!(s, 0, 1, 2, 3))
 }
 
 #[inline]
@@ -180,9 +180,9 @@ where
 {
     let s = <[[String; 13]; 4]>::deserialize(deserializer)?;
     Ok([
-        make_pai_array!(s[0], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
-        make_pai_array!(s[1], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
-        make_pai_array!(s[2], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
-        make_pai_array!(s[3], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+        make_pai_array_from_string_array!(s[0], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+        make_pai_array_from_string_array!(s[1], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+        make_pai_array_from_string_array!(s[2], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+        make_pai_array_from_string_array!(s[3], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
     ])
 }

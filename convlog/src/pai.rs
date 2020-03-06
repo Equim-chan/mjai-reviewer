@@ -1,5 +1,7 @@
 use lazy_static::lazy_static;
+use serde::ser::SerializeSeq;
 use serde::{Deserialize, Serialize, Serializer};
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -45,7 +47,33 @@ impl fmt::Display for Pai {
 
 impl Serialize for Pai {
     #[inline]
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         serializer.collect_str(self)
     }
+}
+
+#[inline]
+pub fn serialize_pai_literal<S, P>(pai: P, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    P: Borrow<Pai>,
+{
+    serializer.serialize_u8(pai.borrow().0)
+}
+
+pub fn serialize_pai_slice_literal<S, P>(pais: P, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    P: AsRef<[Pai]>,
+{
+    let pais_ref = pais.as_ref();
+
+    let mut seq = serializer.serialize_seq(Some(pais_ref.len()))?;
+    for e in pais_ref {
+        seq.serialize_element(&e.0)?;
+    }
+    seq.end()
 }

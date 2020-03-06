@@ -3,7 +3,7 @@
 
 mod conv;
 pub mod mjai;
-mod pai;
+pub mod pai;
 pub mod tenhou;
 
 pub use conv::{tenhou_to_mjai, ConvertError};
