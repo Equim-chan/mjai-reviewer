@@ -1,0 +1,36 @@
+{
+  "tactics": {
+    "base": "default",
+    "jun_pt": [
+      90,
+      45,
+      0,
+      -135
+    ],
+    "jun_est": "ako",
+    "use_agari_coeff_tp_fnm": 0,
+    "use_agari_coeff_tp_an": 8,
+    "tsumo_num_est": "ako",
+    "tsumo_num_ratio": 1.0,
+    "use_other_end_ar": false,
+    "other_end_prob_est": "ako",
+    "other_end_est_begin": 0,
+    "tenpai_prob_est": "ako",
+    "tenpai_after_est": "ako",
+    "tenpai_after_est_begin": 0,
+    "tenpai_after_use_other_reach": true,
+    "betaori_est": "ako",
+    "agari_prob_est": "ako",
+    "my_keiten_prob_est": "ako",
+    "other_keiten_prob_est": "ako",
+    "inclusive_fold_est": "ako",
+    "ron_ratio_est": "ako",
+    "ryukyoku_prob_est": "ako",
+    "result_other_est": "ako",
+    "tas_est": "ako",
+    "mc_init": "ako",
+    "sbr_est": "ako",
+    "katachi_est": "ako",
+    "houjuu_est": "ako"
+  }
+}

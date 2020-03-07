@@ -1,0 +1,58 @@
+{% macro render_pai(pai) %}
+  <svg class="tile">
+    <use class="face" xlink:href="#pai-{{ pai | lower }}"></use>
+  </svg>
+{% endmacro render_pai %}
+
+{% macro render_action(action) %}
+  {% if action[0].type == "none" %}
+    スルー
+  {% elif action[0].type == "dahai" %}
+    打
+    <svg class="tile">
+      <use class="face" xlink:href="#pai-{{ action[0].pai | lower }}"></use>
+    </svg>
+  {% elif action[0].type == "reach" %}
+    打
+    <svg class="tile">
+      <use class="face" xlink:href="#pai-{{ action[1].pai | lower }}"></use>
+    </svg>
+    リーチ
+  {% elif action[0].type == "hora" %}
+    {% if action[0].target == action[0].actor %}
+      ツモ
+    {% else %}
+      ロン
+    {% endif %}
+  {% elif action[0].type == "chi" %}
+    {% for pai in action[0].consumed %}
+      <svg class="tile">
+        <use class="face" xlink:href="#pai-{{ pai | lower }}"></use>
+      </svg>
+    {% endfor %}
+    チー打
+    <svg class="tile">
+      <use class="face" xlink:href="#pai-{{ action[1].pai | lower }}"></use>
+    </svg>
+  {% elif action[0].type == "pon" %}
+    {% for pai in action[0].consumed %}
+      <svg class="tile">
+        <use class="face" xlink:href="#pai-{{ pai | lower }}"></use>
+      </svg>
+    {% endfor %}
+    ポン打
+    <svg class="tile">
+      <use class="face" xlink:href="#pai-{{ action[1].pai | lower }}"></use>
+    </svg>
+  {% elif action[0].type == "kakan" or action[0].type == "daiminkan" %}
+    カン
+    <svg class="tile">
+      <use class="face" xlink:href="#pai-{{ action[0].pai | lower }}"></use>
+    </svg>
+  {% else %}
+    カン
+    <svg class="tile">
+      <use class="face" xlink:href="#pai-{{ action[0].consumed[0] | lower }}"></use>
+    </svg>
+  {% endif %}
+{% endmacro render_action %}

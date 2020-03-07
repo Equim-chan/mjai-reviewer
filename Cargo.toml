@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "convlog",
+    "reviewer",
 ]
 
 [profile.release]

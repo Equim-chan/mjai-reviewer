@@ -1,0 +1,143 @@
+{% import "macros.html" as macros %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>牌譜検討</title>
+</head>
+
+<body>
+  {% include "pai_assets.html" %}
+
+  <h1>目次</h1>
+  <details open class="collapse">
+    <summary></summary>
+    <ol>
+      {% for item in kyokus %}
+        <li>
+          <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}">
+            {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
+          </a>
+        </li>
+      {% endfor %}
+    </ol>
+  </details>
+
+  {% for item in kyokus %}
+    <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}" class="chapter">
+      <h1 id="kyoku-{{ item.kyoku }}-{{ item.honba }}">
+        {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
+      </h1>
+    </a>
+
+    {% if splited_logs is defined %}
+    <details open class="collapse">
+      <summary>牌譜ビューア</summary>
+      <iframe
+        src="https://tenhou.net/5/?tw={{ target_actor }}#json={{ splited_logs[loop.index0] | json_encode() }}"
+        class="tenhou"
+        scrolling="no"
+        marginwidth="0"
+        marginheight="0"
+        frameborder="0"
+      ></iframe>
+    </details>
+    {% endif %}
+
+    {% for entry in item.entries %}
+      <details open class="collapse">
+        <summary>{{ entry.junme }} 巡</summary>
+        <p>
+          {% if entry.actor == target_actor %}
+            自家が{{ macros::render_pai(pai=entry.pai) }}を引いた時——
+          {% else %}
+            {% if entry.actor == (target_actor + 1) % 4 %}
+              下家
+            {% elif entry.actor == (target_actor + 2) % 4 %}
+              対面
+            {% else %}
+              上家
+            {% endif %}
+            が{{ macros::render_pai(pai=entry.pai) }}を切った時——
+          {% endif %}
+        </p>
+        <ul>
+          <li>
+            akochan の最善手：
+            <ul>
+              <li>
+                {{ macros::render_action(action=entry.expected) }}
+              </li>
+            </ul>
+          </li>
+          <li>
+            自家：
+            <ul>
+              <li>
+                {{ macros::render_action(action=entry.actual) }}
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </details>
+    {% endfor %}
+  {% endfor %}
+
+  <style>
+    body {
+      max-width: 732px;
+      margin: auto;
+    }
+
+    .face {
+      filter: url(#inset-shadow);
+      fill: #ffffff;
+    }
+    .tile {
+      width: 25px;
+      height: 35px;
+      vertical-align: middle;
+    }
+
+    a, a:visited {
+      color: inherit;
+    }
+    a.chapter {
+      text-decoration: none;
+    }
+
+    summary {
+      cursor: pointer;
+    }
+    details.collapse  {
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      padding: .5em .5em 0;
+    }
+    details.collapse summary  {
+      font-weight: bold;
+      margin: -.5em -.5em 0;
+      padding: .5em;
+    }
+    details[open].collapse  {
+      padding: .5em;
+      margin-bottom: .5em;
+    }
+    details[open].collapse summary  {
+      border-bottom: 1px solid #aaa;
+      margin-bottom: .5em;
+    }
+
+    iframe.tenhou {
+      width: 100%;
+      height: 480px;
+      display: block;
+      margin: auto;
+    }
+  </style>
+</body>
+
+</html>
