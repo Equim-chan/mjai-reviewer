@@ -26,7 +26,7 @@ lazy_static! {
     };
 }
 
-fn kyoku_to_string<'a>(args: &'a HashMap<String, Value>) -> tera::Result<Value> {
+fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
     static BAKAZE_KANJI: &[&str] = &["東", "南", "西", "北"];
     static NUM_KANJI: &[&str] = &["一", "二", "三", "四"];
 
@@ -76,7 +76,6 @@ where
 
     let ctx = Context::from_serialize(view)?;
     let result = TEMPLATES.render("report.html", &ctx)?;
-
     w.write_all(&result.as_bytes())?;
 
     Ok(())

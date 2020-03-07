@@ -34,17 +34,17 @@
     </a>
 
     {% if splited_logs is defined %}
-    <details open class="collapse">
-      <summary>牌譜ビューア</summary>
-      <iframe
-        src="https://tenhou.net/5/?tw={{ target_actor }}#json={{ splited_logs[loop.index0] | json_encode() }}"
-        class="tenhou"
-        scrolling="no"
-        marginwidth="0"
-        marginheight="0"
-        frameborder="0"
-      ></iframe>
-    </details>
+      <details open class="collapse">
+        <summary>牌譜ビューア</summary>
+        <iframe
+          src="https://tenhou.net/5/?tw={{ target_actor }}#json={{ splited_logs[loop.index0] | json_encode() }}"
+          class="tenhou"
+          scrolling="no"
+          marginwidth="0"
+          marginheight="0"
+          frameborder="0"
+        ></iframe>
+      </details>
     {% endif %}
 
     {% for entry in item.entries %}
