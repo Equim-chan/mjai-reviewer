@@ -15,7 +15,7 @@ lazy_static! {
 
         tera.add_raw_templates(vec![
             ("macros.html", include_str!("../templates/macros.html")),
-            ("pai_assets.html", include_str!("../res/pai_assets.html")),
+            ("pai_assets.html", include_str!("../assets/pai_assets.html")),
             ("report.html", include_str!("../templates/report.html")),
         ])
         .expect("failed to parse template");
