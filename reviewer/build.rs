@@ -7,10 +7,10 @@ use tera::Tera;
 fn main() -> Result<()> {
     let git_hash = get_git_hash().context("failed to get git hash")?;
     let build_date = Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);
-    let build_profile = env::var("PROFILE").unwrap_or("(unknown)".to_owned());
+    let build_profile = env::var("PROFILE").unwrap_or_else(|_| "(unknown)".to_owned());
     let rustc_version = get_rustc_version().context("failed to get rustc version")?;
-    let rustc_host = env::var("HOST").unwrap_or("(unknwon)".to_owned());
-    let rustc_target = env::var("TARGET").unwrap_or("(unknwon)".to_owned());
+    let rustc_host = env::var("HOST").unwrap_or_else(|_| "(unknwon)".to_owned());
+    let rustc_target = env::var("TARGET").unwrap_or_else(|_| "(unknwon)".to_owned());
 
     println!("cargo:rustc-env=GIT_HASH={}", git_hash);
     println!("cargo:rustc-env=BUILD_DATE={}", build_date);
@@ -47,7 +47,7 @@ fn get_git_hash() -> Result<String> {
 }
 
 fn get_rustc_version() -> Result<String> {
-    let rustc = env::var("RUSTC").unwrap_or("rustc".to_owned());
+    let rustc = env::var("RUSTC").unwrap_or_else(|_| "rustc".to_owned());
 
     let output = Command::new(rustc).args(&["--version"]).output()?;
 
