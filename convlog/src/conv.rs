@@ -65,6 +65,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
     let mut dora_feed = kyoku.dora_indicators.clone().into_iter();
     let mut reach_flag: Option<usize> = None;
     let mut last_tsumo = Pai(0);
+    let mut last_dahai = Pai(0);
     let mut need_new_dora = false;
 
     events.push(mjai::Event::StartKyoku {
@@ -150,6 +151,11 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             })?
             .fill_possible_tsumogiri(last_tsumo);
 
+        // record the pai to check if someone naki it.
+        if let mjai::Event::Dahai { pai, .. } = discard {
+            last_dahai = pai;
+        }
+
         // emit the discard event.
         events.push(discard.clone());
 
@@ -179,6 +185,9 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
                     actor: actor as u8,
                 })?
                 .fill_possible_tsumogiri(last_tsumo);
+            if let mjai::Event::Dahai { pai, .. } = discard {
+                last_dahai = pai;
+            }
             events.push(dahai);
         }
 
@@ -232,8 +241,8 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             .filter(|&i| i != actor)
             .find(|&i| {
                 if let Some(take) = take_events[i].peek() {
-                    if let Some(target) = take.naki_target() {
-                        return target == actor as u8;
+                    if let Some((target, pai)) = take.naki_info() {
+                        return target == actor as u8 && pai == last_dahai;
                     }
                 }
 
