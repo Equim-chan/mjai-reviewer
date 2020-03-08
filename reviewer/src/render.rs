@@ -12,15 +12,14 @@ use tera::{Context, Tera, Value};
 lazy_static! {
     static ref TEMPLATES: Tera = {
         let mut tera = Tera::default();
+        tera.register_function("kyoku_to_string", kyoku_to_string);
 
         tera.add_raw_templates(vec![
             ("macros.html", include_str!("../templates/macros.html")),
-            ("pai_assets.html", include_str!("../assets/pai_assets.html")),
+            ("pai.svg", include_str!("../assets/pai.svg")),
             ("report.html", include_str!("../templates/report.html")),
         ])
         .expect("failed to parse template");
-
-        tera.register_function("kyoku_to_string", kyoku_to_string);
 
         tera
     };
