@@ -5,6 +5,8 @@
 
 Review your Tenhou log with mahjong AI akochan.
 
+[Demo](https://gh.ekyu.moe/akochan-reviewer-demo.html)
+
 ## Build
 First of all, build [akochan of my fork](https://github.com/Equim-chan/akochan).
 
