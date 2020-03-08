@@ -112,12 +112,6 @@ fn main() -> Result<()> {
                 .help("Do not open the output file after finishing"),
         )
         .arg(
-            Arg::with_name("full")
-                .short("f")
-                .long("full")
-                .help("Review all moves, instead of just the different ones"),
-        )
-        .arg(
             Arg::with_name("akochan-dir")
                 .short("d")
                 .long("akochan-dir")
@@ -261,12 +255,10 @@ fn main() -> Result<()> {
 
     // do the review
     log!("start review...");
-    let is_full = matches.is_present("full");
     let reviews = review(
         akochan_exe,
         akochan_dir,
         tactics_config,
-        is_full,
         &events,
         actor,
     )

@@ -33,7 +33,6 @@ pub fn review<O, P>(
     akochan_exe: O,
     akochan_dir: P,
     tactics_config_path: O,
-    is_full: bool,
     events: &[Event],
     target_actor: u8,
 ) -> Result<Vec<KyokuReview>>
@@ -173,11 +172,10 @@ where
             };
 
         let actual_action = next_action_roughly(&events[(i + 1)..]);
-        if !is_full && compare_action(&actual_action, &expected_action, target_actor) {
+        if compare_action(&actual_action, &expected_action, target_actor) {
             continue;
         }
 
-        // TODO: properly filter [None]:[None] in full mode
         let actual_action_vec = next_action_exact(actual_action, target_actor);
         let (actor, pai) = match *event {
             Event::Dahai { actor, pai, .. } | Event::Tsumo { actor, pai, .. } => (actor, pai),
