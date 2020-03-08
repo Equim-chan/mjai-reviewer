@@ -231,6 +231,7 @@ fn main() -> Result<()> {
     };
 
     // parse tenhou log from reader
+    log!("parsing tenhou log...");
     let raw_log: tenhou::RawLog =
         serde_json::from_reader(log_reader).context("failed to parse tenhou log")?;
 
@@ -246,6 +247,7 @@ fn main() -> Result<()> {
     let log = tenhou::Log::from(raw_log);
 
     // convert from tenhou::Log to Vec<mjai::Event>
+    log!("converting to mjai events...");
     let events =
         convlog::tenhou_to_mjai(&log).context("failed to convert tenhou log into mjai format")?;
     if let Some(mjai_out_str) = mjai_out {
@@ -258,6 +260,7 @@ fn main() -> Result<()> {
     }
 
     // do the review
+    log!("start review...");
     let is_full = matches.is_present("full");
     let reviews = review(
         akochan_exe,
@@ -298,6 +301,7 @@ fn main() -> Result<()> {
     };
 
     // render the HTML report page
+    log!("rendering output...");
     if let Some(l) = cloned_raw_log {
         render(&mut out, &reviews, actor, Some(&l.split_by_kyoku()))
     } else {
@@ -317,5 +321,6 @@ fn main() -> Result<()> {
         }
     }
 
+    log!("done");
     Ok(())
 }
