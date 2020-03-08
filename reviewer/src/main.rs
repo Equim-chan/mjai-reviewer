@@ -255,14 +255,8 @@ fn main() -> Result<()> {
 
     // do the review
     log!("start review...");
-    let reviews = review(
-        akochan_exe,
-        akochan_dir,
-        tactics_config,
-        &events,
-        actor,
-    )
-    .context("failed to review log")?;
+    let reviews = review(akochan_exe, akochan_dir, tactics_config, &events, actor)
+        .context("failed to review log")?;
 
     // determine whether the file can be opened after writing
     let opanable_file = match out_file {
