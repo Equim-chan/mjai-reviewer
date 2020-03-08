@@ -7,6 +7,7 @@ use anyhow::{Context, Result};
 use clap::{App, Arg};
 use convlog::tenhou;
 use download::download_tenhou_log;
+use dunce::canonicalize;
 use opener;
 use render::render;
 use review::review;
@@ -159,7 +160,7 @@ fn main() -> Result<()> {
                 path
             });
 
-        path.canonicalize().context(format!(
+        canonicalize(&path).context(format!(
             "failed to canonicalize akochan_exe path {:?}",
             path
         ))?
@@ -174,7 +175,7 @@ fn main() -> Result<()> {
                 dir
             });
 
-        path.canonicalize().context(format!(
+        canonicalize(&path).context(format!(
             "failed to canonicalize akochan_dir path {:?}",
             path
         ))?
@@ -185,7 +186,7 @@ fn main() -> Result<()> {
             .map(PathBuf::from)
             .unwrap_or_else(|| "tactics.json".into());
 
-        path.canonicalize().context(format!(
+        canonicalize(&path).context(format!(
             "failed to canonicalize tactics_config path {:?}",
             path
         ))?

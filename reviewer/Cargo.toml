@@ -20,6 +20,7 @@ clap = "2.33"
 ureq = "0.11.4"
 tee = "0.1.0"
 opener = "0.4.1"
+dunce = "1"
 
 [build-dependencies]
 anyhow = "1.0"
