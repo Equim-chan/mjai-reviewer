@@ -318,13 +318,7 @@ fn main() -> Result<()> {
     // render the HTML report page
     log!("rendering output...");
     if let Some(l) = cloned_raw_log {
-        render(
-            &mut out,
-            &reviews,
-            actor,
-            &meta,
-            Some(&l.split_by_kyoku()),
-        )
+        render(&mut out, &reviews, actor, &meta, Some(&l.split_by_kyoku()))
     } else {
         render(&mut out, &reviews, actor, &meta, None)
     }
