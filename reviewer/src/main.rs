@@ -1,13 +1,16 @@
 mod download;
 mod log;
+mod metadata;
 mod render;
 mod review;
+mod tactics;
 
 use anyhow::{Context, Result};
 use clap::{App, Arg};
 use convlog::tenhou;
 use download::download_tenhou_log;
 use dunce::canonicalize;
+use metadata::Metadata;
 use opener;
 use render::render;
 use review::review;
@@ -18,6 +21,7 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use tactics::{Tactics, TacticsJson};
 use tee::TeeReader;
 
 static PKG_NAME: &str = env!("CARGO_PKG_NAME");
@@ -160,10 +164,8 @@ fn main() -> Result<()> {
                 path
             });
 
-        canonicalize(&path).context(format!(
-            "failed to canonicalize akochan_exe path {:?}",
-            path
-        ))?
+        canonicalize(&path)
+            .with_context(|| format!("failed to canonicalize akochan_exe path {:?}", path))?
     };
     let akochan_dir = {
         let path = matches
@@ -175,10 +177,8 @@ fn main() -> Result<()> {
                 dir
             });
 
-        canonicalize(&path).context(format!(
-            "failed to canonicalize akochan_dir path {:?}",
-            path
-        ))?
+        canonicalize(&path)
+            .with_context(|| format!("failed to canonicalize akochan_dir path {:?}", path))?
     };
     let tactics_config = {
         let path = matches
@@ -186,10 +186,17 @@ fn main() -> Result<()> {
             .map(PathBuf::from)
             .unwrap_or_else(|| "tactics.json".into());
 
-        canonicalize(&path).context(format!(
-            "failed to canonicalize tactics_config path {:?}",
-            path
-        ))?
+        canonicalize(&path)
+            .with_context(|| format!("failed to canonicalize tactics_config path {:?}", path))?
+    };
+
+    // load tactics_config for metadata
+    let tactics: Tactics = {
+        let f = File::open(&tactics_config)
+            .with_context(|| format!("failed to open tactics_config {:?}", tactics_config))?;
+        let j: TacticsJson = serde_json::from_reader(f)
+            .with_context(|| format!("failed to parse tactics_config {:?}", tactics_config))?;
+        j.tactics
     };
 
     // load other options
@@ -226,6 +233,7 @@ fn main() -> Result<()> {
     };
 
     // parse tenhou log from reader
+    let begin_parse_log = chrono::Local::now();
     log!("parsing tenhou log...");
     let raw_log: tenhou::RawLog =
         serde_json::from_reader(log_reader).context("failed to parse tenhou log")?;
@@ -242,6 +250,7 @@ fn main() -> Result<()> {
     let log = tenhou::Log::from(raw_log);
 
     // convert from tenhou::Log to Vec<mjai::Event>
+    let begin_convert_log = chrono::Local::now();
     log!("converting to mjai events...");
     let events =
         convlog::tenhou_to_mjai(&log).context("failed to convert tenhou log into mjai format")?;
@@ -251,11 +260,14 @@ fn main() -> Result<()> {
         for event in &events {
             serde_json::to_writer(&mut mjai_file, event)
                 .with_context(|| format!("failed to write to mjai out file {:?}", mjai_file))?;
+            writeln!(mjai_file)
+                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_file))?;
         }
     }
 
     // do the review
-    log!("start review...");
+    let begin_review = chrono::Local::now();
+    log!("start review, this may take serval minutes...");
     let reviews = review(akochan_exe, akochan_dir, tactics_config, &events, actor)
         .context("failed to review log")?;
 
@@ -287,12 +299,34 @@ fn main() -> Result<()> {
         Box::new(io::stdout())
     };
 
+    let now = chrono::Local::now();
+    let parse_time_us = (begin_convert_log - begin_parse_log)
+        .num_microseconds()
+        .unwrap_or(i64::max_value());
+    let convert_time_us = (begin_review - begin_convert_log)
+        .num_microseconds()
+        .unwrap_or(i64::max_value());
+    let review_time_ms = (now - begin_review).num_milliseconds();
+    let meta = Metadata {
+        now: &now.to_rfc3339(),
+        parse_time_us,
+        convert_time_us,
+        review_time_ms,
+        jun_pt: &tactics.jun_pt,
+    };
+
     // render the HTML report page
     log!("rendering output...");
     if let Some(l) = cloned_raw_log {
-        render(&mut out, &reviews, actor, Some(&l.split_by_kyoku()))
+        render(
+            &mut out,
+            &reviews,
+            actor,
+            &meta,
+            Some(&l.split_by_kyoku()),
+        )
     } else {
-        render(&mut out, &reviews, actor, None)
+        render(&mut out, &reviews, actor, &meta, None)
     }
     .context("failed to render HTML report")?;
 

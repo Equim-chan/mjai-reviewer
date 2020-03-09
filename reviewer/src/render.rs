@@ -1,3 +1,4 @@
+use super::metadata::Metadata;
 use super::review::KyokuReview;
 use anyhow::Result;
 use convlog::tenhou::RawPartialLog;
@@ -51,26 +52,29 @@ fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
 }
 
 #[derive(Serialize)]
-struct View<'a, 'b> {
+struct View<'a> {
+    kyokus: &'a [KyokuReview],
     target_actor: u8,
     #[serde(skip_serializing_if = "Option::is_none")]
     splited_logs: Option<&'a [RawPartialLog<'a>]>,
-    kyokus: &'b [KyokuReview],
+    metadata: &'a Metadata<'a>,
 }
 
 pub fn render<'a, W>(
     w: &mut W,
     reviews: &[KyokuReview],
     target_actor: u8,
+    metadata: &Metadata,
     splited_logs: Option<&'a [RawPartialLog<'a>]>,
 ) -> Result<()>
 where
     W: Write,
 {
     let view = View {
+        kyokus: reviews,
         target_actor,
         splited_logs,
-        kyokus: reviews,
+        metadata,
     };
 
     let ctx = Context::from_serialize(view)?;
