@@ -300,19 +300,16 @@ fn main() -> Result<()> {
     };
 
     let now = chrono::Local::now();
-    let parse_time_us = (begin_convert_log - begin_parse_log)
-        .num_microseconds()
-        .unwrap_or(i64::max_value());
-    let convert_time_us = (begin_review - begin_convert_log)
-        .num_microseconds()
-        .unwrap_or(i64::max_value());
-    let review_time_ms = (now - begin_review).num_milliseconds();
+    let parse_time = (begin_convert_log - begin_parse_log).to_std()?;
+    let convert_time = (begin_review - begin_convert_log).to_std()?;
+    let review_time = (now - begin_review).to_std()?;
     let meta = Metadata {
-        now: &now.to_rfc3339(),
-        parse_time_us,
-        convert_time_us,
-        review_time_ms,
         jun_pt: &tactics.jun_pt,
+        parse_time,
+        convert_time,
+        review_time,
+        now,
+        version: &format!("v{} ({})", PKG_VERSION, GIT_HASH),
     };
 
     // render the HTML report page
