@@ -93,18 +93,18 @@ fn main() -> Result<()> {
                 .help("Specify a Tenhou log ID to review, overriding --in-file. For example: 2019050417gm-0029-0000-4f2a8622"),
         )
         .arg(
-            Arg::with_name("download-out")
-                .long("download-out")
+            Arg::with_name("tenhou-out")
+                .long("tenhou-out")
                 .takes_value(true)
                 .value_name("FILE")
-                .help("Save the downloaded tenhou.net/6 format log to FILE when --tenhou-id is specified"),
+                .help("Save the downloaded tenhou.net/6 format log to FILE when --tenhou-id is specified. If FILE is \"-\", write to stdout"),
         )
         .arg(
             Arg::with_name("mjai-out")
                 .long("mjai-out")
                 .takes_value(true)
                 .value_name("FILE")
-                .help("Save the transformed mjai format log to FILE"),
+                .help("Save the transformed mjai format log to FILE. If FILE is \"-\", write to stdout"),
         )
         .arg(
             Arg::with_name("without-viewer")
@@ -115,6 +115,11 @@ fn main() -> Result<()> {
             Arg::with_name("no-open")
                 .long("no-open")
                 .help("Do not open the output file after finishing"),
+        )
+        .arg(
+            Arg::with_name("no-review")
+                .long("no-review")
+                .help("Do not review at all. Only download and save files"),
         )
         .arg(
             Arg::with_name("akochan-dir")
@@ -145,6 +150,90 @@ fn main() -> Result<()> {
     // get actor.
     // unwrap directly because it was already validated.
     let actor: u8 = matches.value_of("actor").unwrap().parse().unwrap();
+
+    // load io specific options
+    let in_file = matches.value_of_os("in-file");
+    let out_file = matches.value_of_os("out-file");
+    let tenhou_id = matches.value_of("tenhou-id");
+    let tenhou_out = matches.value_of_os("tenhou-out");
+    let mjai_out = matches.value_of_os("mjai-out");
+
+    // get log reader, can be from a file, from stdin, or from HTTP stream
+    let log_reader: Box<dyn Read> = {
+        if let Some(tenhou_id_str) = tenhou_id {
+            let log_stream = download_tenhou_log(tenhou_id_str)
+                .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id_str))?;
+
+            // handle --tenhou-out
+            if let Some(tenhou_str) = tenhou_out {
+                if tenhou_str != "-" {
+                    let tenhoufile = File::create(tenhou_str).with_context(|| {
+                        format!("failed to create download out file {:?}", tenhou_str)
+                    })?;
+                    Box::new(TeeReader::new(log_stream, tenhoufile))
+                } else {
+                    Box::new(TeeReader::new(log_stream, io::stdout()))
+                }
+            } else {
+                Box::new(log_stream)
+            }
+        } else {
+            match in_file {
+                Some(in_file_str) if in_file_str != "-" => {
+                    Box::new(File::open(in_file_str).with_context(|| {
+                        format!("failed to open tenhou log file {:?}", in_file_str)
+                    })?)
+                }
+                _ => Box::new(io::stdin()),
+            }
+        }
+    };
+
+    // parse tenhou log from reader
+    let begin_parse_log = chrono::Local::now();
+    log!("parsing tenhou log...");
+    let raw_log: tenhou::RawLog =
+        serde_json::from_reader(log_reader).context("failed to parse tenhou log")?;
+
+    // clone the parsed raw log for possible reuse (split)
+    let cloned_raw_log = if !matches.is_present("without-reviewer") {
+        Some(raw_log.clone())
+    } else {
+        None
+    };
+
+    // convert from RawLog to Log.
+    // it moves raw_log.
+    let log = tenhou::Log::from(raw_log);
+
+    // convert from tenhou::Log to Vec<mjai::Event>
+    let begin_convert_log = chrono::Local::now();
+    log!("converting to mjai events...");
+    let events =
+        convlog::tenhou_to_mjai(&log).context("failed to convert tenhou log into mjai format")?;
+
+    // handle --mjai-out
+    if let Some(mjai_out_str) = mjai_out {
+        let mut w: Box<dyn Write> =
+            if mjai_out_str != "-" {
+                Box::from(File::create(mjai_out_str).with_context(|| {
+                    format!("failed to create mjai out file {:?}", mjai_out_str)
+                })?)
+            } else {
+                Box::from(io::stdout())
+            };
+
+        for event in &events {
+            serde_json::to_writer(&mut w, event)
+                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out_str))?;
+            writeln!(w)
+                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out_str))?;
+        }
+    }
+
+    if matches.is_present("no-review") {
+        return Ok(());
+    }
 
     // get paths
     let akochan_exe = {
@@ -198,72 +287,6 @@ fn main() -> Result<()> {
             .with_context(|| format!("failed to parse tactics_config {:?}", tactics_config))?;
         j.tactics
     };
-
-    // load other options
-    let in_file = matches.value_of_os("in-file");
-    let out_file = matches.value_of_os("out-file");
-    let tenhou_id = matches.value_of("tenhou-id");
-    let download_out = matches.value_of_os("download-out");
-    let mjai_out = matches.value_of_os("mjai-out");
-
-    // get log reader, can be from a file, from stdin, or from HTTP stream
-    let log_reader: Box<dyn Read> = {
-        if let Some(tenhou_id_str) = tenhou_id {
-            let log_stream = download_tenhou_log(tenhou_id_str)
-                .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id_str))?;
-
-            if let Some(download_out_str) = download_out {
-                let download_out_file = File::create(download_out_str).with_context(|| {
-                    format!("failed to create download out file {:?}", download_out_str)
-                })?;
-                Box::new(TeeReader::new(log_stream, download_out_file))
-            } else {
-                Box::new(log_stream)
-            }
-        } else {
-            match in_file {
-                Some(in_file_str) if in_file_str != "-" => {
-                    Box::new(File::open(in_file_str).with_context(|| {
-                        format!("failed to open tenhou log file {:?}", in_file_str)
-                    })?)
-                }
-                _ => Box::new(io::stdin()),
-            }
-        }
-    };
-
-    // parse tenhou log from reader
-    let begin_parse_log = chrono::Local::now();
-    log!("parsing tenhou log...");
-    let raw_log: tenhou::RawLog =
-        serde_json::from_reader(log_reader).context("failed to parse tenhou log")?;
-
-    // clone the parsed raw log for possible reuse (split)
-    let cloned_raw_log = if !matches.is_present("without-reviewer") {
-        Some(raw_log.clone())
-    } else {
-        None
-    };
-
-    // convert from RawLog to Log.
-    // it moves raw_log.
-    let log = tenhou::Log::from(raw_log);
-
-    // convert from tenhou::Log to Vec<mjai::Event>
-    let begin_convert_log = chrono::Local::now();
-    log!("converting to mjai events...");
-    let events =
-        convlog::tenhou_to_mjai(&log).context("failed to convert tenhou log into mjai format")?;
-    if let Some(mjai_out_str) = mjai_out {
-        let mut mjai_file = File::create(mjai_out_str)
-            .with_context(|| format!("failed to create mjai out file {:?}", mjai_out_str))?;
-        for event in &events {
-            serde_json::to_writer(&mut mjai_file, event)
-                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_file))?;
-            writeln!(mjai_file)
-                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_file))?;
-        }
-    }
 
     // do the review
     let begin_review = chrono::Local::now();
