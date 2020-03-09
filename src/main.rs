@@ -82,7 +82,7 @@ fn main() -> Result<()> {
                 .long("out-file")
                 .takes_value(true)
                 .value_name("FILE")
-                .help("Specify the output file for generated HTML report. If FILE is \"-\" or empty, write to stdout"),
+                .help("Specify the output file for generated HTML report. If FILE is \"-\", write to stdout; if FILE is empty, write to \"{tenhou_id}&tw={actor}.html\" if --tenhou-id is specified, otherwise \"report.html\""),
         )
         .arg(
             Arg::with_name("tenhou-id")

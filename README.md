@@ -55,8 +55,9 @@ OPTIONS:
     -i, --in-file <FILE>           Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty, read from
                                    stdin
         --mjai-out <FILE>          Save the transformed mjai format log to FILE. If FILE is "-", write to stdout
-    -o, --out-file <FILE>          Specify the output file for generated HTML report. If FILE is "-" or empty, write to
-                                   stdout
+    -o, --out-file <FILE>          Specify the output file for generated HTML report. If FILE is "-", write to stdout;
+                                   if FILE is empty, write to "{tenhou_id}&tw={actor}.html" if --tenhou-id is specified,
+                                   otherwise "report.html"
     -c, --tactics-config <FILE>    Specify the tactics config file for akochan. Default value "tactics.json"
     -t, --tenhou-id <ID>           Specify a Tenhou log ID to review, overriding --in-file. For example: 2019050417gm-
                                    0029-0000-4f2a8622
