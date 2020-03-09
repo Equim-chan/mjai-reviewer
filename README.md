@@ -30,7 +30,7 @@ Then, build akochan-reviewer
 $ cd ..
 $ git clone https://github.com/Equim-chan/akochan-reviewer.git
 $ export RUSTFLAGS="-C target-cpu=native" # optional
-$ cargo build --bin akochan-reviewer --release
+$ cargo build --release
 ```
 
 `akochan-reviewer` binary will be in `target/release` directory.
