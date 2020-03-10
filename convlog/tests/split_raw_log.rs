@@ -1,8 +1,9 @@
 mod testdata;
 
 use convlog::*;
-use serde_json;
 use testdata::TESTDATA;
+
+use serde_json;
 
 #[test]
 fn test_split_by_kyoku() {

@@ -1,7 +1,9 @@
 use super::mjai;
 use super::tenhou;
 use super::Pai;
+
 use std::str;
+
 use thiserror::Error;
 
 #[derive(Debug, Error)]

@@ -1,9 +1,10 @@
-use lazy_static::lazy_static;
-use serde::ser::SerializeSeq;
-use serde::{Deserialize, Serialize, Serializer};
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fmt;
+
+use lazy_static::lazy_static;
+use serde::ser::SerializeSeq;
+use serde::{Deserialize, Serialize, Serializer};
 
 /// Describes a pai in tenhou.net/6 format.
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize)]

@@ -1,6 +1,7 @@
+use std::time::Duration;
+
 use chrono::{DateTime, Local};
 use serde::{Serialize, Serializer};
-use std::time::Duration;
 
 #[derive(Serialize)]
 pub struct Metadata<'a> {

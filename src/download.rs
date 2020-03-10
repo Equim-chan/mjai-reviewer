@@ -1,6 +1,7 @@
+use std::io::prelude::*;
+
 use anyhow::anyhow;
 use anyhow::Result;
-use std::io::prelude::*;
 use ureq;
 
 pub fn download_tenhou_log(log_id: &str) -> Result<impl Read> {

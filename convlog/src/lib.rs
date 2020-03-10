@@ -6,5 +6,6 @@ pub mod mjai;
 pub mod pai;
 pub mod tenhou;
 
-pub use conv::{tenhou_to_mjai, ConvertError};
+pub use conv::tenhou_to_mjai;
+pub use conv::ConvertError;
 pub use pai::Pai;

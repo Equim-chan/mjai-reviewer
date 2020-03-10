@@ -1,12 +1,14 @@
 use super::metadata::Metadata;
 use super::review::KyokuReview;
+
+use std::collections::HashMap;
+use std::convert::TryFrom;
+use std::io::prelude::*;
+
 use anyhow::Result;
 use convlog::tenhou::RawPartialLog;
 use lazy_static::lazy_static;
 use serde::Serialize;
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::io::prelude::*;
 use tera;
 use tera::{Context, Tera, Value};
 
