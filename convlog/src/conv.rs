@@ -127,19 +127,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
         // check if the kyoku ends here, can be ryukyoku (九種九牌) or tsumo.
         // here it simply checks if there is no more discard for current actor.
         if discard_events[actor].peek().is_none() {
-            match kyoku.end_status {
-                tenhou::kyoku::EndStatus::Hora => {
-                    events.push(mjai::Event::Hora {
-                        actor: actor as u8,
-                        target: actor as u8,
-                    });
-                }
-                tenhou::kyoku::EndStatus::Ryukyoku => {
-                    events.push(mjai::Event::Ryukyoku);
-                }
-            }
-
-            events.push(mjai::Event::EndKyoku);
+            end_kyoku(events, kyoku);
             break;
         }
 
@@ -196,21 +184,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
         // check if the kyoku ends here, can be ryukyoku or ron.
         // here it simply checks if there is no more take for every single actor.
         if (0..4).all(|i| take_events[i].peek().is_none()) {
-            match kyoku.end_status {
-                tenhou::kyoku::EndStatus::Hora => {
-                    for hora in &kyoku.hora_status {
-                        events.push(mjai::Event::Hora {
-                            actor: hora.who,
-                            target: hora.target,
-                        });
-                    }
-                }
-                tenhou::kyoku::EndStatus::Ryukyoku => {
-                    events.push(mjai::Event::Ryukyoku);
-                }
-            }
-
-            events.push(mjai::Event::EndKyoku);
+            end_kyoku(events, kyoku);
             break;
         }
 
@@ -502,6 +476,26 @@ fn discard_action_to_events(
     }
 
     Ok(ret)
+}
+
+fn end_kyoku(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) {
+    match &kyoku.end_status {
+        tenhou::kyoku::EndStatus::Hora { details } => {
+            events.extend(details.iter().map(|detail| mjai::Event::Hora {
+                actor: detail.who,
+                target: detail.target,
+                deltas: Some(detail.score_deltas),
+            }));
+        }
+
+        tenhou::kyoku::EndStatus::Ryukyoku { score_deltas } => {
+            events.push(mjai::Event::Ryukyoku {
+                deltas: Some(*score_deltas),
+            });
+        }
+    };
+
+    events.push(mjai::Event::EndKyoku);
 }
 
 #[inline]

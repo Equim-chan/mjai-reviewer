@@ -89,8 +89,18 @@ pub enum Event {
     Hora {
         actor: u8,
         target: u8,
+
+        // it is an Option because akochan won't send this field, but we need to
+        // record the field.
+        #[serde(default)]
+        #[serde(skip_serializing_if = "Option::is_none")]
+        deltas: Option<[i32; 4]>,
     },
-    Ryukyoku,
+    Ryukyoku {
+        #[serde(default)]
+        #[serde(skip_serializing_if = "Option::is_none")]
+        deltas: Option<[i32; 4]>,
+    },
 
     EndKyoku,
     EndGame,
@@ -186,8 +196,4 @@ impl Event {
             _ => None,
         }
     }
-
-    // #[inline]
-    // pub fn naki_pai(&self) -> Option<Pai> {
-    // }
 }

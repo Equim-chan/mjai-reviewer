@@ -17,6 +17,7 @@ use serde_json;
 pub struct KyokuReview {
     pub kyoku: u8, // in tenhou.net/6 format, counts from 0
     pub honba: u8,
+    pub end_status: Vec<Event>, // must be either multiple Horas or one Ryukyoku
 
     pub entries: Vec<Entry>,
 }
@@ -114,6 +115,11 @@ where
                 kyoku_review = KyokuReview::default();
 
                 junme = 0;
+                continue;
+            }
+
+            Event::Hora { .. } | Event::Ryukyoku { .. } => {
+                kyoku_review.end_status.push(event.clone());
                 continue;
             }
 
@@ -272,7 +278,7 @@ fn compare_action(actual_action: &[Event], expected_action: &[Event], target_act
         Event::Dahai { pai, .. } => {
             match *actual {
                 // ignore 九種九牌
-                Event::Ryukyoku => true,
+                Event::Ryukyoku { .. } => true,
 
                 // ignore the difference of tsumogiri
                 Event::Dahai {
@@ -286,7 +292,7 @@ fn compare_action(actual_action: &[Event], expected_action: &[Event], target_act
         Event::Ankan { consumed, .. } => {
             match *actual {
                 // ignore 九種九牌
-                Event::Ryukyoku => true,
+                Event::Ryukyoku { .. } => true,
 
                 Event::Ankan {
                     consumed: actual_consumed,
@@ -330,7 +336,7 @@ fn compare_action(actual_action: &[Event], expected_action: &[Event], target_act
         Event::Chi { consumed, .. } => {
             let naki_part_matches = match *actual {
                 // ignore 九種九牌
-                Event::Ryukyoku => true,
+                Event::Ryukyoku { .. } => true,
 
                 Event::Tsumo { .. } => false,
 
@@ -368,7 +374,7 @@ fn compare_action(actual_action: &[Event], expected_action: &[Event], target_act
         Event::Pon { consumed, .. } => {
             let naki_part_matches = match *actual {
                 // ignore 九種九牌
-                Event::Ryukyoku => true,
+                Event::Ryukyoku { .. } => true,
 
                 Event::Tsumo { .. } => false,
 
@@ -406,7 +412,7 @@ fn compare_action(actual_action: &[Event], expected_action: &[Event], target_act
         Event::Daiminkan { .. } => {
             match actual {
                 // ignore 九種九牌
-                Event::Ryukyoku => true,
+                Event::Ryukyoku { .. } => true,
 
                 Event::Tsumo { .. } => false,
 
@@ -434,7 +440,7 @@ fn compare_action(actual_action: &[Event], expected_action: &[Event], target_act
         Event::None => {
             match actual {
                 // ignore 九種九牌
-                Event::Ryukyoku => true,
+                Event::Ryukyoku { .. } => true,
 
                 Event::Tsumo { .. } => true,
 

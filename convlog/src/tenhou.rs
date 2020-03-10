@@ -29,8 +29,6 @@ pub struct Kyoku {
     pub ura_indicators: Vec<Pai>,
     pub action_tables: [ActionTable; 4],
     pub end_status: kyoku::EndStatus,
-    pub hora_status: Vec<kyoku::HoraDetail>,
-    pub score_deltas: [i32; 4],
 }
 
 pub mod kyoku {
@@ -43,16 +41,17 @@ pub mod kyoku {
         pub kyotaku: u8,
     }
 
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone)]
     pub enum EndStatus {
-        Hora,
-        Ryukyoku,
+        Hora { details: Vec<HoraDetail> },
+        Ryukyoku { score_deltas: [i32; 4] },
     }
 
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone, Default)]
     pub struct HoraDetail {
         pub who: u8,
         pub target: u8,
+        pub score_deltas: [i32; 4],
     }
 }
 
@@ -238,35 +237,47 @@ impl From<RawLog> for Log {
                             discards: log.discards_3,
                         },
                     ],
-                    end_status: kyoku::EndStatus::Ryukyoku,
-                    hora_status: vec![],
-                    score_deltas: [0, 0, 0, 0],
+                    end_status: kyoku::EndStatus::Ryukyoku {
+                        score_deltas: [0; 4], // default
+                    },
                 };
 
                 if let Some(status) = log.results.get(0) {
                     if let json_scheme::ResultItem::Status(status_text) = status {
                         if status_text == "和了" {
-                            item.end_status = kyoku::EndStatus::Hora;
+                            let mut hora_details = vec![];
 
-                            // for multile hora, sum the deltas together
-                            log.results.iter().skip(1).step_by(2).for_each(|data| {
-                                if let json_scheme::ResultItem::ScoreDeltas(score_deltas) = data {
-                                    item.score_deltas
-                                        .iter_mut()
-                                        .zip(score_deltas)
-                                        .for_each(|(a, &b)| *a += b);
-                                }
-                            });
+                            for detail_tuple in log.results[1..].chunks(2) {
+                                let mut hora_detail = kyoku::HoraDetail::default();
 
-                            // process hora (can be multiple)
-                            log.results.iter().skip(2).step_by(2).for_each(|data| {
-                                if let json_scheme::ResultItem::HoraDetail(hora_detail) = data {
-                                    item.hora_status.push(kyoku::HoraDetail {
-                                        who: hora_detail[0].as_u64().unwrap_or(0) as u8,
-                                        target: hora_detail[1].as_u64().unwrap_or(0) as u8,
-                                    });
+                                if let json_scheme::ResultItem::ScoreDeltas(score_deltas) =
+                                    detail_tuple[0]
+                                {
+                                    hora_detail.score_deltas = score_deltas;
                                 }
-                            });
+
+                                if let json_scheme::ResultItem::HoraDetail(who_target) =
+                                    &detail_tuple[1]
+                                {
+                                    hora_detail.who = who_target[0].as_u64().unwrap_or(0) as u8;
+                                    hora_detail.target = who_target[1].as_u64().unwrap_or(0) as u8;
+                                }
+
+                                hora_details.push(hora_detail);
+                            }
+
+                            item.end_status = kyoku::EndStatus::Hora {
+                                details: hora_details,
+                            };
+                        } else {
+                            let score_deltas =
+                                if let json_scheme::ResultItem::ScoreDeltas(dts) = log.results[1] {
+                                    dts
+                                } else {
+                                    [0; 4]
+                                };
+
+                            item.end_status = kyoku::EndStatus::Ryukyoku { score_deltas };
                         }
                     }
                 }
