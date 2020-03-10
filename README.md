@@ -65,6 +65,24 @@ OPTIONS:
                                    FILE is "-", write to stdout
 ```
 
+## Docker
+
+build:
+
+```console
+$ git clone https://github.com/Equim-chan/akochan-reviewer.git
+$ cd akochan-reviewer
+$ git clone https://github.com/Equim-chan/akochan.git
+$ docker build -t akochan-reviewer:latest .
+```
+
+usage:
+
+```console
+$ docker run --rm akochan-reviewer:latest --no-open -t 2019050417gm-0029-0000-4f2a8622 -a 3 -o - > report.html
+$ open report.html  # or just open in browser
+```
+
 ## Acknowledgment
 * [critter](https://twitter.com/critter_Eng): The creater of akochan, who also proposed many advise and gave help to the development of akochan-reviewer.
 
