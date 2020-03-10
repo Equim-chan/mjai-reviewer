@@ -1,4 +1,5 @@
-use crate::log;
+use super::log;
+use super::state::State;
 
 use std::ffi::OsStr;
 use std::io::prelude::*;
@@ -27,6 +28,7 @@ pub struct Entry {
     pub junme: u8,
     pub actor: u8,
     pub pai: Pai,
+    pub state: State,
 
     pub expected: Vec<Event>, // at most 2 events
     pub actual: Vec<Event>,   // at most 2 events
@@ -81,6 +83,7 @@ where
     )
     .lines();
 
+    let mut state = State::new(target_actor);
     let mut junme = 0;
     let mut kyoku_review = KyokuReview::default();
     let mut entries = vec![];
@@ -91,6 +94,9 @@ where
             .write_all(to_write.as_bytes())
             .context("failed to write to akochan")?;
         log!("> {}", to_write.trim());
+
+        // upate the state
+        state.update(event);
 
         // this match does two things:
         // 1. setting board metadata like bakaze, kyoku, honba, junme
@@ -199,6 +205,7 @@ where
             junme,
             actor,
             pai,
+            state: state.clone(),
             expected: expected_action,
             actual: actual_action_vec,
         };

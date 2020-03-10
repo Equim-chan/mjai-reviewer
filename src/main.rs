@@ -3,7 +3,9 @@ mod log;
 mod metadata;
 mod render;
 mod review;
+mod state;
 mod tactics;
+mod tehai;
 
 use download::download_tenhou_log;
 use metadata::Metadata;
