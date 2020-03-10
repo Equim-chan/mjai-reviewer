@@ -5,24 +5,31 @@ mod render;
 mod review;
 mod tactics;
 
-use anyhow::{Context, Result};
-use clap::{App, Arg};
-use convlog::tenhou;
 use download::download_tenhou_log;
-use dunce::canonicalize;
 use metadata::Metadata;
-use opener;
 use render::render;
 use review::review;
-use serde_json;
+use tactics::TacticsJson;
+
 use std::env;
 use std::ffi::OsString;
+use std::fs::remove_file;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
+use std::io::BufReader;
 use std::path::PathBuf;
-use tactics::{Tactics, TacticsJson};
+use std::result::Result as StdResult;
+
+use anyhow::{Context, Result};
+use clap::value_t_or_exit;
+use clap::{App, Arg};
+use convlog::tenhou;
+use dunce::canonicalize;
+use opener;
+use serde_json;
 use tee::TeeReader;
+use tempfile::NamedTempFile;
 
 static PKG_NAME: &str = env!("CARGO_PKG_NAME");
 static PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -66,7 +73,10 @@ fn main() -> Result<()> {
                         Ok(())
                     }
                 })
-                .help("Specify the actor to review"),
+                .help(
+                    "Specify the actor to review. \
+                    It is the number after \"&tw=\" in tenhou's log url",
+                ),
         )
         .arg(
             Arg::with_name("in-file")
@@ -74,7 +84,10 @@ fn main() -> Result<()> {
                 .long("in-file")
                 .takes_value(true)
                 .value_name("FILE")
-                .help("Specify a tenhou.net/6 format log file to review. If FILE is \"-\" or empty, read from stdin"),
+                .help(
+                    "Specify a tenhou.net/6 format log file to review. \
+                    If FILE is \"-\" or empty, read from stdin",
+                ),
         )
         .arg(
             Arg::with_name("out-file")
@@ -82,7 +95,12 @@ fn main() -> Result<()> {
                 .long("out-file")
                 .takes_value(true)
                 .value_name("FILE")
-                .help("Specify the output file for generated HTML report. If FILE is \"-\", write to stdout; if FILE is empty, write to \"{tenhou_id}&tw={actor}.html\" if --tenhou-id is specified, otherwise \"report.html\""),
+                .help(
+                    "Specify the output file for generated HTML report. \
+                    If FILE is \"-\", write to stdout; \
+                    if FILE is empty, write to \"{tenhou_id}&tw={actor}.html\" \
+                    if --tenhou-id is specified, otherwise \"report.html\"",
+                ),
         )
         .arg(
             Arg::with_name("tenhou-id")
@@ -90,21 +108,31 @@ fn main() -> Result<()> {
                 .long("tenhou-id")
                 .takes_value(true)
                 .value_name("ID")
-                .help("Specify a Tenhou log ID to review, overriding --in-file. For example: 2019050417gm-0029-0000-4f2a8622"),
+                .help(
+                    "Specify a Tenhou log ID to review, overriding --in-file. \
+                    Example: \"2019050417gm-0029-0000-4f2a8622\"",
+                ),
         )
         .arg(
             Arg::with_name("tenhou-out")
                 .long("tenhou-out")
                 .takes_value(true)
                 .value_name("FILE")
-                .help("Save the downloaded tenhou.net/6 format log to FILE when --tenhou-id is specified. If FILE is \"-\", write to stdout"),
+                .help(
+                    "Save the downloaded tenhou.net/6 format log to FILE \
+                    when --tenhou-id is specified. \
+                    If FILE is \"-\", write to stdout",
+                ),
         )
         .arg(
             Arg::with_name("mjai-out")
                 .long("mjai-out")
                 .takes_value(true)
                 .value_name("FILE")
-                .help("Save the transformed mjai format log to FILE. If FILE is \"-\", write to stdout"),
+                .help(
+                    "Save the transformed mjai format log to FILE. \
+                    If FILE is \"-\", write to stdout",
+                ),
         )
         .arg(
             Arg::with_name("without-viewer")
@@ -127,7 +155,11 @@ fn main() -> Result<()> {
                 .long("akochan-dir")
                 .takes_value(true)
                 .value_name("DIR")
-                .help("Specify the directory of akochan. This will serves as the working directory of akochan process. Default value is the directory in which --akochan-exe is specified"),
+                .help(
+                    "Specify the directory of akochan. \
+                    This will serves as the working directory of akochan process. \
+                    Default value is the directory in which --akochan-exe is specified",
+                ),
         )
         .arg(
             Arg::with_name("akochan-exe")
@@ -135,7 +167,10 @@ fn main() -> Result<()> {
                 .long("akochan-exe")
                 .takes_value(true)
                 .value_name("EXE")
-                .help("Specify the executable file of akochan. Default value \"akochan/system.exe\""),
+                .help(
+                    "Specify the executable file of akochan. \
+                    Default value \"akochan/system.exe\"",
+                ),
         )
         .arg(
             Arg::with_name("tactics-config")
@@ -143,34 +178,61 @@ fn main() -> Result<()> {
                 .long("tactics-config")
                 .takes_value(true)
                 .value_name("FILE")
-                .help("Specify the tactics config file for akochan. Default value \"tactics.json\""),
+                .help(
+                    "Specify the tactics config file for akochan. \
+                    Default value \"tactics.json\"",
+                ),
+        )
+        .arg(
+            Arg::with_name("jun-pt")
+                .long("jun-pt")
+                .takes_value(true)
+                .value_name("ARRAY")
+                .validator(|v| {
+                    let arr = v
+                        .split(',')
+                        .map(|p| {
+                            p.parse::<i32>()
+                                .map_err(|err| format!("jun_pt element must be a number: {}", err))
+                        })
+                        .collect::<Vec<StdResult<_, String>>>();
+
+                    if arr.len() != 4 {
+                        Err("jun_pt must have exactly 4 elements".to_owned())
+                    } else {
+                        Ok(())
+                    }
+                })
+                .help(
+                    "Shortcut to override \"jun_pt\" in --tactics-config. \
+                    Format: \"90,45,0,-135\"",
+                ),
         )
         .get_matches();
 
-    // get actor.
-    // unwrap directly because it was already validated.
-    let actor: u8 = matches.value_of("actor").unwrap().parse().unwrap();
+    // get actor
+    let actor: u8 = value_t_or_exit!(matches, "actor", u8);
 
     // load io specific options
-    let in_file = matches.value_of_os("in-file");
-    let out_file = matches.value_of_os("out-file");
-    let tenhou_id = matches.value_of("tenhou-id");
-    let tenhou_out = matches.value_of_os("tenhou-out");
-    let mjai_out = matches.value_of_os("mjai-out");
+    let arg_in_file = matches.value_of_os("in-file");
+    let arg_out_file = matches.value_of_os("out-file");
+    let arg_tenhou_id = matches.value_of("tenhou-id");
+    let arg_tenhou_out = matches.value_of_os("tenhou-out");
+    let arg_mjai_out = matches.value_of_os("mjai-out");
 
     // get log reader, can be from a file, from stdin, or from HTTP stream
     let log_reader: Box<dyn Read> = {
-        if let Some(tenhou_id_str) = tenhou_id {
-            let log_stream = download_tenhou_log(tenhou_id_str)
-                .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id_str))?;
+        if let Some(tenhou_id) = arg_tenhou_id {
+            let log_stream = download_tenhou_log(tenhou_id)
+                .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id))?;
 
             // handle --tenhou-out
-            if let Some(tenhou_str) = tenhou_out {
-                if tenhou_str != "-" {
-                    let tenhoufile = File::create(tenhou_str).with_context(|| {
-                        format!("failed to create download out file {:?}", tenhou_str)
+            if let Some(tenhou_out) = arg_tenhou_out {
+                if tenhou_out != "-" {
+                    let tenhou_out_file = File::create(tenhou_out).with_context(|| {
+                        format!("failed to create download out file {:?}", tenhou_out)
                     })?;
-                    Box::new(TeeReader::new(log_stream, tenhoufile))
+                    Box::new(TeeReader::new(log_stream, tenhou_out_file))
                 } else {
                     Box::new(TeeReader::new(log_stream, io::stdout()))
                 }
@@ -178,11 +240,14 @@ fn main() -> Result<()> {
                 Box::new(log_stream)
             }
         } else {
-            match in_file {
-                Some(in_file_str) if in_file_str != "-" => {
-                    Box::new(File::open(in_file_str).with_context(|| {
-                        format!("failed to open tenhou log file {:?}", in_file_str)
-                    })?)
+            match arg_in_file {
+                Some(in_file_path) if in_file_path != "-" => {
+                    let in_file = File::open(in_file_path).with_context(|| {
+                        format!("failed to open tenhou log file {:?}", in_file_path)
+                    })?;
+                    let in_file_reader = BufReader::new(in_file);
+
+                    Box::new(in_file_reader)
                 }
                 _ => Box::new(io::stdin()),
             }
@@ -213,21 +278,20 @@ fn main() -> Result<()> {
         convlog::tenhou_to_mjai(&log).context("failed to convert tenhou log into mjai format")?;
 
     // handle --mjai-out
-    if let Some(mjai_out_str) = mjai_out {
-        let mut w: Box<dyn Write> =
-            if mjai_out_str != "-" {
-                Box::from(File::create(mjai_out_str).with_context(|| {
-                    format!("failed to create mjai out file {:?}", mjai_out_str)
-                })?)
-            } else {
-                Box::from(io::stdout())
-            };
+    if let Some(mjai_out) = arg_mjai_out {
+        let mut w: Box<dyn Write> = if mjai_out != "-" {
+            let mjai_out_file = File::create(mjai_out)
+                .with_context(|| format!("failed to create mjai out file {:?}", mjai_out))?;
+            Box::from(mjai_out_file)
+        } else {
+            Box::from(io::stdout())
+        };
 
         for event in &events {
             serde_json::to_writer(&mut w, event)
-                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out_str))?;
+                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out))?;
             writeln!(w)
-                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out_str))?;
+                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out))?;
         }
     }
 
@@ -269,43 +333,79 @@ fn main() -> Result<()> {
         canonicalize(&path)
             .with_context(|| format!("failed to canonicalize akochan_dir path {:?}", path))?
     };
-    let tactics_config = {
+    let (tactics_file_path, tactics) = {
         let path = matches
             .value_of_os("tactics-config")
             .map(PathBuf::from)
             .unwrap_or_else(|| "tactics.json".into());
 
-        canonicalize(&path)
-            .with_context(|| format!("failed to canonicalize tactics_config path {:?}", path))?
-    };
+        let canon_path = canonicalize(&path)
+            .with_context(|| format!("failed to canonicalize tactics_config path {:?}", path))?;
 
-    // load tactics_config for metadata
-    let tactics: Tactics = {
-        let f = File::open(&tactics_config)
-            .with_context(|| format!("failed to open tactics_config {:?}", tactics_config))?;
-        let j: TacticsJson = serde_json::from_reader(f)
-            .with_context(|| format!("failed to parse tactics_config {:?}", tactics_config))?;
-        j.tactics
+        // load tactics_config for metadata
+        let tactics_file = File::open(&canon_path)
+            .with_context(|| format!("failed to open tactics_config {:?}", canon_path))?;
+        let tactics_file_reader = BufReader::new(tactics_file);
+
+        let mut tactics_json: TacticsJson = serde_json::from_reader(tactics_file_reader)
+            .with_context(|| format!("failed to parse tactics_config {:?}", canon_path))?;
+
+        // opt-in jun_pt
+        if let Some(jun_pt) = matches.value_of("jun-pt") {
+            tactics_json
+                .tactics
+                .jun_pt
+                .iter_mut()
+                .zip(jun_pt.split(',').map(|p| p.parse::<i32>().unwrap()))
+                .for_each(|(o, n)| *o = n);
+
+            let mut tmp = NamedTempFile::new().context("failed to create temp file")?;
+            serde_json::to_writer(&mut tmp, &tactics_json)
+                .context("failed to write to temp file")?;
+
+            let tmp_path = tmp
+                .into_temp_path()
+                .keep()
+                .context("failed to keep temp file")?;
+            let canon_tmp_path = canonicalize(&tmp_path)
+                .with_context(|| format!("failed to canonicalize temp file path {:?}", tmp_path))?;
+
+            (canon_tmp_path, tactics_json.tactics)
+        } else {
+            (canon_path, tactics_json.tactics)
+        }
     };
 
     // do the review
     let begin_review = chrono::Local::now();
     log!("start review, this may take serval minutes...");
-    let reviews = review(akochan_exe, akochan_dir, tactics_config, &events, actor)
-        .context("failed to review log")?;
+    let reviews = review(
+        &akochan_exe,
+        &akochan_dir,
+        &tactics_file_path,
+        &events,
+        actor,
+    )
+    .context("failed to review log")?;
+
+    // clean up
+    if matches.is_present("jun-pt") {
+        remove_file(&tactics_file_path)
+            .with_context(|| format!("failed to clean up temp file {:?}", tactics_file_path))?;
+    }
 
     // determine whether the file can be opened after writing
-    let opanable_file = match out_file {
-        Some(out_file_str) => {
-            if out_file_str != "-" {
-                Some(out_file_str.to_owned())
+    let opanable_file = match arg_out_file {
+        Some(out_file_path) => {
+            if out_file_path != "-" {
+                Some(out_file_path.to_owned())
             } else {
                 None
             }
         }
         _ => {
-            if let Some(id) = tenhou_id {
-                Some(OsString::from(format!("{}&tw={}.html", id, actor)))
+            if let Some(tenhou_id) = arg_tenhou_id {
+                Some(OsString::from(format!("{}&tw={}.html", tenhou_id, actor)))
             } else {
                 Some(OsString::from("report.html"))
             }
@@ -313,11 +413,10 @@ fn main() -> Result<()> {
     };
 
     // prepare output, can be a file or stdout
-    let mut out: Box<dyn Write> = if let Some(out_file_str) = &opanable_file {
-        Box::new(
-            File::create(out_file_str)
-                .with_context(|| format!("failed to create HTML report file {:?}", out_file_str))?,
-        )
+    let mut out: Box<dyn Write> = if let Some(out_file_path) = &opanable_file {
+        let out_file = File::create(out_file_path)
+            .with_context(|| format!("failed to create HTML report file {:?}", out_file_path))?;
+        Box::new(out_file)
     } else {
         Box::new(io::stdout())
     };
@@ -346,11 +445,11 @@ fn main() -> Result<()> {
 
     // open the output page
     if !matches.is_present("no-open") {
-        if let Some(out_file_str) = &opanable_file {
-            opener::open(out_file_str).with_context(|| {
+        if let Some(out_file_path) = &opanable_file {
+            opener::open(out_file_path).with_context(|| {
                 format!(
                     "failed to open rendered HTML report file {:?}",
-                    out_file_str
+                    out_file_path
                 )
             })?;
         }
