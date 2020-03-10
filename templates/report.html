@@ -43,6 +43,9 @@
       </h1>
     </a>
 
+    {# TODO: render these #}
+    <pre>{{ item.end_status | json_encode() }}</pre>
+
     {% if splited_logs is defined %}
       <div class="sticky" style="z-index: {{ 10 + loop.index0 }}">
         <details open class="collapse">
@@ -63,6 +66,9 @@
       <details open class="collapse">
         <summary>{{ entry.junme }} 巡</summary>
         <p>
+          {# TODO: render these #}
+          <pre>{{ entry.state | json_encode() }}</pre>
+
           {% if entry.actor == target_actor %}
             自家が{{ macros::render_pai(pai=entry.pai) }}を引いた時——
           {% else %}
