@@ -5,12 +5,12 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::io::prelude::*;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use convlog::tenhou::RawPartialLog;
 use lazy_static::lazy_static;
 use serde::Serialize;
 use tera;
-use tera::{Context, Tera, Value};
+use tera::{Tera, Value};
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -79,8 +79,14 @@ where
         metadata,
     };
 
-    let ctx = Context::from_serialize(view)?;
-    let result = TEMPLATES.render("report.html", &ctx)?;
+    let ctx = tera::Context::from_serialize(&view)?;
+    let result =
+        TEMPLATES.render("report.html", &ctx).with_context(|| {
+            match serde_json::to_string(&view) {
+                Ok(json_string) => format!("with values: {}", json_string),
+                Err(err) => format!("even serializations failed: {}", err),
+            }
+        })?;
     w.write_all(&result.as_bytes())?;
 
     Ok(())
