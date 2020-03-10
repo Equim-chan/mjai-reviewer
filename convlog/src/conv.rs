@@ -51,13 +51,13 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
     // first of all, transform all takes and discards to events.
     let mut take_events: Vec<_> = (0..4)
         .map(|i| {
-            take_action_to_events(i, &kyoku.action_tables[usize::from(i)].takes)
+            take_action_to_events(i, &kyoku.action_tables[i as usize].takes)
                 .map(|ev| ev.into_iter().peekable())
         })
         .collect::<Result<Vec<_>>>()?;
     let mut discard_events: Vec<_> = (0..4)
         .map(|i| {
-            discard_action_to_events(i, &kyoku.action_tables[usize::from(i)].discards)
+            discard_action_to_events(i, &kyoku.action_tables[i as usize].discards)
                 .map(|ev| ev.into_iter().peekable())
         })
         .collect::<Result<Vec<_>>>()?;
@@ -91,7 +91,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
         ],
     });
 
-    let mut actor = usize::from(oya);
+    let mut actor = oya as usize;
     loop {
         // start to process a take event.
         let take = take_events[actor]
