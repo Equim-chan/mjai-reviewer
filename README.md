@@ -1,39 +1,14 @@
 # akochan-reviewer
 
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Equim-chan/akochan-reviewer/Rust)](https://github.com/Equim-chan/akochan-reviewer/actions)
-[![LICENSE](https://img.shields.io/github/license/Equim-chan/akochan-reviewer.svg)](https://github.com/Equim-chan/akochan-reviewer/blob/master/LICENSE)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Equim-chan/akochan-reviewer)
+[![License](https://img.shields.io/github/license/Equim-chan/akochan-reviewer)](https://github.com/Equim-chan/akochan-reviewer/blob/master/LICENSE)
 
 Review your Tenhou log with mahjong AI akochan.
 
-[Demo](https://gh.ekyu.moe/akochan-reviewer-demo.html)
+[demo](https://gh.ekyu.moe/akochan-reviewer-demo.html)
 
-## Build
-First of all, build [akochan of my fork](https://github.com/Equim-chan/akochan).
-
-```console
-$ git clone https://github.com/Equim-chan/akochan.git
-$ cd akochan
-```
-
-You have to edit `Makefile` and `ai_src/Makfefile` accordingly. Set up correct path for boost and some other options like `-march=native` of your choice.
-
-```console
-$ cd ai_src
-$ make ai.dll # or libai.so
-$ cd ..
-$ make system.exe
-```
-
-Then, build akochan-reviewer
-
-```console
-$ cd ..
-$ git clone https://github.com/Equim-chan/akochan-reviewer.git
-$ export RUSTFLAGS="-C target-cpu=native" # optional
-$ cargo build --release
-```
-
-`akochan-reviewer` binary will be in `target/release` directory.
+**This tool is still in early stages. There are still lots of features to be implemented, and breaking changes may be made at anytime. Suggestions and contributions are welcome. 日本語もおｋ.**
 
 ## Usage
 ```plain
@@ -65,10 +40,91 @@ OPTIONS:
                                    FILE is "-", write to stdout
 ```
 
+## Build
+### Build akochan
+First of all, build [akochan of my fork](https://github.com/Equim-chan/akochan).
+
+```console
+$ git clone https://github.com/Equim-chan/akochan.git
+$ cd akochan
+```
+
+You have to edit `Makefile` and `ai_src/Makfefile` accordingly. Set up correct path for boost and some other options like `-march=native` of your choice.
+
+#### On Windows MSYS2 with MinGW-w64 toolchain
+```console
+$ pacman -Syu mingw-w64-x86_64-{toolchain,boost}
+```
+
+Edit `Makefile`:
+
+```Makefile
+LIBS = -L/mingw64/lib/boost -lws2_32 -L./ -lai
+```
+
+Edit `ai_src/Makefile`:
+
+```Makefile
+LIBS = -L/mingw64/lib/boost -lws2_32
+```
+
+```console
+$ cd ai_src
+$ make ai.dll
+$ cd ..
+$ make system.exe
+```
+
+#### On MacOS
+```console
+$ brew install llvm libomp boost
+```
+
+Edit `Makefile_Linux`:
+
+```Makefile
+COMPILER = /usr/local/opt/llvm/bin/clang++
+CFLAGS = -g -MMD -MP -std=c++11 -O3 -fopenmp -I/usr/local/include -I./
+LIBS = -L/usr/local/lib -lboost_system -L./ -lai
+```
+
+Edit `ai_src/Makefile_Linux`:
+
+```Makefile
+COMPILER = /usr/local/opt/llvm/bin/clang++
+CFLAGS = -g -MMD -MP -std=c++11 -O3 -fopenmp -I/usr/local/include
+LIBS = -L/usr/local/lib -lboost_system
+```
+
+```console
+$ cd ai_src
+$ make -f Makefile_Linux libai.so
+$ cd ..
+$ make -f Makefile_Linux system.exe
+```
+
+#### On Arch Linux
+```console
+$ sudo pacman -Syu base-devel boost
+$ make -f Makefile_Linux libai.so
+$ cd ..
+$ make -f Makefile_Linux system.exe
+```
+
+### Build akochan-review
+Follow the instructions [here](https://www.rust-lang.org/learn/get-started) to install Rust toolchains first, if you haven't yet.
+
+```console
+$ cd ..
+$ git clone https://github.com/Equim-chan/akochan-reviewer.git
+$ export RUSTFLAGS="-C target-cpu=native" # optional
+$ cargo build --release
+```
+
+`akochan-reviewer` binary will be in `target/release` directory.
+
 ## Docker
-
-build:
-
+### Build
 ```console
 $ git clone https://github.com/Equim-chan/akochan-reviewer.git
 $ cd akochan-reviewer
@@ -76,8 +132,7 @@ $ git clone https://github.com/Equim-chan/akochan.git
 $ docker build -t akochan-reviewer:latest .
 ```
 
-usage:
-
+### Usage
 ```console
 $ docker run --rm akochan-reviewer:latest --no-open -t 2019050417gm-0029-0000-4f2a8622 -a 3 -o - > report.html
 $ open report.html  # or just open in browser
