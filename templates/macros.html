@@ -56,3 +56,29 @@
     </svg>
   {% endif %}
 {% endmacro render_action %}
+
+{%- macro render_actor(actor, target_actor) -%}
+  {%- if (actor - target_actor + 4) % 4 == 1 -%}
+    下家
+  {%- elif (actor - target_actor + 4) % 4 == 2 -%}
+    対面
+  {%- elif (actor - target_actor + 4) % 4 == 3 -%}
+    上家
+  {%- else -%}
+    自家
+  {%- endif -%}
+{%- endmacro -%}
+
+{%- macro render_end_status(end_status, target_actor) -%}
+  {%- if end_status.type == "hora" -%}
+    {%- if end_status.target == end_status.actor -%}
+      ツモ
+    {%- else -%}
+      ロン
+    {%- endif -%}:
+    {{ self::render_actor(actor=end_status.actor, target_actor=target_actor) }}
+    {{ end_status.deltas[end_status.actor] }}
+  {%- else -%}
+    流局
+  {%- endif -%}
+{%- endmacro render_end_status -%}
