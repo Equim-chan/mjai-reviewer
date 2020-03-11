@@ -432,7 +432,7 @@ fn main() -> Result<()> {
         parse_time,
         convert_time,
         review_time,
-        now,
+        tenhou_id: arg_tenhou_id,
         version: &format!("v{} ({})", PKG_VERSION, GIT_HASH),
     };
 

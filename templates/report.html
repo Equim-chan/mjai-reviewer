@@ -27,11 +27,13 @@
   <details class="collapse">
     <summary>Metadata</summary>
     <ul>
-      <li>jun_pt: {{ metadata.jun_pt }}</li>
+      <li>jun pt: {{ metadata.jun_pt }}</li>
+      <li>actor: {{ target_actor }}</li>
+      <li>tenhou log id: {{ metadata.tenhou_id }}</li>
       <li>parse: {{ metadata.parse_time }}</li>
       <li>convert: {{ metadata.convert_time }}</li>
       <li>review: {{ metadata.review_time }}</li>
-      <li>time: {{ metadata.now }}</li>
+      <li>render time: {{ now() | date(format="%Y-%m-%d %H:%M:%S") }}</li>
       <li>version: {{ metadata.version }}</li>
     </ul>
   </details>
