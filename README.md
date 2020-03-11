@@ -51,7 +51,9 @@ $ cd akochan
 
 You have to edit `Makefile` and `ai_src/Makfefile` accordingly. Set up correct path for boost and some other options like `-march=native` of your choice.
 
-#### On Windows MSYS2 with MinGW-w64 toolchain
+<details><summary>On Windows MSYS2 with MinGW-w64 toolchain</summary>
+<p>
+
 ```console
 $ pacman -Syu mingw-w64-x86_64-{toolchain,boost}
 ```
@@ -75,7 +77,12 @@ $ cd ..
 $ make system.exe
 ```
 
-#### On MacOS
+</p>
+</details>
+
+<details><summary>On MacOS</summary>
+<p>
+
 ```console
 $ brew install llvm libomp boost
 ```
@@ -103,13 +110,21 @@ $ cd ..
 $ make -f Makefile_Linux system.exe
 ```
 
-#### On Arch Linux
+</p>
+</details>
+
+<details><summary>On Arch Linux</summary>
+<p>
+
 ```console
 $ sudo pacman -Syu base-devel boost
 $ make -f Makefile_Linux libai.so
 $ cd ..
 $ make -f Makefile_Linux system.exe
 ```
+
+</p>
+</details>
 
 ### Build akochan-review
 Follow the instructions [here](https://www.rust-lang.org/learn/get-started) to install Rust toolchains first, if you haven't yet.
