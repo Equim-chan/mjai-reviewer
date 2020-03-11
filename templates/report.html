@@ -13,15 +13,28 @@
   <h1>目次</h1>
   <details open class="collapse">
     <summary></summary>
-    <ol>
-      {% for item in kyokus %}
-        <li>
-          <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}">
-            {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
-          </a>
-        </li>
-      {% endfor %}
-    </ol>
+    <div class="kyoku-toc">
+      <ol class="kyoku-list">
+        {% for item in kyokus %}
+          <li class="kyoku-item">
+            <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}">
+              {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
+            </a>
+          </li>
+        {% endfor %}
+      </ol>
+      <ol class="end-status-list">
+        {% for item in kyokus %}
+          <li class="end-status-item">
+            <span class="end-status">
+              {% for end_status in item.end_status %}
+                {{ macros::render_end_status(end_status=end_status, target_actor=target_actor) }}
+              {% endfor %}
+            </span>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
   </details>
 
   <details class="collapse">
@@ -40,14 +53,20 @@
 
   {% for item in kyokus %}
     <section style="z-index: {{ 10 + loop.index0 }}">
-      <h1 id="kyoku-{{ item.kyoku }}-{{ item.honba }}">
-        <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}" class="chapter">
-          {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
-        </a>
+      <h1 id="kyoku-{{ item.kyoku }}-{{ item.honba }}" class="kyoku-heading">
+        <div class="kyoku-item">
+          <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}" class="chapter">
+            {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
+          </a>
+        </div>
+        <div class="end-status-item">
+          <span class="end-status">
+            {% for end_status in item.end_status %}
+              {{ macros::render_end_status(end_status=end_status, target_actor=target_actor) }}
+            {% endfor %}
+          </span>
+        </div>
       </h1>
-
-      {# TODO: render these #}
-      <pre>{{ item.end_status | json_encode() }}</pre>
 
       {% if splited_logs is defined %}
         <div class="sticky" style="z-index: {{ 15 + loop.index0 }}">
@@ -167,6 +186,30 @@
     details[open].collapse summary {
       border-bottom: 1px solid #aaa;
       margin-bottom: .5em;
+    }
+
+    .kyoku-toc, 
+    .kyoku-heading {
+      display: flex;
+    }
+
+    .end-status-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .end-status-item {
+      margin-left: 2em;
+    }
+
+    .end-status {
+      color: #666;
+    }
+
+    .kyoku-heading .end-status {
+      font-size: 75%;
+      font-weight: normal;
+      line-height: 75%;
     }
 
     .sticky {
