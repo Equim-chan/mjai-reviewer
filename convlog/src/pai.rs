@@ -1,12 +1,15 @@
-use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fmt;
+use std::str::FromStr;
 
 use lazy_static::lazy_static;
 use serde::ser::SerializeSeq;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use thiserror::Error;
 
 /// Describes a pai in tenhou.net/6 format.
+///
+/// It deserializes from u8, but serializes to String.
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 pub struct Pai(pub u8);
 
@@ -32,10 +35,21 @@ lazy_static! {
     };
 }
 
-impl From<&str> for Pai {
-    #[inline]
-    fn from(s: &str) -> Self {
-        Pai(*MJAI_PAI_STRINGS_MAP.get(s).unwrap_or(&0))
+#[derive(Debug, Error)]
+pub enum ParseError {
+    #[error("invalid pai string {0:?}")]
+    InvalidPaiString(String),
+}
+
+impl FromStr for Pai {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Some(&i) = MJAI_PAI_STRINGS_MAP.get(s) {
+            Ok(Pai(i))
+        } else {
+            Err(ParseError::InvalidPaiString(s.to_owned()))
+        }
     }
 }
 
@@ -56,25 +70,37 @@ impl Serialize for Pai {
     }
 }
 
-#[inline]
-pub fn serialize_pai_literal<S, P>(pai: P, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-    P: Borrow<Pai>,
-{
-    serializer.serialize_u8(pai.borrow().0)
-}
-
-pub fn serialize_pai_slice_literal<S, P>(pais: P, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-    P: AsRef<[Pai]>,
-{
-    let pais_ref = pais.as_ref();
-
-    let mut seq = serializer.serialize_seq(Some(pais_ref.len()))?;
-    for e in pais_ref {
-        seq.serialize_element(&e.0)?;
+impl Pai {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[inline]
+    pub fn serialize_literal<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_u8(self.0)
     }
-    seq.end()
+
+    pub fn serialize_slice_literal<S, P>(pais: P, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        P: AsRef<[Self]>,
+    {
+        let pais_ref = pais.as_ref();
+        let mut seq = serializer.serialize_seq(Some(pais_ref.len()))?;
+        for e in pais_ref {
+            seq.serialize_element(&e.0)?;
+        }
+        seq.end()
+    }
+
+    pub fn deserialize_mjai_str<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let s = String::deserialize(deserializer)?;
+        let pai = s.parse().map_err(Error::custom)?;
+        Ok(pai)
+    }
 }

@@ -1,4 +1,3 @@
-use super::pai::{serialize_pai_literal, serialize_pai_slice_literal};
 use super::Pai;
 
 use serde::{Deserialize, Serialize};
@@ -68,7 +67,7 @@ pub struct ActionTable {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ActionItem {
-    #[serde(serialize_with = "serialize_pai_literal")]
+    #[serde(serialize_with = "Pai::serialize_literal")]
     Pai(Pai),
     Naki(String),
 }
@@ -81,34 +80,34 @@ mod json_scheme {
     pub(super) enum ResultItem {
         Status(String),
         ScoreDeltas([i32; 4]),
-        HoraDetail(Value),
+        HoraDetail(Vec<Value>),
     }
 
     #[derive(Debug, Clone, SerializeTuple, DeserializeTuple)]
     pub(super) struct Kyoku {
         pub(super) meta: kyoku::Meta,
         pub(super) scoreboard: [i32; 4],
-        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) dora_indicators: Vec<Pai>,
-        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) ura_indicators: Vec<Pai>,
 
-        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) haipai_0: [Pai; 13],
         pub(super) takes_0: Vec<ActionItem>,
         pub(super) discards_0: Vec<ActionItem>,
 
-        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) haipai_1: [Pai; 13],
         pub(super) takes_1: Vec<ActionItem>,
         pub(super) discards_1: Vec<ActionItem>,
 
-        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) haipai_2: [Pai; 13],
         pub(super) takes_2: Vec<ActionItem>,
         pub(super) discards_2: Vec<ActionItem>,
 
-        #[serde(serialize_with = "serialize_pai_slice_literal")]
+        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) haipai_3: [Pai; 13],
         pub(super) takes_3: Vec<ActionItem>,
         pub(super) discards_3: Vec<ActionItem>,
@@ -245,26 +244,26 @@ impl From<RawLog> for Log {
                 if let Some(status) = log.results.get(0) {
                     if let json_scheme::ResultItem::Status(status_text) = status {
                         if status_text == "和了" {
-                            let mut hora_details = vec![];
-
-                            for detail_tuple in log.results[1..].chunks_exact(2) {
-                                let mut hora_detail = kyoku::HoraDetail::default();
-
-                                if let json_scheme::ResultItem::ScoreDeltas(score_deltas) =
-                                    detail_tuple[0]
-                                {
-                                    hora_detail.score_deltas = score_deltas;
-                                }
-
-                                if let json_scheme::ResultItem::HoraDetail(who_target) =
-                                    &detail_tuple[1]
-                                {
-                                    hora_detail.who = who_target[0].as_u64().unwrap_or(0) as u8;
-                                    hora_detail.target = who_target[1].as_u64().unwrap_or(0) as u8;
-                                }
-
-                                hora_details.push(hora_detail);
-                            }
+                            let hora_details = log.results[1..]
+                                .chunks_exact(2)
+                                .filter_map(|detail_tuple| {
+                                    if let (
+                                        json_scheme::ResultItem::ScoreDeltas(score_deltas),
+                                        json_scheme::ResultItem::HoraDetail(who_target_tuple),
+                                    ) = (&detail_tuple[0], &detail_tuple[1])
+                                    {
+                                        // TODO: it can actually fail, maybe impl TryFrom instead
+                                        let hora_detail = kyoku::HoraDetail {
+                                            score_deltas: *score_deltas,
+                                            who: who_target_tuple[0].as_u64().unwrap_or(0) as u8,
+                                            target: who_target_tuple[1].as_u64().unwrap_or(0) as u8,
+                                        };
+                                        Some(hora_detail)
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect();
 
                             item.end_status = kyoku::EndStatus::Hora {
                                 details: hora_details,
