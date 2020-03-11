@@ -114,7 +114,7 @@ impl State {
             } if actor == self.actor => {
                 self.tehai.tedashi(pai);
 
-                let (previous_pon_target, previous_pon_idx) = self
+                let (previous_pon_target, previous_pon_pai, previous_pon_idx) = self
                     .fuuros
                     .iter()
                     .enumerate()
@@ -126,7 +126,7 @@ impl State {
                         } if Consumed3([pon_pai, pon_consumed.0[0], pon_consumed.0[1]])
                             == consumed =>
                         {
-                            Some((pon_target, i))
+                            Some((pon_target, pon_pai, i))
                         }
 
                         _ => None,
@@ -134,8 +134,9 @@ impl State {
                     .context(anyhow!("invalid state, previous pon not found for kakan."))?;
 
                 let fuuro = Fuuro::Kakan {
-                    target: previous_pon_target,
                     pai,
+                    previous_pon_target,
+                    previous_pon_pai,
                     consumed,
                 };
 
@@ -177,8 +178,9 @@ pub enum Fuuro {
         consumed: Consumed3,
     },
     Kakan {
-        target: u8,
         pai: Pai,
+        previous_pon_target: u8,
+        previous_pon_pai: Pai,
         consumed: Consumed3,
     },
     Ankan {
