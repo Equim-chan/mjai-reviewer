@@ -96,7 +96,7 @@ where
         log!("> {}", to_write.trim());
 
         // upate the state
-        state.update(event);
+        state.update(event).context("failed to update state")?;
 
         // this match does two things:
         // 1. setting board metadata like bakaze, kyoku, honba, junme

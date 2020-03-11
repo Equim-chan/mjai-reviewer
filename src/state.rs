@@ -1,5 +1,7 @@
 use super::tehai::Tehai;
 
+use anyhow::anyhow;
+use anyhow::{Context, Result};
 use convlog::mjai::{Consumed2, Consumed3, Consumed4, Event};
 use convlog::Pai;
 use serde::Serialize;
@@ -36,7 +38,7 @@ impl State {
     /// and the `actor` must be the target actor.
     ///
     /// Otherwise this is a no-op.
-    pub fn update(&mut self, event: &Event) {
+    pub fn update(&mut self, event: &Event) -> Result<()> {
         match *event {
             Event::StartKyoku { tehais, .. } => {
                 self.tehai.haipai(&tehais[self.actor as usize]);
@@ -110,9 +112,34 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_for_fuuro(&consumed.0);
+                self.tehai.tedashi(pai);
 
-                let fuuro = Fuuro::Kakan { pai, consumed };
+                let (previous_pon_target, previous_pon_idx) = self
+                    .fuuros
+                    .iter()
+                    .enumerate()
+                    .find_map(|(i, f)| match *f {
+                        Fuuro::Pon {
+                            target: pon_target,
+                            pai: pon_pai,
+                            consumed: pon_consumed,
+                        } if Consumed3([pon_pai, pon_consumed.0[0], pon_consumed.0[1]])
+                            == consumed =>
+                        {
+                            Some((pon_target, i))
+                        }
+
+                        _ => None,
+                    })
+                    .context(anyhow!("invalid state, previous pon not found for kakan."))?;
+
+                let fuuro = Fuuro::Kakan {
+                    target: previous_pon_target,
+                    pai,
+                    consumed,
+                };
+
+                self.fuuros.remove(previous_pon_idx);
                 self.fuuros.push(fuuro);
             }
 
@@ -125,6 +152,8 @@ impl State {
 
             _ => (),
         };
+
+        Ok(())
     }
 }
 
@@ -148,6 +177,7 @@ pub enum Fuuro {
         consumed: Consumed3,
     },
     Kakan {
+        target: u8,
         pai: Pai,
         consumed: Consumed3,
     },

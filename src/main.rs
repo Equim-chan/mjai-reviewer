@@ -378,9 +378,10 @@ fn main() -> Result<()> {
         }
     };
 
-    // do the review
     let begin_review = chrono::Local::now();
     log!("start review, this may take serval minutes...");
+
+    // do the review
     let reviews = review(
         &akochan_exe,
         &akochan_dir,
