@@ -114,7 +114,12 @@ impl State {
             } if actor == self.actor => {
                 self.tehai.tedashi(pai);
 
-                let (previous_pon_target, previous_pon_pai, previous_pon_idx) = self
+                let (
+                    previous_pon_target,
+                    previous_pon_pai,
+                    previous_pon_consumed,
+                    previous_pon_idx,
+                ) = self
                     .fuuros
                     .iter()
                     .enumerate()
@@ -126,7 +131,7 @@ impl State {
                         } if Consumed3([pon_pai, pon_consumed.0[0], pon_consumed.0[1]])
                             == consumed =>
                         {
-                            Some((pon_target, pon_pai, i))
+                            Some((pon_target, pon_pai, pon_consumed, i))
                         }
 
                         _ => None,
@@ -137,7 +142,7 @@ impl State {
                     pai,
                     previous_pon_target,
                     previous_pon_pai,
-                    consumed,
+                    consumed: previous_pon_consumed,
                 };
 
                 self.fuuros.remove(previous_pon_idx);
@@ -181,7 +186,7 @@ pub enum Fuuro {
         pai: Pai,
         previous_pon_target: u8,
         previous_pon_pai: Pai,
-        consumed: Consumed3,
+        consumed: Consumed2,
     },
     Ankan {
         consumed: Consumed4,
