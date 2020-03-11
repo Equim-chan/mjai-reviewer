@@ -37,82 +37,104 @@
   </details>
 
   {% for item in kyokus %}
-    <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}" class="chapter">
+    <section style="z-index: {{ 10 + loop.index0 }}">
       <h1 id="kyoku-{{ item.kyoku }}-{{ item.honba }}">
-        {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
+        <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}" class="chapter">
+          {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
+        </a>
       </h1>
-    </a>
 
-    {# TODO: render these #}
-    <pre>{{ item.end_status | json_encode() }}</pre>
+      {# TODO: render these #}
+      <pre>{{ item.end_status | json_encode() }}</pre>
 
-    {% if splited_logs is defined %}
-      <div class="sticky" style="z-index: {{ 10 + loop.index0 }}">
+      {% if splited_logs is defined %}
+        <div class="sticky" style="z-index: {{ 15 + loop.index0 }}">
+          <details open class="collapse">
+            <summary>牌譜ビューア</summary>
+            <iframe
+              src="https://tenhou.net/5/?tw={{ target_actor }}#json={{ splited_logs[loop.index0] | json_encode() }}"
+              class="tenhou"
+              scrolling="no"
+              marginwidth="0"
+              marginheight="0"
+              frameborder="0"
+            ></iframe>
+          </details>
+        </div>
+      {% endif %}
+
+      {% for entry in item.entries %}
         <details open class="collapse">
-          <summary>牌譜ビューア</summary>
-          <iframe
-            src="https://tenhou.net/5/?tw={{ target_actor }}#json={{ splited_logs[loop.index0] | json_encode() }}"
-            class="tenhou"
-            scrolling="no"
-            marginwidth="0"
-            marginheight="0"
-            frameborder="0"
-          ></iframe>
-        </details>
-      </div>
-    {% endif %}
+          <summary>{{ entry.junme }} 巡</summary>
+          <p>
+            {# TODO: render these #}
+            <pre>{{ entry.state | json_encode() }}</pre>
 
-    {% for entry in item.entries %}
-      <details open class="collapse">
-        <summary>{{ entry.junme }} 巡</summary>
-        <p>
-          {# TODO: render these #}
-          <pre>{{ entry.state | json_encode() }}</pre>
-
-          {% if entry.actor == target_actor %}
-            自家が{{ macros::render_pai(pai=entry.pai) }}を引いた時——
-          {% else %}
-            {% if entry.actor == (target_actor + 1) % 4 %}
-              下家
-            {% elif entry.actor == (target_actor + 2) % 4 %}
-              対面
+            {% if entry.actor == target_actor %}
+              自家が{{ macros::render_pai(pai=entry.pai) }}を引いた時——
             {% else %}
-              上家
+              {% if entry.actor == (target_actor + 1) % 4 %}
+                下家
+              {% elif entry.actor == (target_actor + 2) % 4 %}
+                対面
+              {% else %}
+                上家
+              {% endif %}
+              が{{ macros::render_pai(pai=entry.pai) }}を切った時——
             {% endif %}
-            が{{ macros::render_pai(pai=entry.pai) }}を切った時——
-          {% endif %}
-        </p>
-        <ul>
-          <li>
-            akochan の最善手：
-            <ul>
-              <li>
-                {{ macros::render_action(action=entry.expected) }}
-              </li>
-            </ul>
-          </li>
-          <li>
-            自家：
-            <ul>
-              <li>
-                {{ macros::render_action(action=entry.actual) }}
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </details>
-    {% endfor %}
+          </p>
+          <ul>
+            <li>
+              akochan の最善手：
+              <ul>
+                <li>
+                  {{ macros::render_action(action=entry.expected) }}
+                </li>
+              </ul>
+            </li>
+            <li>
+              自家：
+              <ul>
+                <li>
+                  {{ macros::render_action(action=entry.actual) }}
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </details>
+      {% endfor %}
+    </section>
   {% endfor %}
 
   <style>
+    html {
+      scroll-behavior: smooth;
+    }
     body {
       max-width: 732px;
       margin: auto;
     }
 
+    h1 {
+      font-size: 2em;
+    }
+    section {
+      background-color: #fff;
+    }
+    section h1 {
+      text-align: center;
+    }
+
+    a, a:visited {
+      color: inherit;
+    }
+    a.chapter {
+      text-decoration: none;
+    }
+
     .face, .back {
       filter: url(#inset-shadow);
-      fill: #ffffff;
+      fill: #fff;
     }
     .back {
       fill: #ffba1e;
@@ -123,13 +145,6 @@
       vertical-align: middle;
     }
 
-    a, a:visited {
-      color: inherit;
-    }
-    a.chapter {
-      text-decoration: none;
-    }
-
     summary {
       cursor: pointer;
     }
@@ -138,7 +153,7 @@
       border-radius: 4px;
       padding: .5em .5em 0;
     }
-    details.collapse summary  {
+    details.collapse summary {
       font-weight: bold;
       margin: -.5em -.5em 0;
       padding: .5em;
@@ -147,7 +162,7 @@
       padding: .5em;
       margin-bottom: .5em;
     }
-    details[open].collapse summary  {
+    details[open].collapse summary {
       border-bottom: 1px solid #aaa;
       margin-bottom: .5em;
     }
