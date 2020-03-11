@@ -247,7 +247,7 @@ impl From<RawLog> for Log {
                         if status_text == "和了" {
                             let mut hora_details = vec![];
 
-                            for detail_tuple in log.results[1..].chunks(2) {
+                            for detail_tuple in log.results[1..].chunks_exact(2) {
                                 let mut hora_detail = kyoku::HoraDetail::default();
 
                                 if let json_scheme::ResultItem::ScoreDeltas(score_deltas) =
@@ -271,8 +271,10 @@ impl From<RawLog> for Log {
                             };
                         } else {
                             let score_deltas =
-                                if let json_scheme::ResultItem::ScoreDeltas(dts) = log.results[1] {
-                                    dts
+                                if let Some(json_scheme::ResultItem::ScoreDeltas(dts)) =
+                                    log.results.get(1)
+                                {
+                                    *dts
                                 } else {
                                     [0; 4]
                                 };
