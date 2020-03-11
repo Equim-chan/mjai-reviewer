@@ -40,6 +40,7 @@ impl State {
         match *event {
             Event::StartKyoku { tehais, .. } => {
                 self.tehai.haipai(&tehais[self.actor as usize]);
+                self.fuuros.clear();
             }
 
             Event::Tsumo { actor, pai } if actor == self.actor => self.tehai.tsumo(pai),
