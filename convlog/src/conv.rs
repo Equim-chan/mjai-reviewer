@@ -175,7 +175,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
                     actor: actor as u8,
                 })?
                 .fill_possible_tsumogiri(last_tsumo);
-            if let mjai::Event::Dahai { pai, .. } = discard {
+            if let mjai::Event::Dahai { pai, .. } = dahai {
                 last_dahai = pai;
             }
             events.push(dahai);
