@@ -161,3 +161,19 @@ $ open report.html  # or just open in browser
 
 ## License
 [Apache-2.0](https://github.com/Equim-chan/akochan-reviewer/blob/master/LICENSE)
+
+## Contributors ✨
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/critter-mj"><img src="https://pbs.twimg.com/profile_images/1005709404623155201/kMTv4X6X_400x400.jpg" width="100px;" alt=""/><br /><sub><b>critter-mj</b></sub></a><br /><a href="#ideas-critter-mj" title="Ideas, Planning, & Feedback">🤔</a> <a href="#tool-critter-mj" title="Tools">🔧</a> <a href="#data-critter-mj" title="Data">🔣</a></td>
+    <td align="center"><a href="https://github.com/yuarasino"><img src="https://avatars2.githubusercontent.com/u/37145593?v=4" width="100px;" alt=""/><br /><sub><b>新篠ゆう</b></sub></a><br /><a href="#ideas-yuarasino" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/Equim-chan/akochan-reviewer/commits?author=yuarasino" title="Code">💻</a> <a href="#design-yuarasino" title="Design">🎨</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-enable -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
