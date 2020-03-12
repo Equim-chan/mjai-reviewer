@@ -1,5 +1,4 @@
 use convlog::Pai;
-
 use serde::ser::{Serialize, SerializeSeq, Serializer};
 
 #[derive(Debug, Clone, Default)]

@@ -3,6 +3,7 @@ use super::Pai;
 use serde::{Deserialize, Serialize};
 use serde_json::{Result, Value};
 use serde_tuple::{Deserialize_tuple as DeserializeTuple, Serialize_tuple as SerializeTuple};
+use std::fmt;
 
 /// The overview structure of log in tenhou.net/6 format.
 #[derive(Debug, Clone)]
@@ -17,6 +18,16 @@ pub struct Log {
 pub enum GameLength {
     Hanchan = 0,
     Tonpuu = 4,
+}
+
+impl fmt::Display for GameLength {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            GameLength::Hanchan => write!(f, "東風"),
+            GameLength::Tonpuu => write!(f, "半荘"),
+        }
+    }
 }
 
 /// Contains infomation about a kyoku.

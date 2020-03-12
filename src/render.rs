@@ -16,6 +16,7 @@ lazy_static! {
     static ref TEMPLATES: Tera = {
         let mut tera = Tera::default();
         tera.register_function("kyoku_to_string", kyoku_to_string);
+        tera.register_function("pretty_round", pretty_round);
 
         tera.add_raw_templates(vec![
             ("macros.html", include_str!("../templates/macros.html")),
@@ -51,6 +52,29 @@ fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
     } else {
         Ok(Value::String(ret + " " + &honba.to_string() + " 本場"))
     }
+}
+
+fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {
+    if let Some(Value::Number(num)) = args.get("num") {
+        if let Some(f) = num.as_f64() {
+            let n = (f * 1e4).round() / 1e4;
+            let s = format!("{:.04}", n);
+
+            // let parts: Vec<_> = s.split('.').collect();
+            // let left = parts[0];
+            // let right = parts[1]
+            //     .as_bytes()
+            //     .chunks(3)
+            //     .map(|p| unsafe { std::str::from_utf8_unchecked(p) })
+            //     .collect::<Vec<_>>()
+            //     .join(" ");
+            // let ret = format!("{}.{}", left, right);
+
+            return Ok(Value::String(s));
+        }
+    }
+
+    Ok(Value::Null)
 }
 
 #[derive(Serialize)]

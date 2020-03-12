@@ -11,7 +11,7 @@ use anyhow::anyhow;
 use anyhow::{Context, Result};
 use convlog::mjai::Event;
 use convlog::Pai;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json;
 
 #[derive(Debug, Clone, Default, Serialize)]
@@ -32,14 +32,32 @@ pub struct Entry {
 
     pub expected: Vec<Event>, // at most 2 events
     pub actual: Vec<Event>,   // at most 2 events
+
+    pub details: Vec<DetailedAction>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Stat {
+    total_houjuu_hai_prob_now: Option<f64>,
+    total_houjuu_hai_value_now: Option<f64>,
+    pt_exp_after: Option<f64>,
+    pt_exp_total: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DetailedAction {
+    pub moves: Vec<Event>,
+    pub review: Stat,
 }
 
 pub fn review<O, P>(
     akochan_exe: O,
     akochan_dir: P,
     tactics_config_path: O,
+    full: bool,
     events: &[Event],
     target_actor: u8,
+    verbose: bool,
 ) -> Result<Vec<KyokuReview>>
 where
     O: AsRef<OsStr>,
@@ -49,18 +67,20 @@ where
 
     let target_actor_string = target_actor.to_string();
     let args = &[
-        "pipe".as_ref(),
+        "pipe_detailed".as_ref(),
         tactics_config_path.as_ref(),
         target_actor_string.as_ref(),
     ];
 
-    log!("$ cd {:?}", akochan_dir.as_ref());
-    log!(
-        "$ {:?}{}",
-        akochan_exe.as_ref(),
-        args.iter()
-            .fold("".to_owned(), |acc, p| format!("{} {:?}", acc, p))
-    );
+    if verbose {
+        log!("$ cd {:?}", akochan_dir.as_ref());
+        log!(
+            "$ {:?}{}",
+            akochan_exe.as_ref(),
+            args.iter()
+                .fold("".to_owned(), |acc, p| format!("{} {:?}", acc, p))
+        );
+    }
 
     let mut akochan = Command::new(akochan_exe)
         .args(args)
@@ -75,13 +95,16 @@ where
         .stdin
         .as_mut()
         .context("failed to get stdin of akochan")?;
-    let mut stdout = BufReader::new(
+    let mut stdout_lines = BufReader::new(
         akochan
             .stdout
             .as_mut()
             .context("failed to get stdout of akochan")?,
     )
     .lines();
+
+    let events_len = events.len();
+    let mut total_entries = 0;
 
     let mut state = State::new(target_actor);
     let mut junme = 0;
@@ -93,7 +116,9 @@ where
         stdin
             .write_all(to_write.as_bytes())
             .context("failed to write to akochan")?;
-        log!("> {}", to_write.trim());
+        if verbose {
+            log!("> {}", to_write.trim());
+        }
 
         // upate the state
         state.update(event).context("failed to update state")?;
@@ -154,6 +179,14 @@ where
             _ => continue,
         };
 
+        log!(
+            "reviewing kyoku={} honba={} junme={} ({:.2}%)",
+            kyoku_review.kyoku,
+            kyoku_review.honba,
+            junme,
+            (i as f64) / (events_len as f64) * 100f64,
+        );
+
         // should have at least 4, e.g. dahai -> ryukyoku -> end_kyoku -> end_game
         if events.len() < i + 4 {
             return Err(anyhow!(
@@ -161,32 +194,32 @@ where
             ));
         }
 
-        // be careful, stdout.next() may block.
-        let line = stdout
+        // be careful, stdout_lines.next() may block.
+        let line = stdout_lines
             .next()
             .context("failed to read from akochan: unexpected EOF")?
             .context("failed to read from akochan")?;
-        log!("< {}", line.trim());
+        if verbose {
+            log!("< {}", line.trim());
+        }
 
-        let expected: Event =
+        let actions: Vec<DetailedAction> =
             serde_json::from_str(&line).context("failed to parse JSON output of akochan")?;
 
-        let expected_action =
-            if let Event::Chi { .. } | Event::Pon { .. } | Event::Reach { .. } = expected {
-                let next_line = stdout
-                    .next()
-                    .context("failed to read from akochan: unexpected EOF")?
-                    .context("failed to read from akochan")?;
-                let next_expected: Event = serde_json::from_str(&next_line)
-                    .context("failed to parse JSON output of akochan")?;
+        if actions.is_empty() || actions.iter().any(|a| a.moves.is_empty()) {
+            log!("WARNING: actions or some moves in actions is empty");
+            continue;
+        }
 
-                vec![expected, next_expected]
-            } else {
-                vec![expected]
-            };
+        if actions.len() == 1 {
+            // only one choice (Tsumo after Reach), or choice at all (None)
+            continue;
+        }
 
-        let actual_action = next_action_roughly(&events[(i + 1)..]);
-        if compare_action(&actual_action, &expected_action, target_actor) {
+        let expected_action = &actions[0].moves; // best move
+        let actual_action = next_action_for_compare(&events[(i + 1)..]);
+
+        if !full && compare_action(&actual_action, expected_action, target_actor) {
             continue;
         }
 
@@ -206,11 +239,17 @@ where
             actor,
             pai,
             state: state.clone(),
-            expected: expected_action,
+            expected: expected_action.to_vec(),
             actual: actual_action_vec,
+            details: actions,
         };
-        log!("created review entry: {:?}", entry);
+        if verbose {
+            log!("{:?}", entry);
+        }
         entries.push(entry);
+
+        total_entries += 1;
+        log!("review entry created (total {})", total_entries);
     }
 
     let ecode = akochan.wait()?;
@@ -225,9 +264,9 @@ where
     Ok(kyoku_reviews)
 }
 
-fn next_action_roughly(events: &[Event]) -> &[Event] {
+fn next_action_for_compare(events: &[Event]) -> &[Event] {
     match events[0] {
-        Event::Dora { .. } => next_action_roughly(&events[1..]),
+        Event::Dora { .. } => next_action_for_compare(&events[1..]),
         Event::Hora { .. } => &events[..3], // considering multiple rons
         Event::Chi { .. } | Event::Pon { .. } | Event::Reach { .. } => &events[..2],
         _ => &events[..1],
@@ -243,12 +282,9 @@ fn next_action_exact(rough_action: &[Event], target_actor: u8) -> Vec<Event> {
         Event::Hora { .. } => vec![rough_action
             .iter()
             .take(3)
-            .find(|&a| {
-                if let Event::Hora { actor, .. } = *a {
-                    actor == target_actor
-                } else {
-                    false
-                }
+            .find(|&a| match *a {
+                Event::Hora { actor, .. } if actor == target_actor => true,
+                _ => false,
             })
             .cloned()
             .unwrap_or(Event::None)],

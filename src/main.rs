@@ -186,8 +186,8 @@ fn main() -> Result<()> {
                 ),
         )
         .arg(
-            Arg::with_name("jun-pt")
-                .long("jun-pt")
+            Arg::with_name("pt")
+                .long("pt")
                 .takes_value(true)
                 .value_name("ARRAY")
                 .validator(|v| {
@@ -195,12 +195,12 @@ fn main() -> Result<()> {
                         .split(',')
                         .map(|p| {
                             p.parse::<i32>()
-                                .map_err(|err| format!("jun_pt element must be a number: {}", err))
+                                .map_err(|err| format!("pt element must be a number: {}", err))
                         })
                         .collect::<Vec<StdResult<_, String>>>();
 
                     if arr.len() != 4 {
-                        Err("jun_pt must have exactly 4 elements".to_owned())
+                        Err("pt must have exactly 4 elements".to_owned())
                     } else {
                         Ok(())
                     }
@@ -209,6 +209,18 @@ fn main() -> Result<()> {
                     "Shortcut to override \"jun_pt\" in --tactics-config. \
                     Format: \"90,45,0,-135\"",
                 ),
+        )
+        .arg(
+            Arg::with_name("full")
+                .short("f")
+                .long("full")
+                .help("Analyze every move, not only the different ones."),
+        )
+        .arg(
+            Arg::with_name("verbose")
+                .short("v")
+                .long("verbose")
+                .help("Use verbose output"),
         )
         .get_matches();
 
@@ -352,13 +364,13 @@ fn main() -> Result<()> {
         let mut tactics_json: TacticsJson = serde_json::from_reader(tactics_file_reader)
             .with_context(|| format!("failed to parse tactics_config {:?}", canon_path))?;
 
-        // opt-in jun_pt
-        if let Some(jun_pt) = matches.value_of("jun-pt") {
+        // opt-in pt
+        if let Some(pt) = matches.value_of("pt") {
             tactics_json
                 .tactics
                 .jun_pt
                 .iter_mut()
-                .zip(jun_pt.split(',').map(|p| p.parse::<i32>().unwrap()))
+                .zip(pt.split(',').map(|p| p.parse::<i32>().unwrap()))
                 .for_each(|(o, n)| *o = n);
 
             let mut tmp = NamedTempFile::new().context("failed to create temp file")?;
@@ -378,21 +390,27 @@ fn main() -> Result<()> {
         }
     };
 
-    let begin_review = chrono::Local::now();
+    log!("players: {:?}", log.names);
+    log!("target: {}", log.names[actor as usize]);
     log!("start review, this may take serval minutes...");
+    let full = matches.is_present("full");
+    let verbose = matches.is_present("verbose");
 
     // do the review
+    let begin_review = chrono::Local::now();
     let reviews = review(
         &akochan_exe,
         &akochan_dir,
         &tactics_file_path,
+        full,
         &events,
         actor,
+        verbose,
     )
     .context("failed to review log")?;
 
     // clean up
-    if matches.is_present("jun-pt") {
+    if matches.is_present("pt") {
         remove_file(&tactics_file_path)
             .with_context(|| format!("failed to clean up temp file {:?}", tactics_file_path))?;
     }
@@ -429,7 +447,8 @@ fn main() -> Result<()> {
     let convert_time = (begin_review - begin_convert_log).to_std()?;
     let review_time = (now - begin_review).to_std()?;
     let meta = Metadata {
-        jun_pt: &tactics.jun_pt,
+        pt: &tactics.jun_pt,
+        game_length: &log.game_length.to_string(),
         parse_time,
         convert_time,
         review_time,

@@ -4,7 +4,8 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct Metadata<'a> {
-    pub jun_pt: &'a [i32; 4],
+    pub pt: &'a [i32; 4],
+    pub game_length: &'a str,
     pub tenhou_id: Option<&'a str>,
 
     #[serde(with = "humantime_serde")]

@@ -16,14 +16,16 @@ USAGE:
     akochan-reviewer [FLAGS] [OPTIONS] --actor <INDEX>
 
 FLAGS:
+    -f, --full              Analyze every move, not only the different ones.
     -h, --help              Prints help information
         --no-open           Do not open the output file after finishing
         --no-review         Do not review at all. Only download and save files
     -V, --version           Prints version information
+    -v, --verbose           Use verbose output
         --without-viewer    Do not include log viewer in the generated HTML report
 
 OPTIONS:
-    -a, --actor <INDEX>            Specify the actor to review
+    -a, --actor <INDEX>            Specify the actor to review. It is the number after "&tw=" in tenhou's log url
     -d, --akochan-dir <DIR>        Specify the directory of akochan. This will serves as the working directory of
                                    akochan process. Default value is the directory in which --akochan-exe is specified
     -e, --akochan-exe <EXE>        Specify the executable file of akochan. Default value "akochan/system.exe"
@@ -33,9 +35,10 @@ OPTIONS:
     -o, --out-file <FILE>          Specify the output file for generated HTML report. If FILE is "-", write to stdout;
                                    if FILE is empty, write to "{tenhou_id}&tw={actor}.html" if --tenhou-id is specified,
                                    otherwise "report.html"
+        --pt <ARRAY>               Shortcut to override "jun_pt" in --tactics-config. Format: "90,45,0,-135"
     -c, --tactics-config <FILE>    Specify the tactics config file for akochan. Default value "tactics.json"
-    -t, --tenhou-id <ID>           Specify a Tenhou log ID to review, overriding --in-file. For example: 2019050417gm-
-                                   0029-0000-4f2a8622
+    -t, --tenhou-id <ID>           Specify a Tenhou log ID to review, overriding --in-file. Example: "2019050417gm-0029-
+                                   0000-4f2a8622"
         --tenhou-out <FILE>        Save the downloaded tenhou.net/6 format log to FILE when --tenhou-id is specified. If
                                    FILE is "-", write to stdout
 ```

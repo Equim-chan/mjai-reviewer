@@ -14,14 +14,14 @@ pub enum ConvertError {
     #[error("invalid pai string")]
     InvalidPai(#[source] <u8 as std::str::FromStr>::Err),
 
-    #[error("insufficient dora indicators: at kyoku {kyoku} honba {honba}")]
+    #[error("insufficient dora indicators: at kyoku={kyoku} honba={honba}")]
     InsufficientDoraIndicators { kyoku: u8, honba: u8 },
 
-    #[error("insufficient takes sequence size: at kyoku {kyoku} honba {honba} for actor {actor}")]
+    #[error("insufficient takes sequence size: at kyoku={kyoku} honba={honba} for actor={actor}")]
     InsufficientTakes { kyoku: u8, honba: u8, actor: u8 },
 
     #[error(
-        "insufficient discards sequence size: at kyoku {kyoku} honba {honba} for actor {actor}"
+        "insufficient discards sequence size: at kyoku={kyoku} honba={honba} for actor={actor}"
     )]
     InsufficientDiscards { kyoku: u8, honba: u8, actor: u8 },
 }

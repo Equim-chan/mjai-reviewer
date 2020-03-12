@@ -1,4 +1,4 @@
-{% import "macros.html" as macros %}
+{%- import "macros.html" as macros -%}
 
 <!DOCTYPE html>
 <html lang="ja">
@@ -15,60 +15,70 @@
     <summary></summary>
     <div class="kyoku-toc">
       <ol class="kyoku-list">
-        {% for item in kyokus %}
+        {%- for item in kyokus -%}
           <li class="kyoku-item">
             <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}">
-              {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
+              {{- kyoku_to_string(kyoku=item.kyoku, honba=item.honba) -}}
             </a>
           </li>
-        {% endfor %}
+        {%- endfor -%}
       </ol>
       <ol class="end-status-list">
-        {% for item in kyokus %}
+        {%- for item in kyokus -%}
           <li class="end-status-item">
             <span class="end-status">
-              {% for end_status in item.end_status %}
-                {{ macros::render_end_status(end_status=end_status, target_actor=target_actor) }}
-              {% endfor %}
+              {%- for end_status in item.end_status -%}
+                {{- macros::render_end_status(end_status=end_status, target_actor=target_actor) -}}
+              {%- endfor -%}
             </span>
           </li>
-        {% endfor %}
+        {%- endfor -%}
       </ol>
     </div>
   </details>
 
   <details class="collapse">
     <summary>Metadata</summary>
-    <ul>
-      <li>jun pt: {{ metadata.jun_pt }}</li>
-      <li>actor: {{ target_actor }}</li>
-      <li>tenhou log id: {{ metadata.tenhou_id }}</li>
-      <li>parse: {{ metadata.parse_time }}</li>
-      <li>convert: {{ metadata.convert_time }}</li>
-      <li>review: {{ metadata.review_time }}</li>
-      <li>render time: {{ now() | date(format="%Y-%m-%d %H:%M:%S") }}</li>
-      <li>version: {{ metadata.version }}</li>
-    </ul>
+    <dl>
+      <dt>pt</dt>
+      <dd>{{ metadata.pt }}</dd>
+      <dt>game length</dt>
+      <dd>{{ metadata.game_length }}</dd>
+      <dt>actor id</dt>
+      <dd>{{ target_actor }}</dd>
+      <dt>tenhou log id</dt>
+      <dd>{{ metadata.tenhou_id | default(value="N/A") | safe }}</dd>
+      <dt>parse</dt>
+      <dd>{{ metadata.parse_time }}</dd>
+      <dt>convert</dt>
+      <dd>{{ metadata.convert_time }}</dd>
+      <dt>review</dt>
+      <dd>{{ metadata.review_time }}</dd>
+      <dt>version</dt>
+      <dd>{{ metadata.version }}</dd>
+      <dt>render time</dt>
+      <dd>{{ now() | date(format="%Y-%m-%d %H:%M:%S") }}</dd>
+    </dl>
   </details>
 
-  {% for item in kyokus %}
+  {%- for item in kyokus -%}
     <section style="z-index: {{ 10 + loop.index0 }}">
       <h1 id="kyoku-{{ item.kyoku }}-{{ item.honba }}" class="kyoku-heading">
         <div class="kyoku-item">
           <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}" class="chapter">
-            {{ kyoku_to_string(kyoku=item.kyoku, honba=item.honba) }}
+            {{- kyoku_to_string(kyoku=item.kyoku, honba=item.honba) -}}
           </a>
         </div>
         <div class="end-status-item">
           <span class="end-status">
-            {% for end_status in item.end_status %}
-              {{ macros::render_end_status(end_status=end_status, target_actor=target_actor) }}
-            {% endfor %}
+            {%- for end_status in item.end_status -%}
+              {{- macros::render_end_status(end_status=end_status, target_actor=target_actor) -}}
+            {%- endfor -%}
           </span>
         </div>
       </h1>
 
-      {% if splited_logs is defined %}
+      {%- if splited_logs is defined -%}
         <div class="sticky" style="z-index: {{ 15 + loop.index0 }}">
           <details open class="collapse">
             <summary>牌譜ビューア</summary>
@@ -82,34 +92,34 @@
             ></iframe>
           </details>
         </div>
-      {% endif %}
+      {%- endif -%}
 
-      {% for entry in item.entries %}
+      {%- for entry in item.entries -%}
         <details open class="collapse">
           <summary>{{ entry.junme }} 巡</summary>
           <p>
             {# TODO: render these #}
             <pre>{{ entry.state | json_encode() }}</pre>
 
-            {% if entry.actor == target_actor %}
+            {%- if entry.actor == target_actor -%}
               自家が{{ macros::render_pai(pai=entry.pai) }}を引いた時——
-            {% else %}
-              {% if entry.actor == (target_actor + 1) % 4 %}
+            {%- else -%}
+              {%- if entry.actor == (target_actor + 1) % 4 -%}
                 下家
-              {% elif entry.actor == (target_actor + 2) % 4 %}
+              {%- elif entry.actor == (target_actor + 2) % 4 -%}
                 対面
-              {% else %}
+              {%- else -%}
                 上家
-              {% endif %}
+              {%- endif -%}
               が{{ macros::render_pai(pai=entry.pai) }}を切った時——
-            {% endif %}
+            {%- endif -%}
           </p>
           <ul>
             <li>
               akochan の最善手：
               <ul>
                 <li>
-                  {{ macros::render_action(action=entry.expected) }}
+                  {{- macros::render_action(action=entry.expected) -}}
                 </li>
               </ul>
             </li>
@@ -117,15 +127,76 @@
               自家：
               <ul>
                 <li>
-                  {{ macros::render_action(action=entry.actual) }}
+                  {{- macros::render_action(action=entry.actual) -}}
                 </li>
               </ul>
             </li>
           </ul>
+
+          {%- if entry.details is defined -%}
+            <details>
+              <table border="1" cellspacing="0" cellpadding="0" class="stat">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>pt 期待値</th>
+                    <th>放銃率 (%)</th>
+                    <th>放銃後の pt 期待値</th>
+                    <th>通った後の pt 期待値</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {%- for detail in entry.details -%}
+                    <tr>
+                      <td>
+                        {{- macros::render_action(action=detail.moves) -}}
+                      </td>
+                      <td>
+                        {%- if detail.review.pt_exp_total is number -%}
+                          <span title="{{ detail.review.pt_exp_total }}">
+                            {{- pretty_round(num=detail.review.pt_exp_total) -}}
+                          </span>
+                        {%- else -%}
+                          N/A
+                        {%- endif -%}
+                      </td>
+                      <td data-raw="{{ detail.review.total_houjuu_hai_prob_now }}">
+                        {%- if detail.review.total_houjuu_hai_prob_now is number -%}
+                          <span title="{{ detail.review.total_houjuu_hai_prob_now * 100 }}">
+                            {{- pretty_round(num=(detail.review.total_houjuu_hai_prob_now * 100)) -}}
+                          </span>
+                        {%- else -%}
+                          N/A
+                        {%- endif -%}
+                      </td>
+                      <td data-raw="{{ detail.review.total_houjuu_hai_value_now }}">
+                        {%- if detail.review.total_houjuu_hai_value_now is number -%}
+                          <span title="{{ detail.review.total_houjuu_hai_value_now }}">
+                            {{- pretty_round(num=detail.review.total_houjuu_hai_value_now) -}}
+                          </span>
+                        {%- else -%}
+                          N/A
+                        {%- endif -%}
+                      </td>
+                      <td data-raw="{{ detail.review.pt_exp_after }}">
+                        {%- if detail.review.pt_exp_after is number -%}
+                          <span title="{{ detail.review.pt_exp_after }}">
+                            {{- pretty_round(num=detail.review.pt_exp_after) -}}
+                          </span>
+                        {%- else -%}
+                          N/A
+                        {%- endif -%}
+                      </td>
+                    </tr>
+                  {%- endfor -%}
+                </tbody>
+              </table>
+            </details>
+          {%- endif -%}
         </details>
-      {% endfor %}
+      {%- endfor -%}
     </section>
-  {% endfor %}
+  {%- endfor -%}
 
   <style>
     html {
@@ -188,7 +259,7 @@
       margin-bottom: .5em;
     }
 
-    .kyoku-toc, 
+    .kyoku-toc,
     .kyoku-heading {
       display: flex;
     }
@@ -223,9 +294,25 @@
       display: block;
       margin: auto;
     }
+
+    table.stat {
+      table-layout: fixed;
+      text-align: center;
+      width: 100%;
+    }
+    table.stat th, td {
+      padding: 3px;
+    }
+    table.stat th {
+      font-size: 85%;
+    }
+    table.stat td {
+      font-size: 90%;
+      line-height: 32px;
+    }
   </style>
 
-  {% include "pai.svg" %}
+  {%- include "pai.svg" -%}
 </body>
 
 </html>
