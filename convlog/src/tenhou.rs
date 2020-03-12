@@ -24,8 +24,8 @@ impl fmt::Display for GameLength {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            GameLength::Hanchan => write!(f, "東風"),
-            GameLength::Tonpuu => write!(f, "半荘"),
+            GameLength::Hanchan => write!(f, "半荘"),
+            GameLength::Tonpuu => write!(f, "東風"),
         }
     }
 }
