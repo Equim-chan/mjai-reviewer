@@ -99,7 +99,7 @@
           <summary>{{ entry.junme }} 巡</summary>
           <p>
             {# TODO: render these #}
-            <pre>{{ entry.state | json_encode() }}</pre>
+            {# <pre>{{ entry.state | json_encode() }}</pre> #}
 
             {%- if entry.actor == target_actor -%}
               自家が{{ macros::render_pai(pai=entry.pai) }}を引いた時——
@@ -160,7 +160,7 @@
                           N/A
                         {%- endif -%}
                       </td>
-                      <td data-raw="{{ detail.review.total_houjuu_hai_prob_now }}">
+                      <td>
                         {%- if detail.review.total_houjuu_hai_prob_now is number -%}
                           <span title="{{ detail.review.total_houjuu_hai_prob_now * 100 }}">
                             {{- pretty_round(num=(detail.review.total_houjuu_hai_prob_now * 100)) -}}
@@ -169,7 +169,7 @@
                           N/A
                         {%- endif -%}
                       </td>
-                      <td data-raw="{{ detail.review.total_houjuu_hai_value_now }}">
+                      <td>
                         {%- if detail.review.total_houjuu_hai_value_now is number -%}
                           <span title="{{ detail.review.total_houjuu_hai_value_now }}">
                             {{- pretty_round(num=detail.review.total_houjuu_hai_value_now) -}}
@@ -178,7 +178,7 @@
                           N/A
                         {%- endif -%}
                       </td>
-                      <td data-raw="{{ detail.review.pt_exp_after }}">
+                      <td>
                         {%- if detail.review.pt_exp_after is number -%}
                           <span title="{{ detail.review.pt_exp_after }}">
                             {{- pretty_round(num=detail.review.pt_exp_after) -}}

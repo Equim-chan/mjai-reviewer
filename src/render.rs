@@ -60,16 +60,6 @@ fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {
             let n = (f * 1e4).round() / 1e4;
             let s = format!("{:.04}", n);
 
-            // let parts: Vec<_> = s.split('.').collect();
-            // let left = parts[0];
-            // let right = parts[1]
-            //     .as_bytes()
-            //     .chunks(3)
-            //     .map(|p| unsafe { std::str::from_utf8_unchecked(p) })
-            //     .collect::<Vec<_>>()
-            //     .join(" ");
-            // let ret = format!("{}.{}", left, right);
-
             return Ok(Value::String(s));
         }
     }
