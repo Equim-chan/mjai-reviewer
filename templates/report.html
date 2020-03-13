@@ -141,10 +141,10 @@
                 <thead>
                   <tr>
                     <th></th>
-                    <th>{% if use_ranking_exp %}順位{% else %}pt {% endif %}期待値</th>
+                    <th>{% if use_ranking_exp %}最終順位{% else %}pt {% endif %}期待値</th>
                     <th>放銃率 (%)</th>
-                    <th>放銃後の{% if use_ranking_exp %}順位{% else %} pt {% endif %}期待値</th>
-                    <th>通った後の{% if use_ranking_exp %}順位{% else %} pt {% endif %}期待値</th>
+                    <th>放銃後の{% if use_ranking_exp %}最終順位{% else %} pt {% endif %}期待値</th>
+                    <th>通った後の{% if use_ranking_exp %}最終順位{% else %} pt {% endif %}期待値</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -321,7 +321,7 @@
       padding: 3px;
     }
     table.stat th {
-      font-size: 80%;
+      font-size: 85%;
     }
     table.stat td {
       font-size: 90%;

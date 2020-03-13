@@ -214,7 +214,7 @@ fn main() -> Result<()> {
             Arg::with_name("use-ranking-exp")
                 .long("use-ranking-exp")
                 .help(
-                    "Use ranking exp value instead of pt exp value. \
+                    "Use final ranking exp instead of pt exp. \
                     This will override --pt and \"jun_pt\" in --tactics-config.",
                 ),
         )
