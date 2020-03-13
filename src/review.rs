@@ -184,7 +184,7 @@ where
             kyoku_review.kyoku,
             kyoku_review.honba,
             junme,
-            (i as f64) / (events_len as f64) * 100f64,
+            (i as f32) / (events_len as f32) * 100f32,
         );
 
         // should have at least 4, e.g. dahai -> ryukyoku -> end_kyoku -> end_game
