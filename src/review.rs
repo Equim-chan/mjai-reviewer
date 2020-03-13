@@ -12,7 +12,7 @@ use anyhow::{Context, Result};
 use convlog::mjai::Event;
 use convlog::Pai;
 use serde::{Deserialize, Serialize};
-use serde_json;
+use serde_json as json;
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct KyokuReview {
@@ -112,12 +112,10 @@ where
     let mut entries = vec![];
 
     for (i, event) in events.iter().enumerate() {
-        let to_write = serde_json::to_string(event).unwrap() + "\n";
-        stdin
-            .write_all(to_write.as_bytes())
-            .context("failed to write to akochan")?;
+        let to_write = json::to_string(event).unwrap();
+        writeln!(stdin, "{}", to_write).context("failed to write to akochan")?;
         if verbose {
-            log!("> {}", to_write.trim());
+            log!("> {}", to_write);
         }
 
         // upate the state
@@ -204,7 +202,7 @@ where
         }
 
         let actions: Vec<DetailedAction> =
-            serde_json::from_str(&line).context("failed to parse JSON output of akochan")?;
+            json::from_str(&line).context("failed to parse JSON output of akochan")?;
 
         if actions.is_empty() || actions.iter().any(|a| a.moves.is_empty()) {
             log!("WARNING: actions or some moves in actions is empty");

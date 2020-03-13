@@ -1,6 +1,7 @@
 use super::Pai;
 
 use serde::{Deserialize, Serialize};
+use serde_json as json;
 use serde_json::{Result, Value};
 use serde_tuple::{Deserialize_tuple as DeserializeTuple, Serialize_tuple as SerializeTuple};
 use std::fmt;
@@ -199,7 +200,7 @@ impl Log {
     /// Parse a tenhou.net/6 log from JSON string.
     #[inline]
     pub fn from_json_str(json_string: &str) -> Result<Self> {
-        let raw_log: RawLog = serde_json::from_str(json_string)?;
+        let raw_log: RawLog = json::from_str(json_string)?;
         Ok(Self::from(raw_log))
     }
 }

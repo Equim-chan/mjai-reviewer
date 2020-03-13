@@ -29,7 +29,7 @@ use clap::{App, Arg};
 use convlog::tenhou;
 use dunce::canonicalize;
 use opener;
-use serde_json;
+use serde_json as json;
 use tee::TeeReader;
 use tempfile::NamedTempFile;
 
@@ -280,7 +280,7 @@ fn main() -> Result<()> {
     let begin_parse_log = chrono::Local::now();
     log!("parsing tenhou log...");
     let raw_log: tenhou::RawLog =
-        serde_json::from_reader(log_reader).context("failed to parse tenhou log")?;
+        json::from_reader(log_reader).context("failed to parse tenhou log")?;
 
     // clone the parsed raw log for possible reuse (split)
     let cloned_raw_log = if !matches.is_present("without-reviewer") {
@@ -310,9 +310,8 @@ fn main() -> Result<()> {
         };
 
         for event in &events {
-            serde_json::to_writer(&mut w, event)
-                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out))?;
-            writeln!(w)
+            let to_write = json::to_string(event).context("failed to serialize")?;
+            writeln!(w, "{}", to_write)
                 .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out))?;
         }
     }
@@ -369,7 +368,7 @@ fn main() -> Result<()> {
             .with_context(|| format!("failed to open tactics_config {:?}", canon_path))?;
         let tactics_file_reader = BufReader::new(tactics_file);
 
-        let mut tactics_json: TacticsJson = serde_json::from_reader(tactics_file_reader)
+        let mut tactics_json: TacticsJson = json::from_reader(tactics_file_reader)
             .with_context(|| format!("failed to parse tactics_config {:?}", canon_path))?;
 
         // opt-in pt
@@ -390,8 +389,7 @@ fn main() -> Result<()> {
                 .for_each(|(o, n)| *o = n);
 
             let mut tmp = NamedTempFile::new().context("failed to create temp file")?;
-            serde_json::to_writer(&mut tmp, &tactics_json)
-                .context("failed to write to temp file")?;
+            json::to_writer(&mut tmp, &tactics_json).context("failed to write to temp file")?;
 
             let tmp_path = tmp
                 .into_temp_path()

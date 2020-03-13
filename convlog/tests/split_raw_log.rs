@@ -3,13 +3,12 @@ mod testdata;
 use convlog::*;
 use testdata::TESTDATA;
 
-use serde_json;
+use serde_json as json;
 
 #[test]
 fn test_split_by_kyoku() {
     TESTDATA.iter().for_each(|data| {
-        let raw_log: tenhou::RawLog =
-            serde_json::from_str(data).expect("failed to parse tenhou log");
+        let raw_log: tenhou::RawLog = json::from_str(data).expect("failed to parse tenhou log");
         let splited_raw_logs = raw_log.split_by_kyoku();
 
         let log = tenhou::Log::from(raw_log.clone());

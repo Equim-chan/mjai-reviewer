@@ -9,6 +9,7 @@ use anyhow::{Context, Result};
 use convlog::tenhou::RawPartialLog;
 use lazy_static::lazy_static;
 use serde::Serialize;
+use serde_json as json;
 use tera;
 use tera::{Tera, Value};
 
@@ -95,12 +96,12 @@ where
 
     let ctx = tera::Context::from_serialize(&view)?;
     let result =
-        TEMPLATES.render("report.html", &ctx).with_context(|| {
-            match serde_json::to_string(&view) {
+        TEMPLATES
+            .render("report.html", &ctx)
+            .with_context(|| match json::to_string(&view) {
                 Ok(json_string) => format!("with values: {}", json_string),
                 Err(err) => format!("even serializations failed: {}", err),
-            }
-        })?;
+            })?;
     w.write_all(&result.as_bytes())?;
 
     Ok(())
