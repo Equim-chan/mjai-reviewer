@@ -144,7 +144,7 @@ fn main() -> Result<()> {
         .arg(
             Arg::with_name("no-open")
                 .long("no-open")
-                .help("Do not open the output file after finishing"),
+                .help("Do not open the output file in browser after finishing"),
         )
         .arg(
             Arg::with_name("no-review")
@@ -208,6 +208,14 @@ fn main() -> Result<()> {
                 .help(
                     "Shortcut to override \"jun_pt\" in --tactics-config. \
                     Format: \"90,45,0,-135\"",
+                ),
+        )
+        .arg(
+            Arg::with_name("use-ranking-exp")
+                .long("use-ranking-exp")
+                .help(
+                    "Use ranking exp value instead of pt exp value. \
+                    This will override --pt and \"jun_pt\" in --tactics-config.",
                 ),
         )
         .arg(
@@ -365,12 +373,20 @@ fn main() -> Result<()> {
             .with_context(|| format!("failed to parse tactics_config {:?}", canon_path))?;
 
         // opt-in pt
-        if let Some(pt) = matches.value_of("pt") {
+        let pt_opt = if matches.is_present("use-ranking-exp") {
+            Some(vec![-1, -2, -3, -4])
+        } else if let Some(pt) = matches.value_of("pt") {
+            Some(pt.split(',').map(|p| p.parse::<i32>().unwrap()).collect())
+        } else {
+            None
+        };
+
+        if let Some(pt) = pt_opt {
             tactics_json
                 .tactics
                 .jun_pt
                 .iter_mut()
-                .zip(pt.split(',').map(|p| p.parse::<i32>().unwrap()))
+                .zip(pt)
                 .for_each(|(o, n)| *o = n);
 
             let mut tmp = NamedTempFile::new().context("failed to create temp file")?;

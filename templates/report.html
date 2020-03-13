@@ -1,5 +1,7 @@
 {%- import "macros.html" as macros -%}
 
+{%- set_global use_ranking_exp = metadata.pt|join(sep=",") == "-1,-2,-3,-4" -%}
+
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -139,10 +141,10 @@
                 <thead>
                   <tr>
                     <th></th>
-                    <th>pt 期待値</th>
+                    <th>{% if use_ranking_exp %}順位{% else %}pt {% endif %}期待値</th>
                     <th>放銃率 (%)</th>
-                    <th>放銃後の pt 期待値</th>
-                    <th>通った後の pt 期待値</th>
+                    <th>放銃後の{% if use_ranking_exp %}順位{% else %} pt {% endif %}期待値</th>
+                    <th>通った後の{% if use_ranking_exp %}順位{% else %} pt {% endif %}期待値</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,8 +155,13 @@
                       </td>
                       <td>
                         {%- if detail.review.pt_exp_total is number -%}
-                          <span title="{{ detail.review.pt_exp_total }}">
-                            {{- pretty_round(num=detail.review.pt_exp_total) -}}
+                          {%- if use_ranking_exp -%}
+                            {%- set val = 0 - detail.review.pt_exp_total -%}
+                          {%- else -%}
+                            {%- set val = detail.review.pt_exp_total -%}
+                          {%- endif -%}
+                          <span title="{{ val }}">
+                            {{- pretty_round(num=val) -}}
                           </span>
                         {%- else -%}
                           N/A
@@ -171,8 +178,13 @@
                       </td>
                       <td>
                         {%- if detail.review.total_houjuu_hai_value_now is number -%}
-                          <span title="{{ detail.review.total_houjuu_hai_value_now }}">
-                            {{- pretty_round(num=detail.review.total_houjuu_hai_value_now) -}}
+                          {%- if use_ranking_exp -%}
+                            {%- set val = 0 - detail.review.total_houjuu_hai_value_now -%}
+                          {%- else -%}
+                            {%- set val = detail.review.total_houjuu_hai_value_now -%}
+                          {%- endif -%}
+                          <span title="{{ val }}">
+                            {{- pretty_round(num=val) -}}
                           </span>
                         {%- else -%}
                           N/A
@@ -180,8 +192,13 @@
                       </td>
                       <td>
                         {%- if detail.review.pt_exp_after is number -%}
-                          <span title="{{ detail.review.pt_exp_after }}">
-                            {{- pretty_round(num=detail.review.pt_exp_after) -}}
+                          {%- if use_ranking_exp -%}
+                            {%- set val = 0 - detail.review.pt_exp_after -%}
+                          {%- else -%}
+                            {%- set val = detail.review.pt_exp_after -%}
+                          {%- endif -%}
+                          <span title="{{ val }}">
+                            {{- pretty_round(num=val) -}}
                           </span>
                         {%- else -%}
                           N/A
@@ -304,7 +321,7 @@
       padding: 3px;
     }
     table.stat th {
-      font-size: 85%;
+      font-size: 80%;
     }
     table.stat td {
       font-size: 90%;

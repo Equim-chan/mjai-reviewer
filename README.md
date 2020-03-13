@@ -16,13 +16,15 @@ USAGE:
     akochan-reviewer [FLAGS] [OPTIONS] --actor <INDEX>
 
 FLAGS:
-    -f, --full              Analyze every move, not only the different ones.
-    -h, --help              Prints help information
-        --no-open           Do not open the output file after finishing
-        --no-review         Do not review at all. Only download and save files
-    -V, --version           Prints version information
-    -v, --verbose           Use verbose output
-        --without-viewer    Do not include log viewer in the generated HTML report
+    -f, --full               Analyze every move, not only the different ones.
+    -h, --help               Prints help information
+        --no-open            Do not open the output file in browser after finishing
+        --no-review          Do not review at all. Only download and save files
+        --use-ranking-exp    Use ranking exp value instead of pt exp value. This will override --pt and "jun_pt" in
+                             --tactics-config.
+    -V, --version            Prints version information
+    -v, --verbose            Use verbose output
+        --without-viewer     Do not include log viewer in the generated HTML report
 
 OPTIONS:
     -a, --actor <INDEX>            Specify the actor to review. It is the number after "&tw=" in tenhou's log url
