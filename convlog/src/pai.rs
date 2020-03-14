@@ -10,7 +10,7 @@ use thiserror::Error;
 /// Describes a pai in tenhou.net/6 format.
 ///
 /// It deserializes from u8, but serializes to String.
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Deserialize)]
 pub struct Pai(pub u8);
 
 impl Eq for Pai {}
