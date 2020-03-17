@@ -210,8 +210,9 @@ where
         }
 
         if actions.len() == 1 {
-            // only one choice (Tsumo after Reach), or choice at all (None)
-            continue;
+            if let Event::None = actions[0].moves[0] {
+                continue;
+            }
         }
 
         let expected_action = &actions[0].moves; // best move
