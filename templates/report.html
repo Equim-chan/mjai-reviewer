@@ -99,23 +99,7 @@
       {%- for entry in item.entries -%}
         <details open class="collapse">
           <summary>{{ entry.junme }} 巡</summary>
-          <p>
-            {# TODO: render these #}
-            {# <pre>{{ entry.state | json_encode() }}</pre> #}
-
-            {%- if entry.actor == target_actor -%}
-              自家が{{ macros::render_pai(pai=entry.pai) }}を引いた時——
-            {%- else -%}
-              {%- if entry.actor == (target_actor + 1) % 4 -%}
-                下家
-              {%- elif entry.actor == (target_actor + 2) % 4 -%}
-                対面
-              {%- else -%}
-                上家
-              {%- endif -%}
-              が{{ macros::render_pai(pai=entry.pai) }}を切った時——
-            {%- endif -%}
-          </p>
+          {{- macros::render_tehai_state(entry=entry, target_actor=target_actor) -}}
           <ul>
             <li>
               akochan の最善手：
@@ -298,6 +282,43 @@
       font-size: 75%;
       font-weight: normal;
       line-height: 75%;
+    }
+
+    .tehai-state {
+      display: flex;
+      list-style: none;
+      padding-left: 0;
+      margin-top: 25px;
+    }
+    .tsumo {
+      margin-left: .5em;
+    }
+    .tsumo::before {
+      content: attr(data-content);
+    }
+    .fuuro {
+      display: flex;
+      list-style: none;
+      padding-left: 0;
+      margin-left: .5em;
+    }
+    :not(.fuuro) + .fuuro {
+      margin-left: 1em;
+    }
+    .consumed {
+      display: flex;
+      list-style: none;
+      padding-left: 0;
+    }
+    .rotated {
+      transform: rotate(90deg) translateX(-25px);
+      transform-origin: bottom left;
+      margin-right: 10px;
+    }
+    .rotated.added {
+      transform: rotate(90deg) translateX(-50px);
+      transform-origin: bottom left;
+      margin-right: -15px;
     }
 
     .sticky {
