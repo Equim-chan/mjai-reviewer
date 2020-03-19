@@ -76,7 +76,7 @@ impl Tehai {
     }
 
     /// Remove several pais for fuuro.
-    pub fn remove_for_fuuro(&mut self, pais: &[Pai]) {
+    pub fn remove_multiple(&mut self, pais: &[Pai]) {
         // usually, it is already sorted, except for kakan and ankan.
         if !self.is_sorted {
             self.sort();

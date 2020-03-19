@@ -65,7 +65,7 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_for_fuuro(&consumed.0);
+                self.tehai.remove_multiple(&consumed.0);
 
                 let fuuro = Fuuro::Chi {
                     target,
@@ -81,7 +81,7 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_for_fuuro(&consumed.0);
+                self.tehai.remove_multiple(&consumed.0);
 
                 let fuuro = Fuuro::Pon {
                     target,
@@ -97,7 +97,7 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_for_fuuro(&consumed.0);
+                self.tehai.remove_multiple(&consumed.0);
 
                 let fuuro = Fuuro::Daiminkan {
                     target,
@@ -115,15 +115,15 @@ impl State {
                 self.tehai.tedashi(pai);
 
                 let (
+                    previous_pon_idx,
                     previous_pon_target,
                     previous_pon_pai,
                     previous_pon_consumed,
-                    previous_pon_idx,
                 ) = self
                     .fuuros
                     .iter()
                     .enumerate()
-                    .find_map(|(i, f)| match *f {
+                    .find_map(|(idx, f)| match *f {
                         Fuuro::Pon {
                             target: pon_target,
                             pai: pon_pai,
@@ -131,12 +131,12 @@ impl State {
                         } if Consumed3([pon_pai, pon_consumed.0[0], pon_consumed.0[1]])
                             == consumed =>
                         {
-                            Some((pon_target, pon_pai, pon_consumed, i))
+                            Some((idx, pon_target, pon_pai, pon_consumed))
                         }
 
                         _ => None,
                     })
-                    .context(anyhow!("invalid state, previous pon not found for kakan."))?;
+                    .context(anyhow!("invalid state: previous Pon not found for Kakan"))?;
 
                 let fuuro = Fuuro::Kakan {
                     pai,
@@ -144,13 +144,11 @@ impl State {
                     previous_pon_pai,
                     consumed: previous_pon_consumed,
                 };
-
-                self.fuuros.remove(previous_pon_idx);
-                self.fuuros.push(fuuro);
+                self.fuuros[previous_pon_idx] = fuuro;
             }
 
             Event::Ankan { actor, consumed } if actor == self.actor => {
-                self.tehai.remove_for_fuuro(&consumed.0);
+                self.tehai.remove_multiple(&consumed.0);
 
                 let fuuro = Fuuro::Ankan { consumed };
                 self.fuuros.push(fuuro);
