@@ -1,8 +1,14 @@
-{% macro render_pai(pai) %}
-  <svg class="tile">
-    <use class="face" href="#pai-{{ pai | lower }}"></use>
-  </svg>
-{% endmacro render_pai %}
+{%- macro render_pai(pai) -%}
+  {%- if pai == "back" -%}
+    <svg class="tile">
+      <use class="back" href="#tile"></use>
+    </svg>
+  {%- else -%}
+    <svg class="tile">
+      <use class="face" href="#pai-{{ pai | lower }}"></use>
+    </svg>
+  {%- endif -%}
+{%- endmacro render_pai -%}
 
 {%- macro render_action(action) -%}
   {%- if action[0].type == "none" -%}
@@ -66,3 +72,105 @@
     流局
   {%- endif -%}
 {%- endmacro render_end_status -%}
+
+{%- macro render_tehai_state(entry, target_actor) -%}
+  {%- set actor = (entry.actor - target_actor + 4) % 4 -%}
+  <ul class="tehai-state">
+    {%- for pai in entry.state.tehai -%}
+      {%- if entry.state.tehai|length == loop.index -%}
+        {%- if entry.actor == target_actor -%}
+          <li class="tsumo" data-content="ツモ ">{{- self::render_pai(pai=pai) -}}</li>
+        {%- else -%}
+          <li>{{- self::render_pai(pai=pai) -}}</li>
+          <li class="tsumo" data-content="{{ self::render_actor(actor=entry.actor, target_actor=target_actor) }}打 ">{{- self::render_pai(pai=entry.pai) -}}</li>
+        {%- endif -%}
+      {%- else -%}
+        <li>{{- self::render_pai(pai=pai) -}}</li>
+      {%- endif -%}
+    {%- endfor -%}
+    {%- for fuuro in entry.state.fuuros|reverse -%}
+      <li class="fuuro">{{- self::render_fuuro(fuuro=fuuro, target_actor=target_actor) -}}</li>
+    {%- endfor -%}
+  </ul>
+{%- endmacro render_tehai_state -%}
+
+{%- macro render_fuuro(fuuro, target_actor) -%}
+  {%- if fuuro.type == "pon" or fuuro.type == "chi" -%}
+    {{- self::render_pon_or_chi(fuuro=fuuro, target_actor=target_actor) -}}
+  {%- elif fuuro.type == "ankan" -%}
+    {{- self::render_ankan(fuuro=fuuro, target_actor=target_actor) -}}
+  {%- elif fuuro.type == "kakan" -%}
+    {{- self::render_kakan(fuuro=fuuro, target_actor=target_actor) -}}
+  {%- elif fuuro.type == "daiminkan" -%}
+    {{- self::render_daiminkan(fuuro=fuuro, target_actor=target_actor) -}}
+  {%- endif -%}
+{%- endmacro render_fuuro -%}
+
+{%- macro render_pon_or_chi(fuuro, target_actor) -%}
+  {%- set relative_actor = (fuuro.target - target_actor + 4) % 4 -%}
+  <ul class="consumed">
+    {%- if relative_actor == 1 -%} {# 下家 #}
+      <li>{{- self::render_pai(pai=fuuro.consumed.0) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.1) -}}</li>
+      <li class="rotated">{{- self::render_pai(pai=fuuro.pai) -}}</li>
+    {%- elif relative_actor == 2 -%} {# 対面 #}
+      <li>{{- self::render_pai(pai=fuuro.consumed.0) -}}</li>
+      <li class="rotated">{{- self::render_pai(pai=fuuro.pai) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.1) -}}</li>
+    {%- elif relative_actor == 3 -%} {# 上家 #}
+      <li class="rotated">{{- self::render_pai(pai=fuuro.pai) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.0) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.1) -}}</li>
+    {%- endif -%}
+  </ul>
+{%- endmacro render_pon_or_chi -%}
+
+{%- macro render_ankan(fuuro, target_actor) -%}
+  <ul class="consumed">
+    <li>{{ self::render_pai(pai="back") }}</li>
+    <li>{{ self::render_pai(pai=fuuro.consumed.1) }}</li>
+    <li>{{ self::render_pai(pai=fuuro.consumed.2) }}</li>
+    <li>{{ self::render_pai(pai="back") }}</li>
+  </ul>
+{%- endmacro render_ankan -%}
+
+{%- macro render_kakan(fuuro, target_actor) -%}
+  {%- set relative_actor = (fuuro.previous_pon_target - target_actor + 4) % 4 -%}
+  <ul class="consumed">
+    {%- if relative_actor == 1 -%} {# 下家 #}
+      <li>{{- self::render_pai(pai=fuuro.consumed.0) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.1) -}}</li>
+      <li class="rotated added">{{- self::render_pai(pai=fuuro.pai) -}}{{- self::render_pai(pai=fuuro.previous_pon_pai) -}}</li>
+    {%- elif relative_actor == 2 -%} {# 対面 #}
+      <li>{{- self::render_pai(pai=fuuro.consumed.0) -}}</li>
+      <li class="rotated added">{{- self::render_pai(pai=fuuro.pai) -}}{{- self::render_pai(pai=fuuro.previous_pon_pai) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.1) -}}</li>
+    {%- elif relative_actor == 3 -%} {# 上家 #}
+      <li class="rotated added">{{- self::render_pai(pai=fuuro.pai) -}}{{- self::render_pai(pai=fuuro.previous_pon_pai) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.0) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.1) -}}</li>
+    {%- endif -%}
+  </ul>
+{%- endmacro render_kakan -%}
+
+{%- macro render_daiminkan(fuuro, target_actor) -%}
+  {%- set relative_actor = (fuuro.target - target_actor + 4) % 4 -%}
+  <ul class="consumed">
+    {%- if relative_actor == 1 -%} {# 下家 #}
+      <li>{{- self::render_pai(pai=fuuro.consumed.0) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.1) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.2) -}}</li>
+      <li class="rotated">{{- self::render_pai(pai=fuuro.pai) -}}</li>
+    {%- elif relative_actor == 2 -%} {# 対面 #}
+      <li>{{- self::render_pai(pai=fuuro.consumed.0) -}}</li>
+      <li class="rotated">{{- self::render_pai(pai=fuuro.pai) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.1) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.2) -}}</li>
+    {%- elif relative_actor == 3 -%} {# 上家 #}
+      <li class="rotated">{{- self::render_pai(pai=fuuro.pai) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.0) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.1) -}}</li>
+      <li>{{- self::render_pai(pai=fuuro.consumed.2) -}}</li>
+    {%- endif -%}
+  </ul>
+{%- endmacro render_daiminkan -%}
