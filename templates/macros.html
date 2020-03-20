@@ -28,14 +28,14 @@
     {%- endif -%}
   {%- elif action[0].type == "chi" -%}
     {%- for pai in action[0].consumed -%}
-      {{ self::render_pai(pai=pai) }}
-    {%- endfor -%}
+      {{- self::render_pai(pai=pai) -}}
+    {% endfor %}
     チー打
     {{ self::render_pai(pai=action[1].pai) }}
   {%- elif action[0].type == "pon" -%}
     {%- for pai in action[0].consumed -%}
-      {{ self::render_pai(pai=pai) }}
-    {%- endfor -%}
+      {{- self::render_pai(pai=pai) -}}
+    {% endfor %}
     ポン打
     {{ self::render_pai(pai=action[1].pai) }}
   {%- elif action[0].type == "kakan" or action[0].type == "daiminkan" -%}
