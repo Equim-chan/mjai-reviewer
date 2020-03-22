@@ -31,6 +31,7 @@
     "mc_init": "ako",
     "sbr_est": "ako",
     "katachi_est": "ako",
-    "houjuu_est": "ako"
+    "houjuu_est": "ako",
+    "use_ori_exp_at_dp_fuuro": false
   }
 }
