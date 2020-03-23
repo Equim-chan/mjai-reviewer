@@ -1,4 +1,4 @@
-pub static TESTDATA: &[&str] = &[
+pub const TESTDATA: &[&str] = &[
     include_str!("chankan.json"),
     include_str!("complex_nakis.json"),
     include_str!("four_reach.json"),

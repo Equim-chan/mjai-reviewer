@@ -1,7 +1,8 @@
+use std::io;
+
 use convlog;
 use convlog::tenhou;
 use serde_json as json;
-use std::io;
 
 fn main() {
     let stdin = io::stdin();

@@ -15,7 +15,7 @@ pub struct Pai(pub u8);
 
 impl Eq for Pai {}
 
-static MJAI_PAI_STRINGS: &[&str] = &[
+const MJAI_PAI_STRINGS: &[&str] = &[
     "?", "?", "?", "?", "?", "?", "?", "?", "?", "?", // 0~9
     "?", "1m", "2m", "3m", "4m", "5m", "6m", "7m", "8m", "9m", // 10~19
     "?", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", // 20~29

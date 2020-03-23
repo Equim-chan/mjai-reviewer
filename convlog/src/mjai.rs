@@ -1,4 +1,4 @@
-use super::pai::Pai;
+use crate::pai::Pai;
 
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize};

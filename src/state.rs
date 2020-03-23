@@ -1,4 +1,4 @@
-use super::tehai::Tehai;
+use crate::tehai::Tehai;
 
 use anyhow::anyhow;
 use anyhow::{Context, Result};

@@ -1,5 +1,5 @@
-use super::metadata::Metadata;
-use super::review::KyokuReview;
+use crate::metadata::Metadata;
+use crate::review::KyokuReview;
 
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -29,8 +29,8 @@ static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
 });
 
 fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
-    static BAKAZE_KANJI: &[&str] = &["東", "南", "西", "北"];
-    static NUM_KANJI: &[&str] = &["一", "二", "三", "四"];
+    const BAKAZE_KANJI: &[&str] = &["東", "南", "西", "北"];
+    const NUM_KANJI: &[&str] = &["一", "二", "三", "四"];
 
     let kyoku = if let Some(Value::Number(num)) = args.get("kyoku") {
         usize::try_from(num.as_u64().unwrap_or(0)).unwrap_or(0)

@@ -1,5 +1,5 @@
-use super::log;
-use super::state::State;
+use crate::log;
+use crate::state::State;
 
 use std::ffi::OsStr;
 use std::io::prelude::*;

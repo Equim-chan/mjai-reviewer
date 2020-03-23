@@ -1,10 +1,11 @@
-use super::Pai;
+use crate::Pai;
+
+use std::fmt;
 
 use serde::{Deserialize, Serialize};
 use serde_json as json;
 use serde_json::{Result, Value};
 use serde_tuple::{Deserialize_tuple as DeserializeTuple, Serialize_tuple as SerializeTuple};
-use std::fmt;
 
 /// The overview structure of log in tenhou.net/6 format.
 #[derive(Debug, Clone)]

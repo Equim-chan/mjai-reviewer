@@ -1,7 +1,8 @@
-use anyhow::{Context, Result};
-use chrono::prelude::*;
 use std::env;
 use std::process::Command;
+
+use anyhow::{Context, Result};
+use chrono::prelude::*;
 use tera::Tera;
 
 fn main() -> Result<()> {

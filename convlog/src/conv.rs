@@ -1,6 +1,6 @@
-use super::mjai;
-use super::tenhou;
-use super::Pai;
+use crate::mjai;
+use crate::tenhou;
+use crate::Pai;
 
 use std::str;
 

@@ -33,15 +33,15 @@ use serde_json as json;
 use tee::TeeReader;
 use tempfile::NamedTempFile;
 
-static PKG_NAME: &str = env!("CARGO_PKG_NAME");
-static PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
-static PKG_DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
-static GIT_HASH: &str = env!("GIT_HASH");
-static BUILD_DATE: &str = env!("BUILD_DATE");
-static BUILD_PROFILE: &str = env!("BUILD_PROFILE");
-static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
-static RUSTC_HOST: &str = env!("RUSTC_HOST");
-static RUSTC_TARGET: &str = env!("RUSTC_TARGET");
+const PKG_NAME: &str = env!("CARGO_PKG_NAME");
+const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
+const PKG_DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
+const GIT_HASH: &str = env!("GIT_HASH");
+const BUILD_DATE: &str = env!("BUILD_DATE");
+const BUILD_PROFILE: &str = env!("BUILD_PROFILE");
+const RUSTC_VERSION: &str = env!("RUSTC_VERSION");
+const RUSTC_HOST: &str = env!("RUSTC_HOST");
+const RUSTC_TARGET: &str = env!("RUSTC_TARGET");
 
 fn main() -> Result<()> {
     let matches = App::new(PKG_NAME)
