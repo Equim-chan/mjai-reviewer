@@ -63,7 +63,6 @@ fn main() -> Result<()> {
                 .long("actor")
                 .takes_value(true)
                 .value_name("INDEX")
-                .required(true)
                 .validator(|v| {
                     let num: u8 = v
                         .parse()
@@ -232,9 +231,6 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
-    // get actor
-    let actor: u8 = value_t_or_exit!(matches, "actor", u8);
-
     // load io specific options
     let arg_in_file = matches.value_of_os("in-file");
     let arg_out_file = matches.value_of_os("out-file");
@@ -319,6 +315,9 @@ fn main() -> Result<()> {
     if matches.is_present("no-review") {
         return Ok(());
     }
+
+    // get actor
+    let actor: u8 = value_t_or_exit!(matches, "actor", u8);
 
     // get paths
     let akochan_exe = {
