@@ -63,7 +63,6 @@ fn main() -> Result<()> {
                 .long("actor")
                 .takes_value(true)
                 .value_name("INDEX")
-                .required(true)
                 .validator(|v| {
                     let num: u8 = v
                         .parse()
@@ -135,6 +134,15 @@ fn main() -> Result<()> {
                     "Save the transformed mjai format log to FILE. \
                     If FILE is \"-\", write to stdout",
                 ),
+        )
+        .arg(
+            Arg::with_name("tenhou-ids-file")
+            .long("tenhou-ids-file")
+            .takes_value(true)
+            .value_name("FILE")
+            .help(
+                "Specify a file of Tenhou log ID list, overriding --tenhou-id."
+            )
         )
         .arg(
             Arg::with_name("without-viewer")
@@ -232,15 +240,41 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
-    // get actor
-    let actor: u8 = value_t_or_exit!(matches, "actor", u8);
-
     // load io specific options
     let arg_in_file = matches.value_of_os("in-file");
     let arg_out_file = matches.value_of_os("out-file");
     let arg_tenhou_id = matches.value_of("tenhou-id");
     let arg_tenhou_out = matches.value_of_os("tenhou-out");
     let arg_mjai_out = matches.value_of_os("mjai-out");
+    let arg_tenhou_ids_file = matches.value_of("tenhou-ids-file");
+
+    if let Some(tenhou_ids_file) = arg_tenhou_ids_file {
+        println!("tenhou_ids_file: {:?}", tenhou_ids_file);
+        for line in BufReader::new(File::open(tenhou_ids_file)?).lines() {
+            let tenhou_id = line?;
+            log!("downloading tenhou log {} ...", tenhou_id);
+            let log_stream = download_tenhou_log(&tenhou_id)
+                .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id))?;
+            let log_reader = Box::new(log_stream);
+            log!("parsing tenhou log {} ...", tenhou_id);
+            let raw_log: tenhou::RawLog =
+                json::from_reader(log_reader).context("failed to parse tenhou log")?;
+            let log = tenhou::Log::from(raw_log);
+            log!("converting to mjai events...");
+            let events =
+                convlog::tenhou_to_mjai(&log).context("failed to convert tenhou log into mjai format")?;
+            let mjai_out = tenhou_id + ".json";
+            let mjai_out_file = File::create(mjai_out.clone())
+                .with_context(|| format!("failed to create mjai out file {:?}", mjai_out))?;
+            let mut w = Box::from(mjai_out_file);
+            for event in &events {
+                let to_write = json::to_string(event).context("failed to serialize")?;
+                writeln!(w, "{}", to_write)
+                    .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out))?;
+            }
+        }
+        return Ok(());
+    }
 
     // get log reader, can be from a file, from stdin, or from HTTP stream
     let log_reader: Box<dyn Read> = {
@@ -319,6 +353,9 @@ fn main() -> Result<()> {
     if matches.is_present("no-review") {
         return Ok(());
     }
+
+    // get actor
+    let actor: u8 = value_t_or_exit!(matches, "actor", u8);
 
     // get paths
     let akochan_exe = {
