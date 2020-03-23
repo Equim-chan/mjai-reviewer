@@ -164,6 +164,8 @@ $ open report.html  # or just open in browser
 ## License
 [Apache-2.0](https://github.com/Equim-chan/akochan-reviewer/blob/master/LICENSE)
 
+akochan itself was licensed separately, see https://github.com/critter-mj/akochan/blob/master/LICENSE.
+
 ## Contributors ✨
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
