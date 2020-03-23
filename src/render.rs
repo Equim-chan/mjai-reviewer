@@ -7,28 +7,26 @@ use std::io::prelude::*;
 
 use anyhow::{Context, Result};
 use convlog::tenhou::RawPartialLog;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json as json;
 use tera;
 use tera::{Tera, Value};
 
-lazy_static! {
-    static ref TEMPLATES: Tera = {
-        let mut tera = Tera::default();
-        tera.register_function("kyoku_to_string", kyoku_to_string);
-        tera.register_function("pretty_round", pretty_round);
+static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
+    let mut tera = Tera::default();
+    tera.register_function("kyoku_to_string", kyoku_to_string);
+    tera.register_function("pretty_round", pretty_round);
 
-        tera.add_raw_templates(vec![
-            ("macros.html", include_str!("../templates/macros.html")),
-            ("pai.svg", include_str!("../assets/pai.svg")),
-            ("report.html", include_str!("../templates/report.html")),
-        ])
-        .expect("failed to parse template");
+    tera.add_raw_templates(vec![
+        ("macros.html", include_str!("../templates/macros.html")),
+        ("pai.svg", include_str!("../assets/pai.svg")),
+        ("report.html", include_str!("../templates/report.html")),
+    ])
+    .expect("failed to parse template");
 
-        tera
-    };
-}
+    tera
+});
 
 fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
     static BAKAZE_KANJI: &[&str] = &["東", "南", "西", "北"];

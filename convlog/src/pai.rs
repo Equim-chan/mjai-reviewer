@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use serde::ser::SerializeSeq;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use thiserror::Error;
@@ -25,15 +25,13 @@ static MJAI_PAI_STRINGS: &[&str] = &[
     "?", // 60
 ];
 
-lazy_static! {
-    static ref MJAI_PAI_STRINGS_MAP: HashMap<String, u8> = {
-        let mut m = HashMap::new();
-        for (i, &v) in MJAI_PAI_STRINGS.iter().enumerate() {
-            m.insert(v.to_owned(), i as u8);
-        }
-        m
-    };
-}
+static MJAI_PAI_STRINGS_MAP: Lazy<HashMap<String, u8>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    for (i, &v) in MJAI_PAI_STRINGS.iter().enumerate() {
+        m.insert(v.to_owned(), i as u8);
+    }
+    m
+});
 
 #[derive(Debug, Error)]
 pub enum ParseError {
