@@ -50,33 +50,29 @@ pub struct DetailedAction {
     pub review: Stat,
 }
 
-pub fn review<O, P>(
-    akochan_exe: O,
-    akochan_dir: P,
-    tactics_config_path: O,
+pub fn review(
+    akochan_exe: &OsStr,
+    akochan_dir: &OsStr,
+    tactics_config_path: &OsStr,
     full: bool,
     events: &[Event],
     target_actor: u8,
     verbose: bool,
-) -> Result<Vec<KyokuReview>>
-where
-    O: AsRef<OsStr>,
-    P: AsRef<Path>,
-{
+) -> Result<Vec<KyokuReview>> {
     let mut kyoku_reviews = vec![];
 
     let target_actor_string = target_actor.to_string();
     let args = &[
         "pipe_detailed".as_ref(),
-        tactics_config_path.as_ref(),
+        tactics_config_path,
         target_actor_string.as_ref(),
     ];
 
     if verbose {
-        log!("$ cd {:?}", akochan_dir.as_ref());
+        log!("$ cd {:?}", akochan_dir);
         log!(
             "$ {:?}{}",
-            akochan_exe.as_ref(),
+            akochan_exe,
             args.iter()
                 .fold("".to_owned(), |acc, p| format!("{} {:?}", acc, p))
         );
@@ -84,7 +80,7 @@ where
 
     let mut akochan = Command::new(akochan_exe)
         .args(args)
-        .current_dir(akochan_dir)
+        .current_dir(Path::new(akochan_dir))
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())

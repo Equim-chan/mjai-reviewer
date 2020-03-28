@@ -476,9 +476,9 @@ fn main() -> Result<()> {
     // do the review
     let begin_review = chrono::Local::now();
     let reviews = review(
-        &akochan_exe,
-        &akochan_dir,
-        &tactics_file_path,
+        akochan_exe.as_ref(),
+        akochan_dir.as_ref(),
+        tactics_file_path.as_ref(),
         full,
         &events,
         actor,

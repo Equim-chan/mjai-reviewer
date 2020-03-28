@@ -2,8 +2,6 @@ use crate::mjai;
 use crate::tenhou;
 use crate::Pai;
 
-use std::str;
-
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -500,7 +498,7 @@ fn end_kyoku(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) {
 
 #[inline]
 fn pai_from_bytes(b: &[u8]) -> Result<Pai> {
-    let s = unsafe { str::from_utf8_unchecked(b) };
+    let s = String::from_utf8_lossy(b);
     let pai = Pai(s.parse().map_err(ConvertError::InvalidPai)?);
 
     Ok(pai)

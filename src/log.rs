@@ -1,9 +1,20 @@
 #[macro_export]
 macro_rules! log {
     () => {
-        eprintln!("{:<15} {}:{}", chrono::Local::now().time(), file!(), line!())
+        eprintln!(
+            "{} {}:{}",
+            chrono::Local::now().time().format("%H:%M:%S%.6f"),
+            file!(),
+            line!()
+        )
     };
     ($($arg:tt)*) => {
-        eprintln!("{:<15} {}:{}\t{}", chrono::Local::now().time(), file!(), line!(), format_args!($($arg)*))
+        eprintln!(
+            "{} {}:{}\t{}",
+            chrono::Local::now().time().format("%H:%M:%S%.6f"),
+            file!(),
+            line!(),
+            format_args!($($arg)*)
+        )
     };
 }
