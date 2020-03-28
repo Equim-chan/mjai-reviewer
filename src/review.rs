@@ -206,7 +206,7 @@ pub fn review(
         }
 
         if actions.len() == 1 {
-            if let Event::None = actions[0].moves[0] {
+            if let Event::None | Event::Ryukyoku { .. } = actions[0].moves[0] {
                 continue;
             }
         }
