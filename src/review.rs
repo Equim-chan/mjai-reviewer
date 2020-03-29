@@ -28,6 +28,7 @@ pub struct Entry {
     pub junme: u8,
     pub actor: u8,
     pub pai: Pai,
+    pub is_kakan: bool, // for chankan
     pub state: State,
 
     pub expected: Vec<Event>, // at most 2 events
@@ -148,7 +149,7 @@ pub fn review(
                 continue;
             }
 
-            Event::Dahai { actor, .. } => {
+            Event::Dahai { actor, .. } | Event::Kakan { actor, .. } => {
                 if actor == target_actor {
                     continue;
                 }
@@ -219,8 +220,13 @@ pub fn review(
         }
 
         let actual_action_vec = next_action_exact(actual_action, target_actor);
-        let (actor, pai) = match *event {
-            Event::Dahai { actor, pai, .. } | Event::Tsumo { actor, pai, .. } => (actor, pai),
+        let (actor, pai, is_kakan) = match *event {
+            Event::Dahai { actor, pai, .. } | Event::Tsumo { actor, pai, .. } => {
+                (actor, pai, false)
+            }
+
+            Event::Kakan { actor, pai, .. } => (actor, pai, true),
+
             _ => {
                 return Err(anyhow!(
                     "invalid state: no actor or pai found, event: {:?}",
@@ -233,6 +239,7 @@ pub fn review(
             junme,
             actor,
             pai,
+            is_kakan,
             state: state.clone(),
             expected: expected_action.to_vec(),
             actual: actual_action_vec,

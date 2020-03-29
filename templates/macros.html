@@ -82,7 +82,13 @@
           <li class="tsumo" data-content="ツモ ">{{- self::render_pai(pai=pai) -}}</li>
         {%- else -%}
           <li>{{- self::render_pai(pai=pai) -}}</li>
-          <li class="tsumo" data-content="{{ self::render_actor(actor=entry.actor, target_actor=target_actor) }}打 ">{{- self::render_pai(pai=entry.pai) -}}</li>
+          {%- set content = self::render_actor(actor=entry.actor, target_actor=target_actor) -%}
+          {%- if entry.is_kakan -%}
+            {%- set content = content ~ "カン " -%}
+          {%- else -%}
+            {%- set content = content ~ "打 " -%}
+          {%- endif -%}
+          <li class="tsumo" data-content="{{ content }}">{{- self::render_pai(pai=entry.pai) -}}</li>
         {%- endif -%}
       {%- else -%}
         <li>{{- self::render_pai(pai=pai) -}}</li>
