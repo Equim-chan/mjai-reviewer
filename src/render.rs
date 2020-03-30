@@ -67,40 +67,50 @@ fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {
 }
 
 #[derive(Serialize)]
-struct View<'a> {
+pub struct View<'a, L>
+where
+    L: AsRef<[RawPartialLog<'a>]> + Serialize,
+{
     kyokus: &'a [KyokuReview],
     target_actor: u8,
     #[serde(skip_serializing_if = "Option::is_none")]
-    splited_logs: Option<&'a [RawPartialLog<'a>]>,
+    splited_logs: Option<L>,
     metadata: &'a Metadata<'a>,
 }
 
-pub fn render<'a, W>(
-    w: &mut W,
-    reviews: &[KyokuReview],
-    target_actor: u8,
-    metadata: &Metadata,
-    splited_logs: Option<&'a [RawPartialLog<'a>]>,
-) -> Result<()>
+impl<'a, L> View<'a, L>
 where
-    W: Write,
+    L: AsRef<[RawPartialLog<'a>]> + Serialize,
 {
-    let view = View {
-        kyokus: reviews,
-        target_actor,
-        splited_logs,
-        metadata,
-    };
+    #[inline]
+    pub fn new(
+        reviews: &'a [KyokuReview],
+        target_actor: u8,
+        metadata: &'a Metadata<'a>,
+        splited_logs: Option<L>,
+    ) -> Self {
+        Self {
+            kyokus: reviews,
+            target_actor,
+            splited_logs,
+            metadata,
+        }
+    }
 
-    let ctx = tera::Context::from_serialize(&view)?;
-    let result =
-        TEMPLATES
-            .render("report.html", &ctx)
-            .with_context(|| match json::to_string(&view) {
-                Ok(json_string) => format!("with values: {}", json_string),
-                Err(err) => format!("even serializations failed: {}", err),
+    pub fn render<W>(&self, w: &mut W) -> Result<()>
+    where
+        W: Write,
+    {
+        let ctx = tera::Context::from_serialize(&self)?;
+        let result =
+            TEMPLATES.render("report.html", &ctx).with_context(|| {
+                match json::to_string(&self) {
+                    Ok(json_string) => format!("with values: {}", json_string),
+                    Err(err) => format!("even serializations failed: {}", err),
+                }
             })?;
-    w.write_all(&result.as_bytes())?;
+        w.write_all(&result.as_bytes())?;
 
-    Ok(())
+        Ok(())
+    }
 }

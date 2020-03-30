@@ -9,7 +9,7 @@ mod tehai;
 
 use download::download_tenhou_log;
 use metadata::Metadata;
-use render::render;
+use render::View;
 use review::review;
 use tactics::TacticsJson;
 
@@ -171,6 +171,11 @@ fn main() -> Result<()> {
                 .help("Do not review at all. Only download and save files"),
         )
         .arg(
+            Arg::with_name("json")
+                .long("json")
+                .help("Output review result in JSON instead of HTML"),
+        )
+        .arg(
             Arg::with_name("akochan-dir")
                 .short("d")
                 .long("akochan-dir")
@@ -251,17 +256,29 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
-    // load io specific options
+    // load options
     let arg_in_file = matches.value_of_os("in-file");
     let arg_out_file = matches.value_of_os("out-file");
     let arg_tenhou_id = matches.value_of("tenhou-id");
     let arg_tenhou_out = matches.value_of_os("tenhou-out");
     let arg_mjai_out = matches.value_of_os("mjai-out");
     let arg_tenhou_ids_file = matches.value_of_os("tenhou-ids-file");
+    let arg_out_dir = matches.value_of_os("out-dir");
+    let arg_akochan_exe = matches.value_of_os("akochan-exe");
+    let arg_akochan_dir = matches.value_of_os("akochan-dir");
+    let arg_tactics_config = matches.value_of_os("tactics-config");
+    let arg_pt = matches.value_of("pt");
+    let arg_actor = value_t!(matches, "actor", u8);
+    let arg_use_ranking_exp = matches.is_present("use-ranking-exp");
+    let arg_without_reviewer = matches.is_present("without-reviewer");
+    let arg_no_open = matches.is_present("no-open");
+    let arg_no_review = matches.is_present("no-review");
+    let arg_json = matches.is_present("json");
+    let arg_full = matches.is_present("full");
+    let arg_verbose = matches.is_present("verbose");
 
     if let Some(tenhou_ids_file) = arg_tenhou_ids_file {
-        let out_dir_name = matches
-            .value_of_os("out-dir")
+        let out_dir_name = arg_out_dir
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("."));
         create_dir_all(&out_dir_name)
@@ -343,8 +360,13 @@ fn main() -> Result<()> {
         json::from_reader(log_reader).context("failed to parse tenhou log")?;
 
     // clone the parsed raw log for possible reuse (split)
-    let cloned_raw_log = if !matches.is_present("without-reviewer") {
-        Some(raw_log.clone())
+    //
+    // See https://manishearth.github.io/blog/2017/04/13/prolonging-temporaries-in-rust/
+    // for the technique of extending the lifetime of temp var here.
+    let cloned_raw_log;
+    let splited_raw_logs = if !arg_without_reviewer {
+        cloned_raw_log = raw_log.clone();
+        Some(cloned_raw_log.split_by_kyoku())
     } else {
         None
     };
@@ -376,50 +398,43 @@ fn main() -> Result<()> {
         }
     }
 
-    if matches.is_present("no-review") {
+    if arg_no_review {
         return Ok(());
     }
 
     // get actor
-    let actor: u8 = value_t!(matches, "actor", u8).unwrap_or_else(|e| e.exit());
+    let actor = arg_actor.unwrap_or_else(|e| e.exit());
 
     // get paths
     let akochan_exe = {
-        let path = matches
-            .value_of_os("akochan-exe")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| {
-                let mut path = if let Ok(current_dir) = env::current_dir() {
-                    current_dir
-                } else {
-                    PathBuf::from(".")
-                };
+        let path = arg_akochan_exe.map(PathBuf::from).unwrap_or_else(|| {
+            let mut path = if let Ok(current_dir) = env::current_dir() {
+                current_dir
+            } else {
+                PathBuf::from(".")
+            };
 
-                path.push("akochan");
-                path.push("system.exe");
+            path.push("akochan");
+            path.push("system.exe");
 
-                path
-            });
+            path
+        });
 
         canonicalize(&path)
             .with_context(|| format!("failed to canonicalize akochan_exe path {:?}", path))?
     };
     let akochan_dir = {
-        let path = matches
-            .value_of_os("akochan_dir")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| {
-                let mut dir = akochan_exe.clone();
-                dir.pop();
-                dir
-            });
+        let path = arg_akochan_dir.map(PathBuf::from).unwrap_or_else(|| {
+            let mut dir = akochan_exe.clone();
+            dir.pop();
+            dir
+        });
 
         canonicalize(&path)
             .with_context(|| format!("failed to canonicalize akochan_dir path {:?}", path))?
     };
     let (tactics_file_path, tactics) = {
-        let path = matches
-            .value_of_os("tactics-config")
+        let path = arg_tactics_config
             .map(PathBuf::from)
             .unwrap_or_else(|| "tactics.json".into());
 
@@ -435,9 +450,9 @@ fn main() -> Result<()> {
             .with_context(|| format!("failed to parse tactics_config {:?}", canon_path))?;
 
         // opt-in pt
-        let pt_opt = if matches.is_present("use-ranking-exp") {
+        let pt_opt = if arg_use_ranking_exp {
             Some(vec![-1, -2, -3, -4])
-        } else if let Some(pt) = matches.value_of("pt") {
+        } else if let Some(pt) = arg_pt {
             Some(pt.split(',').map(|p| p.parse::<i32>().unwrap()).collect())
         } else {
             None
@@ -470,8 +485,6 @@ fn main() -> Result<()> {
     log!("players: {:?}", log.names);
     log!("target: {}", log.names[actor as usize]);
     log!("start review, this may take serval minutes...");
-    let full = matches.is_present("full");
-    let verbose = matches.is_present("verbose");
 
     // do the review
     let begin_review = chrono::Local::now();
@@ -479,15 +492,15 @@ fn main() -> Result<()> {
         akochan_exe.as_ref(),
         akochan_dir.as_ref(),
         tactics_file_path.as_ref(),
-        full,
+        arg_full,
         &events,
         actor,
-        verbose,
+        arg_verbose,
     )
     .context("failed to review log")?;
 
     // clean up
-    if matches.is_present("pt") {
+    if arg_pt.is_some() {
         remove_file(&tactics_file_path)
             .with_context(|| format!("failed to clean up temp file {:?}", tactics_file_path))?;
     }
@@ -533,17 +546,19 @@ fn main() -> Result<()> {
         version: &format!("v{} ({})", PKG_VERSION, GIT_HASH),
     };
 
-    // render the HTML report page
-    log!("rendering output...");
-    if let Some(l) = cloned_raw_log {
-        render(&mut out, &reviews, actor, &meta, Some(&l.split_by_kyoku()))
+    // render the HTML report page or JSON
+    let view = View::new(&reviews, actor, &meta, splited_raw_logs);
+    if arg_json {
+        log!("writing output...");
+        json::to_writer(&mut out, &view).context("failed to write JSON result")?;
     } else {
-        render(&mut out, &reviews, actor, &meta, None)
+        log!("rendering output...");
+        view.render(&mut out)
+            .context("failed to render HTML report")?;
     }
-    .context("failed to render HTML report")?;
 
     // open the output page
-    if !matches.is_present("no-open") {
+    if !arg_json && !arg_no_open {
         if let Some(out_file_path) = &opanable_file {
             opener::open(out_file_path).with_context(|| {
                 format!(
