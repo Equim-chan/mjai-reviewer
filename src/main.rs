@@ -86,7 +86,7 @@ fn main() -> Result<()> {
                 .takes_value(true)
                 .value_name("ARRAY")
                 .help(
-                    "Specify kyokus to review. If ARRAY is empty, review all kyokus.\
+                    "Specify kyokus to review. If ARRAY is empty, review all kyokus. \
                     Format: \"E1,E4,S3.1\"",
                 ),
         )
