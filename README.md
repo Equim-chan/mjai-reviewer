@@ -12,13 +12,13 @@ Review your Tenhou log with mahjong AI akochan.
 
 ## Example
 ```console
-# Review https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2
+$ # Review https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2
 
-# With arbitrary pt distribution
+$ # With arbitrary pt distribution
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 --pt 75,30,0,-165
 
-# Review every move, even if some moves already match akochan's choice
+$ # Review every move, even if some moves already match akochan's choice
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 -f
 ```
 
