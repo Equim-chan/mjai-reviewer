@@ -10,39 +10,56 @@ Review your Tenhou log with mahjong AI akochan.
 
 **This tool is still in early stages. There are still lots of features to be implemented, and breaking changes may be made at anytime. Suggestions and contributions are welcome. 日本語もおｋ.**
 
+## Example
+```console
+# Review https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2
+$ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2
+
+# With arbitrary pt distribution
+$ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 --pt 75,30,0,-165
+
+# Review every move, even if some moves already match akochan's choice
+$ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 -f
+```
+
 ## Usage
 ```plain
 USAGE:
-    akochan-reviewer [FLAGS] [OPTIONS] --actor <INDEX>
+    akochan-reviewer [FLAGS] [OPTIONS]
 
 FLAGS:
     -f, --full               Analyze every move, not only the different ones.
     -h, --help               Prints help information
+        --json               Output review result in JSON instead of HTML
         --no-open            Do not open the output file in browser after finishing
         --no-review          Do not review at all. Only download and save files
-        --use-ranking-exp    Use ranking exp value instead of pt exp value. This will override --pt and "jun_pt" in
-                             --tactics-config.
+        --use-ranking-exp    Use final ranking exp instead of pt exp. This will override --pt and "jun_pt" in --tactics-
+                             config.
     -V, --version            Prints version information
     -v, --verbose            Use verbose output
         --without-viewer     Do not include log viewer in the generated HTML report
 
 OPTIONS:
-    -a, --actor <INDEX>            Specify the actor to review. It is the number after "&tw=" in tenhou's log url
-    -d, --akochan-dir <DIR>        Specify the directory of akochan. This will serves as the working directory of
-                                   akochan process. Default value is the directory in which --akochan-exe is specified
-    -e, --akochan-exe <EXE>        Specify the executable file of akochan. Default value "akochan/system.exe"
-    -i, --in-file <FILE>           Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty, read from
-                                   stdin
-        --mjai-out <FILE>          Save the transformed mjai format log to FILE. If FILE is "-", write to stdout
-    -o, --out-file <FILE>          Specify the output file for generated HTML report. If FILE is "-", write to stdout;
-                                   if FILE is empty, write to "{tenhou_id}&tw={actor}.html" if --tenhou-id is specified,
-                                   otherwise "report.html"
-        --pt <ARRAY>               Shortcut to override "jun_pt" in --tactics-config. Format: "90,45,0,-135"
-    -c, --tactics-config <FILE>    Specify the tactics config file for akochan. Default value "tactics.json"
-    -t, --tenhou-id <ID>           Specify a Tenhou log ID to review, overriding --in-file. Example: "2019050417gm-0029-
-                                   0000-4f2a8622"
-        --tenhou-out <FILE>        Save the downloaded tenhou.net/6 format log to FILE when --tenhou-id is specified. If
-                                   FILE is "-", write to stdout
+    -a, --actor <INDEX>             Specify the actor to review. It is the number after "&tw=" in tenhou's log url
+    -d, --akochan-dir <DIR>         Specify the directory of akochan. This will serves as the working directory of
+                                    akochan process. Default value is the directory in which --akochan-exe is specified
+    -e, --akochan-exe <EXE>         Specify the executable file of akochan. Default value "akochan/system.exe"
+    -i, --in-file <FILE>            Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty, read from
+                                    stdin
+        --mjai-out <FILE>           Save the transformed mjai format log to FILE. If FILE is "-", write to stdout
+        --out-dir <DIR>             Specify a directory to save the output for mjai logs. If DIR is empty, defaults to
+                                    "."
+    -o, --out-file <FILE>           Specify the output file for generated HTML report. If FILE is "-", write to stdout;
+                                    if FILE is empty, write to "{tenhou_id}&tw={actor}.html" if --tenhou-id is
+                                    specified, otherwise "report.html"
+        --pt <ARRAY>                Shortcut to override "jun_pt" in --tactics-config. Format: "90,45,0,-135"
+    -c, --tactics-config <FILE>     Specify the tactics config file for akochan. Default value "tactics.json"
+    -t, --tenhou-id <ID>            Specify a Tenhou log ID to review, overriding --in-file. Example: "2019050417gm-
+                                    0029-0000-4f2a8622"
+        --tenhou-ids-file <FILE>    Specify a file of Tenhou log ID list to convert to mjai format, implying --no-
+                                    review.
+        --tenhou-out <FILE>         Save the downloaded tenhou.net/6 format log to FILE when --tenhou-id is specified.
+                                    If FILE is "-", write to stdout
 ```
 
 ## Build
