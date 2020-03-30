@@ -18,8 +18,11 @@ $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2
 $ # Review with arbitrary pt distribution
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 --pt 75,30,0,-165
 
-$ # Review every move, even if some moves already match akochan's choice
+$ # Review every move, including moves that already match akochan's choice
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 -f
+
+# Review 東2局1本場 and 東3局 only
+$ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 -k E2.1,E3
 ```
 
 ## Usage
@@ -46,6 +49,7 @@ OPTIONS:
     -e, --akochan-exe <EXE>         Specify the executable file of akochan. Default value "akochan/system.exe"
     -i, --in-file <FILE>            Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty, read from
                                     stdin
+    -k, --kyokus <ARRAY>            Specify kyokus to review. If ARRAY is empty, review all kyokus.Format: "E1,E4,S3.1"
         --mjai-out <FILE>           Save the transformed mjai format log to FILE. If FILE is "-", write to stdout
         --out-dir <DIR>             Specify a directory to save the output for mjai logs. If DIR is empty, defaults to
                                     "."

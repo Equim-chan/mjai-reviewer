@@ -1,4 +1,5 @@
 mod download;
+mod kyoku_filter;
 mod log;
 mod metadata;
 mod render;
@@ -21,7 +22,6 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::PathBuf;
-use std::result::Result as StdResult;
 
 use anyhow::{Context, Result};
 use clap::value_t;
@@ -77,6 +77,17 @@ fn main() -> Result<()> {
                 .help(
                     "Specify the actor to review. \
                     It is the number after \"&tw=\" in tenhou's log url",
+                ),
+        )
+        .arg(
+            Arg::with_name("kyokus")
+                .short("k")
+                .long("kyokus")
+                .takes_value(true)
+                .value_name("ARRAY")
+                .help(
+                    "Specify kyokus to review. If ARRAY is empty, review all kyokus.\
+                    Format: \"E1,E4,S3.1\"",
                 ),
         )
         .arg(
@@ -221,7 +232,7 @@ fn main() -> Result<()> {
                             p.parse::<i32>()
                                 .map_err(|err| format!("pt element must be a number: {}", err))
                         })
-                        .collect::<Vec<StdResult<_, String>>>();
+                        .collect::<Vec<Result<_, String>>>();
 
                     if arr.len() != 4 {
                         Err("pt must have exactly 4 elements".to_owned())
@@ -267,8 +278,9 @@ fn main() -> Result<()> {
     let arg_akochan_exe = matches.value_of_os("akochan-exe");
     let arg_akochan_dir = matches.value_of_os("akochan-dir");
     let arg_tactics_config = matches.value_of_os("tactics-config");
-    let arg_pt = matches.value_of("pt");
     let arg_actor = value_t!(matches, "actor", u8);
+    let arg_pt = matches.value_of("pt");
+    let arg_kyokus = matches.value_of("kyokus");
     let arg_use_ranking_exp = matches.is_present("use-ranking-exp");
     let arg_without_reviewer = matches.is_present("without-reviewer");
     let arg_no_open = matches.is_present("no-open");
@@ -405,6 +417,12 @@ fn main() -> Result<()> {
     // get actor
     let actor = arg_actor.unwrap_or_else(|e| e.exit());
 
+    // init kyoku filter if there is any
+    let kyoku_filter = arg_kyokus
+        .map(|s| s.parse())
+        .transpose()
+        .context("failed to parse kyoku filter")?;
+
     // get paths
     let akochan_exe = {
         let path = arg_akochan_exe.map(PathBuf::from).unwrap_or_else(|| {
@@ -492,10 +510,10 @@ fn main() -> Result<()> {
         akochan_exe.as_ref(),
         akochan_dir.as_ref(),
         tactics_file_path.as_ref(),
-        arg_full,
         &events,
+        kyoku_filter,
         actor,
-        arg_verbose,
+        (arg_full, arg_verbose),
     )
     .context("failed to review log")?;
 
