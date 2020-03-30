@@ -1,6 +1,6 @@
 # akochan-reviewer
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Equim-chan/akochan-reviewer/Rust)](https://github.com/Equim-chan/akochan-reviewer/actions)
+[![GitHub Workflow Status](https://github.com/Equim-chan/akochan-reviewer/workflows/build/badge.svg)](https://github.com/Equim-chan/akochan-reviewer/actions)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Equim-chan/akochan-reviewer)
 [![License](https://img.shields.io/github/license/Equim-chan/akochan-reviewer)](https://github.com/Equim-chan/akochan-reviewer/blob/master/LICENSE)
 
@@ -15,7 +15,7 @@ Review your Tenhou log with mahjong AI akochan.
 $ # Review https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2
 
-$ # With arbitrary pt distribution
+$ # Review with arbitrary pt distribution
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 --pt 75,30,0,-165
 
 $ # Review every move, even if some moves already match akochan's choice
