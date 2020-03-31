@@ -1,8 +1,6 @@
-use crate::kyoku_filter::KyokuFilter;
 use crate::log;
 use crate::state::State;
 
-use std::ffi::OsStr;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::Path;
@@ -53,22 +51,20 @@ pub struct DetailedAction {
 }
 
 pub fn review(
-    akochan_exe: &OsStr,
-    akochan_dir: &OsStr,
-    tactics_config_path: &OsStr,
+    akochan_exe: &Path,
+    akochan_dir: &Path,
+    tactics_config: &Path,
     events: &[Event],
-    kyoku_filter: Option<KyokuFilter>,
     target_actor: u8,
-    full_verbose: (bool, bool),
+    full: bool,
+    verbose: bool,
 ) -> Result<Vec<KyokuReview>> {
-    let (full, verbose) = full_verbose;
-
     let mut kyoku_reviews = vec![];
 
     let target_actor_string = target_actor.to_string();
     let args = &[
         "pipe_detailed".as_ref(),
-        tactics_config_path,
+        tactics_config,
         target_actor_string.as_ref(),
     ];
 
@@ -110,31 +106,8 @@ pub fn review(
     let mut junme = 0;
     let mut kyoku_review = KyokuReview::default();
     let mut entries = vec![];
-    let mut skip_current_kyoku = false;
 
     for (i, event) in events.iter().enumerate() {
-        // apply filter
-        if let Event::StartKyoku {
-            bakaze,
-            kyoku: kk,
-            honba,
-            ..
-        } = *event
-        {
-            let kyoku = (bakaze.0 - 41) * 4 + kk - 1;
-
-            if let Some(kyoku_filter) = kyoku_filter.as_ref() {
-                skip_current_kyoku = !kyoku_filter.test(kyoku, honba);
-            }
-
-            kyoku_review.kyoku = kyoku;
-            kyoku_review.honba = honba;
-        }
-
-        if skip_current_kyoku {
-            continue;
-        }
-
         let to_write = json::to_string(event).unwrap();
         writeln!(stdin, "{}", to_write).context("failed to write to akochan")?;
         if verbose {
@@ -148,8 +121,16 @@ pub fn review(
         // 1. setting board metadata like bakaze, kyoku, honba, junme
         // 2. decide whether or not this event is a valid timing when we can review
         match *event {
-            Event::StartKyoku { .. } => {
-                // kyoku_review.{kyoku,honba} was already handled
+            Event::StartKyoku {
+                bakaze,
+                kyoku: kk,
+                honba,
+                ..
+            } => {
+                let kyoku = (bakaze.0 - 41) * 4 + kk - 1;
+                kyoku_review.kyoku = kyoku;
+                kyoku_review.honba = honba;
+
                 continue;
             }
 

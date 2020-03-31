@@ -1,5 +1,4 @@
 mod download;
-mod kyoku_filter;
 mod log;
 mod metadata;
 mod render;
@@ -16,12 +15,12 @@ use tactics::TacticsJson;
 
 use std::env;
 use std::ffi::OsString;
+use std::fs;
 use std::fs::File;
-use std::fs::{create_dir_all, remove_file};
 use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::value_t;
@@ -293,42 +292,8 @@ fn main() -> Result<()> {
         let out_dir_name = arg_out_dir
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("."));
-        create_dir_all(&out_dir_name)
-            .with_context(|| format!("failed to create {:?}", out_dir_name))?;
 
-        log!("tenhou_ids_file: {:?}", tenhou_ids_file);
-
-        for line in BufReader::new(File::open(tenhou_ids_file)?).lines() {
-            let tenhou_id = line?;
-
-            log!("downloading tenhou log {} ...", tenhou_id);
-            let log_stream = download_tenhou_log(&tenhou_id)
-                .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id))?;
-
-            log!("parsing tenhou log {} ...", tenhou_id);
-            let raw_log: tenhou::RawLog =
-                json::from_reader(log_stream).context("failed to parse tenhou log")?;
-            let log = tenhou::Log::from(raw_log);
-
-            log!("converting to mjai events...");
-            let events = convlog::tenhou_to_mjai(&log)
-                .context("failed to convert tenhou log into mjai format")?;
-
-            let mjai_out = {
-                let mut p = out_dir_name.clone();
-                p.push(tenhou_id + ".json");
-                p
-            };
-            let mut mjai_out_file = File::create(&mjai_out)
-                .with_context(|| format!("failed to create mjai out file {:?}", mjai_out))?;
-
-            for event in &events {
-                let to_write = json::to_string(event).context("failed to serialize")?;
-                writeln!(mjai_out_file, "{}", to_write)
-                    .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out))?;
-            }
-        }
-        return Ok(());
+        return batch_download(&out_dir_name, Path::new(tenhou_ids_file));
     }
 
     // get log reader, can be from a file, from stdin, or from HTTP stream
@@ -368,8 +333,18 @@ fn main() -> Result<()> {
     // parse tenhou log from reader
     let begin_parse_log = chrono::Local::now();
     log!("parsing tenhou log...");
-    let raw_log: tenhou::RawLog =
-        json::from_reader(log_reader).context("failed to parse tenhou log")?;
+    let raw_log = {
+        let mut l: tenhou::RawLog =
+            json::from_reader(log_reader).context("failed to parse tenhou log")?;
+
+        // filter kyokus
+        if let Some(s) = arg_kyokus {
+            let filter = s.parse().context("failed to parse kyoku filter")?;
+            l.filter_kyokus(&filter);
+        }
+
+        l
+    };
 
     // clone the parsed raw log for possible reuse (split)
     //
@@ -416,12 +391,6 @@ fn main() -> Result<()> {
 
     // get actor
     let actor = arg_actor.unwrap_or_else(|e| e.exit());
-
-    // init kyoku filter if there is any
-    let kyoku_filter = arg_kyokus
-        .map(|s| s.parse())
-        .transpose()
-        .context("failed to parse kyoku filter")?;
 
     // get paths
     let akochan_exe = {
@@ -507,19 +476,19 @@ fn main() -> Result<()> {
     // do the review
     let begin_review = chrono::Local::now();
     let reviews = review(
-        akochan_exe.as_ref(),
-        akochan_dir.as_ref(),
-        tactics_file_path.as_ref(),
+        &akochan_exe,
+        &akochan_dir,
+        &tactics_file_path,
         &events,
-        kyoku_filter,
         actor,
-        (arg_full, arg_verbose),
+        arg_full,
+        arg_verbose,
     )
     .context("failed to review log")?;
 
     // clean up
     if arg_pt.is_some() {
-        remove_file(&tactics_file_path)
+        fs::remove_file(&tactics_file_path)
             .with_context(|| format!("failed to clean up temp file {:?}", tactics_file_path))?;
     }
 
@@ -588,5 +557,45 @@ fn main() -> Result<()> {
     }
 
     log!("done");
+    Ok(())
+}
+
+fn batch_download(out_dir_name: &Path, tenhou_ids_file: &Path) -> Result<()> {
+    fs::create_dir_all(&out_dir_name)
+        .with_context(|| format!("failed to create {:?}", out_dir_name))?;
+
+    log!("tenhou_ids_file: {:?}", tenhou_ids_file);
+
+    for line in BufReader::new(File::open(tenhou_ids_file)?).lines() {
+        let tenhou_id = line?;
+
+        log!("downloading tenhou log {} ...", tenhou_id);
+        let log_stream = download_tenhou_log(&tenhou_id)
+            .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id))?;
+
+        log!("parsing tenhou log {} ...", tenhou_id);
+        let raw_log: tenhou::RawLog =
+            json::from_reader(log_stream).context("failed to parse tenhou log")?;
+        let log = tenhou::Log::from(raw_log);
+
+        log!("converting to mjai events...");
+        let events = convlog::tenhou_to_mjai(&log)
+            .context("failed to convert tenhou log into mjai format")?;
+
+        let mjai_out = {
+            let mut p = out_dir_name.to_owned();
+            p.push(tenhou_id + ".json");
+            p
+        };
+        let mut mjai_out_file = File::create(&mjai_out)
+            .with_context(|| format!("failed to create mjai out file {:?}", mjai_out))?;
+
+        for event in &events {
+            let to_write = json::to_string(event).context("failed to serialize")?;
+            writeln!(mjai_out_file, "{}", to_write)
+                .with_context(|| format!("failed to write to mjai out file {:?}", mjai_out))?;
+        }
+    }
+
     Ok(())
 }

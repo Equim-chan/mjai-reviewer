@@ -1,4 +1,4 @@
-use crate::Pai;
+use crate::{KyokuFilter, Pai};
 
 use std::fmt;
 
@@ -32,19 +32,19 @@ impl fmt::Display for GameLength {
     }
 }
 
-/// Contains infomation about a kyoku.
-#[derive(Debug, Clone)]
-pub struct Kyoku {
-    pub meta: kyoku::Meta,
-    pub scoreboard: [i32; 4],
-    pub dora_indicators: Vec<Pai>,
-    pub ura_indicators: Vec<Pai>,
-    pub action_tables: [ActionTable; 4],
-    pub end_status: kyoku::EndStatus,
-}
-
 pub mod kyoku {
     use super::*;
+
+    /// Contains infomation about a kyoku.
+    #[derive(Debug, Clone)]
+    pub struct Kyoku {
+        pub meta: Meta,
+        pub scoreboard: [i32; 4],
+        pub dora_indicators: Vec<Pai>,
+        pub ura_indicators: Vec<Pai>,
+        pub action_tables: [ActionTable; 4],
+        pub end_status: EndStatus,
+    }
 
     #[derive(Debug, Clone, SerializeTuple, DeserializeTuple)]
     pub struct Meta {
@@ -66,6 +66,8 @@ pub mod kyoku {
         pub score_deltas: [i32; 4],
     }
 }
+
+pub use kyoku::Kyoku;
 
 /// A group of "配牌", "取" and "出", describing a player's
 /// gaming status and actions throughout a kyoku.
@@ -171,6 +173,12 @@ mod json_scheme {
 pub use json_scheme::{Log as RawLog, PartialLog as RawPartialLog};
 
 impl RawLog {
+    #[inline]
+    pub fn filter_kyokus(&mut self, kyoku_filter: &KyokuFilter) {
+        self.logs
+            .retain(|l| kyoku_filter.test(l.meta.kyoku_num, l.meta.honba))
+    }
+
     /// Split one raw tenhou.net/6 log into many by kyokus.
     pub fn split_by_kyoku<'a>(&'a self) -> Vec<RawPartialLog<'a>> {
         let mut ret = vec![];
@@ -203,6 +211,12 @@ impl Log {
     pub fn from_json_str(json_string: &str) -> Result<Self> {
         let raw_log: RawLog = json::from_str(json_string)?;
         Ok(Self::from(raw_log))
+    }
+
+    #[inline]
+    pub fn filter_kyokus(&mut self, kyoku_filter: &KyokuFilter) {
+        self.kyokus
+            .retain(|l| kyoku_filter.test(l.meta.kyoku_num, l.meta.honba))
     }
 }
 

@@ -2,6 +2,8 @@ use crate::mjai;
 use crate::tenhou;
 use crate::Pai;
 
+use std::str::FromStr;
+
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -10,7 +12,7 @@ pub enum ConvertError {
     InvalidNaki(String),
 
     #[error("invalid pai string")]
-    InvalidPai(#[source] <u8 as std::str::FromStr>::Err),
+    InvalidPai(#[source] <u8 as FromStr>::Err),
 
     #[error("insufficient dora indicators: at kyoku={kyoku} honba={honba}")]
     InsufficientDoraIndicators { kyoku: u8, honba: u8 },
