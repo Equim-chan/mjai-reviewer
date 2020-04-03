@@ -107,14 +107,15 @@ impl Tehai {
 
 #[inline]
 fn to_ord(pai: Pai) -> u8 {
-    let id = pai.as_u8();
+    match pai {
+        Pai::AkaMan5 => 16,
+        Pai::AkaPin5 => 26,
+        Pai::AkaSou5 => 36,
 
-    match id {
-        51 => 15,
-        52 => 25,
-        53 => 35,
         _ => {
-            if 15 <= id && id < 20 || 25 <= id && id < 30 || 35 <= id && id < 40 {
+            let id = pai.as_u8();
+
+            if 16 <= id && id < 20 || 26 <= id && id < 30 || 36 <= id && id < 40 {
                 id + 1
             } else {
                 id

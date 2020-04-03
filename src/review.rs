@@ -127,7 +127,7 @@ pub fn review(
                 honba,
                 ..
             } => {
-                let kyoku = (bakaze.as_u8() - 41) * 4 + kk - 1;
+                let kyoku = (bakaze.as_u8() - Pai::East.as_u8()) * 4 + kk - 1;
                 kyoku_review.kyoku = kyoku;
                 kyoku_review.honba = honba;
 
