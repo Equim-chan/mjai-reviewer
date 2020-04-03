@@ -14,7 +14,7 @@ use thiserror::Error;
 ///
 /// By default, it deserializes from u8 (as in tenhou.net/6), but serializes to
 /// String (as in mjai).
-#[derive(Debug, Clone, Copy, PartialEq, DeserializeRepr, TryFromPrimitive)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash, DeserializeRepr, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Pai {
     Unknown = 0,
