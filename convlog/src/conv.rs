@@ -71,6 +71,12 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
 
     // then emit the events in order.
     let oya = kyoku.meta.kyoku_num % 4;
+    let bakaze = match kyoku.meta.kyoku_num / 4 {
+        0 => Pai::East,
+        1 => Pai::South,
+        2 => Pai::West,
+        _ => Pai::North,
+    };
     let mut dora_feed = kyoku.dora_indicators.clone().into_iter();
     let mut reach_flag: Option<usize> = None;
     let mut last_tsumo = Pai::Unknown;
@@ -78,10 +84,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
     let mut need_new_dora = false;
 
     events.push(mjai::Event::StartKyoku {
-        bakaze: {
-            let id = 41 + kyoku.meta.kyoku_num / 4;
-            Pai::try_from(id).map_err(|_| ConvertError::InvalidPai(id.to_string()))?
-        },
+        bakaze,
         kyoku: kyoku.meta.kyoku_num % 4 + 1,
         honba: kyoku.meta.honba,
         kyotaku: kyoku.meta.kyotaku,
