@@ -121,8 +121,8 @@ macro_rules! build_consumed_struct {
         impl PartialEq for $name {
             #[inline]
             fn eq(&self, other: &Self) -> bool {
-                $(1u64 << self.0[$index].0)|*
-                    == $(1u64 << other.0[$index].0)|*
+                $(1u64 << self.0[$index].as_u8())|*
+                    == $(1u64 << other.0[$index].as_u8())|*
             }
         }
 

@@ -84,6 +84,7 @@ pub struct ActionTable {
 pub enum ActionItem {
     #[serde(serialize_with = "Pai::serialize_literal")]
     Pai(Pai),
+    Tsumogiri(u8), // must be 60
     Naki(String),
 }
 

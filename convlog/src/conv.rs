@@ -2,7 +2,7 @@ use crate::mjai;
 use crate::tenhou;
 use crate::Pai;
 
-use std::str::FromStr;
+use std::convert::TryFrom;
 
 use thiserror::Error;
 
@@ -11,19 +11,26 @@ pub enum ConvertError {
     #[error("invalid naki string: {0:?}")]
     InvalidNaki(String),
 
-    #[error("invalid pai string")]
-    InvalidPai(#[source] <u8 as FromStr>::Err),
+    #[error("invalid pai string: {0:?}")]
+    InvalidPai(String),
 
     #[error("insufficient dora indicators: at kyoku={kyoku} honba={honba}")]
     InsufficientDoraIndicators { kyoku: u8, honba: u8 },
 
-    #[error("insufficient takes sequence size: at kyoku={kyoku} honba={honba} for actor={actor}")]
+    #[error(
+        "insufficient takes sequence size: \
+        at kyoku={kyoku} honba={honba} for actor={actor}"
+    )]
     InsufficientTakes { kyoku: u8, honba: u8, actor: u8 },
 
     #[error(
-        "insufficient discards sequence size: at kyoku={kyoku} honba={honba} for actor={actor}"
+        "insufficient discards sequence size: \
+        at kyoku={kyoku} honba={honba} for actor={actor}"
     )]
     InsufficientDiscards { kyoku: u8, honba: u8, actor: u8 },
+
+    #[error("tsumogiri should not exist in discard table")]
+    UnexpectedTsumogiri,
 }
 
 pub type Result<T> = std::result::Result<T, ConvertError>;
@@ -66,12 +73,15 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
     let oya = kyoku.meta.kyoku_num % 4;
     let mut dora_feed = kyoku.dora_indicators.clone().into_iter();
     let mut reach_flag: Option<usize> = None;
-    let mut last_tsumo = Pai(0);
-    let mut last_dahai = Pai(0);
+    let mut last_tsumo = Pai::Unknown;
+    let mut last_dahai = Pai::Unknown;
     let mut need_new_dora = false;
 
     events.push(mjai::Event::StartKyoku {
-        bakaze: Pai(41 + kyoku.meta.kyoku_num / 4),
+        bakaze: {
+            let id = 41 + kyoku.meta.kyoku_num / 4;
+            Pai::try_from(id).map_err(|_| ConvertError::InvalidPai(id.to_string()))?
+        },
         kyoku: kyoku.meta.kyoku_num % 4 + 1,
         honba: kyoku.meta.honba,
         kyotaku: kyoku.meta.kyotaku,
@@ -234,7 +244,10 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
     takes
         .iter()
         .map(|take| match take {
+            tenhou::ActionItem::Tsumogiri(_) => Err(ConvertError::UnexpectedTsumogiri),
+
             &tenhou::ActionItem::Pai(pai) => Ok(mjai::Event::Tsumo { actor, pai }),
+
             tenhou::ActionItem::Naki(naki_string) => {
                 let naki = naki_string.as_bytes();
 
@@ -371,8 +384,18 @@ fn discard_action_to_events(
             &tenhou::ActionItem::Pai(pai) => {
                 let ev = mjai::Event::Dahai {
                     actor,
-                    pai, // must be filled later if it is tsumogiri
-                    tsumogiri: pai.0 == 60,
+                    pai,
+                    tsumogiri: false,
+                };
+
+                ret.push(ev);
+            }
+
+            tenhou::ActionItem::Tsumogiri(_) => {
+                let ev = mjai::Event::Dahai {
+                    actor,
+                    pai: Pai::Unknown, // must be filled later
+                    tsumogiri: true,
                 };
 
                 ret.push(ev);
@@ -462,13 +485,17 @@ fn discard_action_to_events(
                         return Err(ConvertError::InvalidNaki(naki_string.clone()));
                     }
 
-                    let pai = pai_from_bytes(&naki[1..3])?;
+                    let pai = if &naki[1..3] == b"60" {
+                        Pai::Unknown
+                    } else {
+                        pai_from_bytes(&naki[1..3])?
+                    };
 
                     ret.push(mjai::Event::Reach { actor });
                     ret.push(mjai::Event::Dahai {
                         actor,
                         pai, // must be filled later if it is tsumogiri
-                        tsumogiri: pai.0 == 60,
+                        tsumogiri: pai == Pai::Unknown,
                     });
                 }
             }
@@ -501,9 +528,11 @@ fn end_kyoku(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) {
 #[inline]
 fn pai_from_bytes(b: &[u8]) -> Result<Pai> {
     let s = String::from_utf8_lossy(b);
-    let pai = Pai(s.parse().map_err(ConvertError::InvalidPai)?);
+    let id: u8 = s
+        .parse()
+        .map_err(|_| ConvertError::InvalidPai(s.clone().into_owned()))?;
 
-    Ok(pai)
+    Pai::try_from(id).map_err(|_| ConvertError::InvalidPai(s.clone().into_owned()))
 }
 
 impl mjai::Event {
