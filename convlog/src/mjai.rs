@@ -1,5 +1,7 @@
 use crate::pai::Pai;
 
+use std::fmt;
+
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -115,8 +117,15 @@ macro_rules! make_pai_array_from_string_array {
 
 macro_rules! build_consumed_struct {
     ($name:ident; $n:expr; $($index:expr),*) => {
-        #[derive(Debug, Clone, Copy, Serialize)]
+        #[derive(Clone, Copy, Serialize)]
         pub struct $name(pub [Pai; $n]);
+
+        impl fmt::Debug for $name {
+            #[inline]
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                fmt::Debug::fmt(&self.0, f)
+            }
+        }
 
         impl PartialEq for $name {
             #[inline]
