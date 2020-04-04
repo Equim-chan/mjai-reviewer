@@ -18,13 +18,13 @@ pub enum ConvertError {
     InsufficientDoraIndicators { kyoku: u8, honba: u8 },
 
     #[error(
-        "insufficient takes sequence size: \
+        "insufficient take sequence size: \
         at kyoku={kyoku} honba={honba} for actor={actor}"
     )]
     InsufficientTakes { kyoku: u8, honba: u8, actor: u8 },
 
     #[error(
-        "insufficient discards sequence size: \
+        "insufficient discard sequence size: \
         at kyoku={kyoku} honba={honba} for actor={actor}"
     )]
     InsufficientDiscards { kyoku: u8, honba: u8, actor: u8 },
@@ -55,7 +55,7 @@ pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
 }
 
 fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) -> Result<()> {
-    // first of all, transform all takes and discards to events.
+    // First of all, transform all takes and discards to events.
     let mut take_events: Vec<_> = (0..4)
         .map(|i| {
             take_action_to_events(i, &kyoku.action_tables[i as usize].takes)
@@ -69,7 +69,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
         })
         .collect::<Result<Vec<_>>>()?;
 
-    // then emit the events in order.
+    // Then emit the events in order.
     let oya = kyoku.meta.kyoku_num % 4;
     let bakaze = match kyoku.meta.kyoku_num / 4 {
         0 => Pai::East,
@@ -106,7 +106,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
 
     let mut actor = oya as usize;
     loop {
-        // start to process a take event.
+        // Start to process a take event.
         let take = take_events[actor]
             .next()
             .ok_or(ConvertError::InsufficientTakes {
@@ -115,36 +115,36 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
                 actor: actor as u8,
             })?;
 
-        // record the pai so that it can be filled in tsumogiri dahai.
+        // Record the pai so that it can be filled in tsumogiri dahai.
         if let mjai::Event::Tsumo { pai, .. } = take {
             last_tsumo = pai;
         }
 
-        // if a reach event was emitted before, set it as accepted now.
+        // If a reach event was emitted before, set it as accepted now.
         if let Some(actor) = reach_flag.take() {
             events.push(mjai::Event::ReachAccepted { actor: actor as u8 });
         }
 
-        // skip one discard if the take is daiminkan.
-        // and then immediately consume the next take event from the same actor.
+        // If the take is daiminkan, skip one discard and immediately consume
+        // the next take event from the same actor.
         if let mjai::Event::Daiminkan { .. } = take {
             events.push(take);
-            discard_events[actor].next(); // cannot use .skip(1) here as the types do not match
+            discard_events[actor].next();
             need_new_dora = true;
             continue;
         }
 
-        // emit the take event.
+        // Emit the take event.
         events.push(take);
 
-        // check if the kyoku ends here, can be ryukyoku (九種九牌) or tsumo.
-        // here it simply checks if there is no more discard for current actor.
+        // Check if the kyoku ends here, can be ryukyoku (九種九牌) or tsumo.
+        // Here it simply checks if there is no more discard for current actor.
         if discard_events[actor].peek().is_none() {
             end_kyoku(events, kyoku);
             break;
         }
 
-        // start to process a discard event.
+        // Start to process a discard event.
         let discard = discard_events[actor]
             .next()
             .ok_or(ConvertError::InsufficientDiscards {
@@ -154,15 +154,15 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             })?
             .fill_possible_tsumogiri(last_tsumo);
 
-        // record the pai to check if someone naki it.
+        // Record the pai to check if someone naki it.
         if let mjai::Event::Dahai { pai, .. } = discard {
             last_dahai = pai;
         }
 
-        // emit the discard event.
+        // Emit the discard event.
         events.push(discard.clone());
 
-        // process previous minkan.
+        // Process previous minkan.
         if need_new_dora {
             events.push(mjai::Event::Dora {
                 dora_marker: dora_feed
@@ -175,8 +175,10 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             need_new_dora = false;
         }
 
-        // process reach declare.
-        // a reach declare actually consists of two events (reach + dahai).
+        // Process reach declare.
+        //
+        // A reach declare consists of two events (reach
+        // + dahai).
         if let mjai::Event::Reach { .. } = discard {
             reach_flag = Some(actor);
 
@@ -194,15 +196,19 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             events.push(dahai);
         }
 
-        // check if the kyoku ends here, can be ryukyoku or ron.
-        // here it simply checks if there is no more take for every single actor.
+        // Check if the kyoku ends here, can be ryukyoku or ron.
+        //
+        // Here it simply checks if there is no more take for every single
+        // actor.
         if (0..4).all(|i| take_events[i].peek().is_none()) {
             end_kyoku(events, kyoku);
             break;
         }
 
-        // check if the last discard was ankan or kakan.
-        // for kan, it will immediately consume the next take event from the same actor.
+        // Check if the last discard was ankan or kakan.
+        //
+        // For kan, it will immediately consume the next take event from the
+        // same actor.
         match discard {
             mjai::Event::Ankan { .. } => {
                 // ankan triggers a dora event immediately.
@@ -223,20 +229,42 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             _ => (),
         }
 
-        // decide who is the next actor.
-        // if someone takes taki of the previous discard, then it will be him,
-        // otherwise it will be the shimocha.
+        // Decide who is the next actor.
+        //
+        // For most of the time, if someone takes taki of the previous discard,
+        // then it will be him, otherwise it will be the shimocha.
+        //
+        // There are some edge cases when there are multiple candidates for the
+        // next actor, which will be handled by the second pass of the filter.
         actor = (0..4)
             .filter(|&i| i != actor)
-            .find(|&i| {
+            // First pass, filter the naki that takes the specific tile from the
+            // specific target.
+            .filter_map(|i| {
                 if let Some(take) = take_events[i].peek() {
                     if let Some((target, pai)) = take.naki_info() {
-                        return target == actor as u8 && pai == last_dahai;
+                        if target == (actor as u8) && pai == last_dahai {
+                            return Some((i, take.naki_to_ord()));
+                        }
                     }
                 }
 
-                false
+                None
             })
+            // Second pass, compare the nakis and filter out the final
+            // candidate.
+            //
+            // If a Chi and a Pon that calls the same tile from the same actor
+            // can take place at the same time, then Pon must be the first to
+            // take place, because if the Chi is the first instead, then the Pon
+            // will be impossible to take as he will have no chance to Pon from
+            // the same actor without Tsumo first.
+            //
+            // There is one exception to make the Chi legal though, if the actor
+            // takes another naki (Pon) before him, which is rare to be seen and
+            // it seems not possible to properly describe it on tenhou.net/6.
+            .max_by_key(|&(_, naki_ord)| naki_ord)
+            .map(|(i, _)| i)
             .unwrap_or((actor + 1) % 4);
     }
 

@@ -176,12 +176,21 @@ impl Event {
     }
 
     #[inline]
-    pub fn naki_info(&self) -> Option<(u8, Pai)> {
+    pub(crate) fn naki_info(&self) -> Option<(u8, Pai)> {
         match *self {
             Event::Chi { target, pai, .. }
             | Event::Pon { target, pai, .. }
             | Event::Daiminkan { target, pai, .. } => Some((target, pai)),
             _ => None,
+        }
+    }
+
+    #[inline]
+    pub(crate) fn naki_to_ord(&self) -> isize {
+        match *self {
+            Event::Chi { .. } => 0,
+            Event::Pon { .. } => 1,
+            _ => -1,
         }
     }
 }

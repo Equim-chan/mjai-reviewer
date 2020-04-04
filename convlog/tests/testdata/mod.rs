@@ -1,6 +1,7 @@
 pub const TESTDATA: &[&str] = &[
     include_str!("chankan.json"),
-    include_str!("complex_nakis.json"),
+    include_str!("complex_nakis_0.json"),
+    include_str!("complex_nakis_1.json"),
     include_str!("four_reach.json"),
     include_str!("kyushukyuhai.json"),
     include_str!("double_ron.json"),
