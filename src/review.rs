@@ -216,7 +216,10 @@ pub fn review(
         let expected_action = &actions[0].moves; // best move
         let actual_action = next_action_for_compare(&events[(i + 1)..]);
 
-        if !full && compare_action(&actual_action, expected_action, target_actor) {
+        if !full
+            && compare_action(&actual_action, expected_action, target_actor)
+                .context("invalid state in event")?
+        {
             continue;
         }
 
@@ -303,7 +306,11 @@ fn next_action_exact(rough_action: &[Event], target_actor: u8) -> Vec<Event> {
 }
 
 /// Returns true if actual_action is innocent or the same as expected_action.
-fn compare_action(actual_action: &[Event], expected_action: &[Event], target_actor: u8) -> bool {
+fn compare_action(
+    actual_action: &[Event],
+    expected_action: &[Event],
+    target_actor: u8,
+) -> Result<bool> {
     // hot path.
     //
     // note that for Event::Dahai, it also compares tsumogiri, therefore if they
@@ -314,7 +321,7 @@ fn compare_action(actual_action: &[Event], expected_action: &[Event], target_act
         .zip(actual_action)
         .all(|(e, a)| e == a)
     {
-        return true;
+        return Ok(true);
     }
 
     // fallback to slow path.
@@ -324,182 +331,209 @@ fn compare_action(actual_action: &[Event], expected_action: &[Event], target_act
         Event::Dahai { pai, .. } => {
             match *actual {
                 // ignore 九種九牌
-                Event::Ryukyoku { .. } => true,
+                Event::Ryukyoku { .. } => Ok(true),
 
                 // ignore the difference of tsumogiri
                 Event::Dahai {
                     pai: actual_pai, ..
-                } => actual_pai == pai,
+                } => Ok(actual_pai == pai),
 
-                _ => false,
+                _ => Ok(false),
             }
         }
 
         Event::Ankan { consumed, .. } => {
             match *actual {
                 // ignore 九種九牌
-                Event::Ryukyoku { .. } => true,
+                Event::Ryukyoku { .. } => Ok(true),
 
                 Event::Ankan {
                     consumed: actual_consumed,
                     ..
-                } => actual_consumed == consumed,
+                } => Ok(actual_consumed == consumed),
 
-                _ => false,
+                _ => Ok(false),
             }
         }
 
         Event::Kakan { pai, .. } => match *actual {
             Event::Kakan {
                 pai: actual_pai, ..
-            } => actual_pai == pai,
+            } => Ok(actual_pai == pai),
 
-            _ => false,
+            _ => Ok(false),
         },
 
         Event::Reach { .. } => {
             match actual {
                 Event::Reach { .. } => {
+                    let next_actual = actual_action.get(1);
+
                     // ignore the difference of tsumogiri
                     if let Some(&Event::Dahai {
                         pai: actual_pai, ..
-                    }) = actual_action.get(1)
+                    }) = next_actual
                     {
-                        if let Event::Dahai { pai, .. } = expected_action[1] {
-                            actual_pai == pai
+                        let next_expected = expected_action.get(1);
+
+                        if let Some(&Event::Dahai { pai, .. }) = next_expected {
+                            Ok(actual_pai == pai)
                         } else {
-                            false // ?
+                            Err(anyhow!(
+                                "event after Reach is not Dahai, got {:?}",
+                                next_expected
+                            ))
                         }
                     } else {
-                        false // ?
+                        Err(anyhow!(
+                            "event after Reach is not Dahai, got {:?}",
+                            next_actual
+                        ))
                     }
                 }
 
-                _ => false,
+                _ => Ok(false),
             }
         }
 
         Event::Chi { consumed, .. } => {
-            let naki_part_matches = match *actual {
+            match *actual {
                 // ignore 九種九牌
-                Event::Ryukyoku { .. } => true,
+                Event::Ryukyoku { .. } => Ok(true),
 
-                Event::Tsumo { .. } => false,
+                Event::Tsumo { .. } => Ok(false),
 
                 Event::Chi {
                     consumed: actual_consumed,
                     ..
-                } => actual_consumed == consumed,
+                } if actual_consumed == consumed => {
+                    let next_actual = actual_action.get(1);
+
+                    if let Some(&Event::Dahai {
+                        pai: actual_pai, ..
+                    }) = next_actual
+                    {
+                        let next_expected = expected_action.get(1);
+
+                        if let Some(&Event::Dahai { pai, .. }) = next_expected {
+                            Ok(actual_pai == pai)
+                        } else {
+                            Err(anyhow!(
+                                "event after Chi is not Dahai, got {:?}",
+                                next_expected
+                            ))
+                        }
+                    } else {
+                        Err(anyhow!(
+                            "event after Chi is not Dahai, got {:?}",
+                            next_actual
+                        ))
+                    }
+                }
 
                 _ => {
                     if let Some(actor) = actual.actor() {
-                        // pon, daiminkan, ron
-                        actor != target_actor
+                        // interrupted by opponent's pon, daiminkan or ron
+                        Ok(actor != target_actor)
                     } else {
-                        false // ?
+                        Err(anyhow!("unexpected event: {:?}", actual))
                     }
                 }
-            };
-
-            if !naki_part_matches {
-                false
-            } else if let Event::Dahai {
-                pai: actual_pai, ..
-            } = actual_action[1]
-            {
-                if let Event::Dahai { pai, .. } = expected_action[1] {
-                    actual_pai == pai
-                } else {
-                    false // ?
-                }
-            } else {
-                false // ?
             }
         }
 
         Event::Pon { consumed, .. } => {
-            let naki_part_matches = match *actual {
+            match *actual {
                 // ignore 九種九牌
-                Event::Ryukyoku { .. } => true,
+                Event::Ryukyoku { .. } => Ok(true),
 
-                Event::Tsumo { .. } => false,
+                Event::Tsumo { .. } => Ok(false),
 
                 Event::Pon {
                     consumed: actual_consumed,
                     ..
-                } => actual_consumed == consumed,
+                } if actual_consumed == consumed => {
+                    let next_actual = actual_action.get(1);
+
+                    if let Some(&Event::Dahai {
+                        pai: actual_pai, ..
+                    }) = next_actual
+                    {
+                        let next_expected = expected_action.get(1);
+
+                        if let Some(&Event::Dahai { pai, .. }) = next_expected {
+                            Ok(actual_pai == pai)
+                        } else {
+                            Err(anyhow!(
+                                "event after Pon is not Dahai, got {:?}",
+                                next_expected
+                            ))
+                        }
+                    } else {
+                        Err(anyhow!(
+                            "event after Pon is not Dahai, got {:?}",
+                            next_actual
+                        ))
+                    }
+                }
 
                 _ => {
                     if let Some(actor) = actual.actor() {
-                        // ron
-                        actor != target_actor
+                        // interrupted by opponent's ron
+                        Ok(actor != target_actor)
                     } else {
-                        false // ?
+                        Err(anyhow!("unexpected event: {:?}", actual))
                     }
                 }
-            };
-
-            if !naki_part_matches {
-                false
-            } else if let Event::Dahai {
-                pai: actual_pai, ..
-            } = actual_action[1]
-            {
-                if let Event::Dahai { pai, .. } = expected_action[1] {
-                    actual_pai == pai
-                } else {
-                    false // ?
-                }
-            } else {
-                false // ?
             }
         }
 
         Event::Daiminkan { .. } => {
             match actual {
                 // ignore 九種九牌
-                Event::Ryukyoku { .. } => true,
+                Event::Ryukyoku { .. } => Ok(true),
 
-                Event::Tsumo { .. } => false,
+                Event::Tsumo { .. } => Ok(false),
 
-                Event::Daiminkan { .. } => true,
+                Event::Daiminkan { .. } => Ok(true),
 
                 _ => {
                     if let Some(actor) = actual.actor() {
-                        actor != target_actor
+                        // interrupted by opponent's ron
+                        Ok(actor != target_actor)
                     } else {
-                        false // ?
+                        Err(anyhow!("unexpected event: {:?}", actual))
                     }
                 }
             }
         }
 
         // considering multiple rons
-        Event::Hora { .. } => actual_action.iter().take(3).any(|a| {
+        Event::Hora { .. } => Ok(actual_action.iter().take(3).any(|a| {
             if let Event::Hora { actor, .. } = *a {
                 actor == target_actor
             } else {
                 false
             }
-        }),
+        })),
 
         Event::None => {
             match actual {
                 // ignore 九種九牌
-                Event::Ryukyoku { .. } => true,
+                Event::Ryukyoku { .. } => Ok(true),
 
-                Event::Tsumo { .. } => true,
+                Event::Tsumo { .. } => Ok(true),
 
                 _ => {
                     if let Some(actor) = actual.actor() {
-                        actor != target_actor
+                        Ok(actor != target_actor)
                     } else {
-                        false // ?
+                        Err(anyhow!("unexpected event: {:?}", actual))
                     }
                 }
             }
         }
 
-        _ => false, // ?
+        _ => Err(anyhow!("unexpected event: {:?}", actual)),
     }
 }
