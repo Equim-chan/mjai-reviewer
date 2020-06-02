@@ -13,6 +13,12 @@ use convlog::Pai;
 use serde::{Deserialize, Serialize};
 use serde_json as json;
 
+pub struct Review {
+    pub total_reviewed: usize,
+    pub total_entries: usize,
+    pub kyokus: Vec<KyokuReview>,
+}
+
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct KyokuReview {
     pub kyoku: u8, // in tenhou.net/6 format, counts from 0
@@ -58,7 +64,7 @@ pub fn review(
     target_actor: u8,
     full: bool,
     verbose: bool,
-) -> Result<Vec<KyokuReview>> {
+) -> Result<Review> {
     let mut kyoku_reviews = vec![];
 
     let target_actor_string = target_actor.to_string();
@@ -101,11 +107,13 @@ pub fn review(
 
     let events_len = events.len();
     let mut total_entries = 0;
+    let mut total_reviewed = 0;
 
+    let mut kyoku_review = KyokuReview::default();
     let mut state = State::new(target_actor);
     let mut junme = 0;
-    let mut kyoku_review = KyokuReview::default();
     let mut entries = vec![];
+    let mut is_reached = false;
 
     for (i, event) in events.iter().enumerate() {
         let to_write = json::to_string(event).unwrap();
@@ -130,6 +138,7 @@ pub fn review(
                 let kyoku = (bakaze.as_u8() - Pai::East.as_u8()) * 4 + kk - 1;
                 kyoku_review.kyoku = kyoku;
                 kyoku_review.honba = honba;
+                is_reached = false;
 
                 continue;
             }
@@ -172,6 +181,14 @@ pub fn review(
                 continue;
             }
 
+            Event::ReachAccepted { actor } => {
+                if actor == target_actor {
+                    is_reached = true;
+                }
+
+                continue;
+            }
+
             _ => continue,
         };
 
@@ -207,7 +224,14 @@ pub fn review(
             continue;
         }
 
+        // skip the comparision when
+        // 1. it is not our turn and there is no chance to naki
+        // 2. our state is reached and there is no chance to ankan
+        // 3. 九種九牌
         if actions.len() == 1 {
+            if is_reached {
+                continue;
+            }
             if let Event::None | Event::Ryukyoku { .. } = actions[0].moves[0] {
                 continue;
             }
@@ -216,10 +240,11 @@ pub fn review(
         let expected_action = &actions[0].moves; // best move
         let actual_action = next_action_for_compare(&events[(i + 1)..]);
 
-        if !full
-            && compare_action(&actual_action, expected_action, target_actor)
-                .context("invalid state in event")?
-        {
+        let is_equal = compare_action(&actual_action, expected_action, target_actor)
+            .context("invalid state in event")?;
+        total_reviewed += 1;
+
+        if is_equal && !full {
             continue;
         }
 
@@ -267,7 +292,11 @@ pub fn review(
         }
     }
 
-    Ok(kyoku_reviews)
+    Ok(Review {
+        total_reviewed,
+        total_entries,
+        kyokus: kyoku_reviews,
+    })
 }
 
 fn next_action_for_compare(events: &[Event]) -> &[Event] {

@@ -15,5 +15,8 @@ pub struct Metadata<'a> {
     #[serde(with = "humantime_serde")]
     pub review_time: Duration,
 
+    pub total_reviewed: usize,
+    pub total_entries: usize,
+
     pub version: &'a str,
 }

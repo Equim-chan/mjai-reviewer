@@ -475,7 +475,7 @@ fn main() -> Result<()> {
 
     // do the review
     let begin_review = chrono::Local::now();
-    let reviews = review(
+    let review_result = review(
         &akochan_exe,
         &akochan_dir,
         &tactics_file_path,
@@ -530,11 +530,13 @@ fn main() -> Result<()> {
         convert_time,
         review_time,
         tenhou_id: arg_tenhou_id,
+        total_reviewed: review_result.total_reviewed,
+        total_entries: review_result.total_entries,
         version: &format!("v{} ({})", PKG_VERSION, GIT_HASH),
     };
 
     // render the HTML report page or JSON
-    let view = View::new(&reviews, actor, &meta, splited_raw_logs);
+    let view = View::new(&review_result.kyokus, actor, &meta, splited_raw_logs);
     if arg_json {
         log!("writing output...");
         json::to_writer(&mut out, &view).context("failed to write JSON result")?;

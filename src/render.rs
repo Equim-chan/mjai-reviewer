@@ -84,13 +84,13 @@ where
 {
     #[inline]
     pub fn new(
-        reviews: &'a [KyokuReview],
+        kyoku_reviews: &'a [KyokuReview],
         target_actor: u8,
         metadata: &'a Metadata<'a>,
         splited_logs: Option<L>,
     ) -> Self {
         Self {
-            kyokus: reviews,
+            kyokus: kyoku_reviews,
             target_actor,
             splited_logs,
             metadata,

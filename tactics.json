@@ -1,37 +1,70 @@
 {
   "tactics": {
+    "agari_prob_est": "ako",
     "base": "default",
+    "do_kakan_inclusive": true,
+    "han_shift_prob_kan": [
+      0.1,
+      0.8,
+      0.1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "houjuu_est": "ako",
+    "inclusive_fold_est": "ako",
+    "jun_est": "ako",
     "jun_pt": [
       90,
-      45,
-      0,
-      -135
+      30,
+      -30,
+      -90
     ],
-    "jun_est": "ako",
-    "use_agari_coeff_tp_fnm": 0,
-    "use_agari_coeff_tp_an": 8,
-    "tsumo_num_est": "ako",
-    "tsumo_num_ratio": 1.0,
-    "use_other_end_ar": false,
-    "other_end_prob_est": "ako",
+    "katachi_est": "ako",
+    "mc_init": "ako",
+    "my_keiten_prob_est": "ako",
     "other_end_est_begin": 0,
-    "tenpai_prob_est": "ako",
+    "other_end_prob_est": "ako",
+    "other_keiten_prob_est": "ako",
+    "result_other_est": "ako",
+    "ron_ratio_est": "ako",
+    "ryukyoku_prob_est": "ako",
+    "sbr_est": "ako",
+    "tas_est": "ako",
     "tenpai_after_est": "ako",
     "tenpai_after_est_begin": 0,
     "tenpai_after_use_other_reach": true,
-    "betaori_est": "ako",
-    "agari_prob_est": "ako",
-    "my_keiten_prob_est": "ako",
-    "other_keiten_prob_est": "ako",
-    "inclusive_fold_est": "ako",
-    "ron_ratio_est": "ako",
-    "ryukyoku_prob_est": "ako",
-    "result_other_est": "ako",
-    "tas_est": "ako",
-    "mc_init": "ako",
-    "sbr_est": "ako",
-    "katachi_est": "ako",
-    "houjuu_est": "ako",
-    "use_ori_exp_at_dp_fuuro": false
+    "tenpai_prob_est": "ako",
+    "tsumo_num_est": "ako",
+    "tsumo_num_ratio": 1,
+    "use_agari_coeff_tp_an": 8,
+    "use_agari_coeff_tp_fnm": 0,
+    "use_other_end_ar": false,
+    "use_ori_exp_at_dp_fuuro": true,
+    "hanfu_weight_ron": [{
+      "han": 2,
+      "fu": 3,
+      "value": 0.1
+    }, {
+      "han": 3,
+      "fu": 3,
+      "value": 0.4
+    }, {
+      "han": 4,
+      "fu": 3,
+      "value": 0.4
+    }, {
+      "han": 6,
+      "fu": 3,
+      "value": 0.1
+    }]
   }
 }

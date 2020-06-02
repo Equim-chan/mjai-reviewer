@@ -50,15 +50,15 @@
       <dd>{{ target_actor }}</dd>
       <dt>tenhou log id</dt>
       <dd>{{ metadata.tenhou_id | default(value="N/A") | safe }}</dd>
-      <dt>parse</dt>
+      <dt>parse time</dt>
       <dd>{{ metadata.parse_time }}</dd>
-      <dt>convert</dt>
+      <dt>convert time</dt>
       <dd>{{ metadata.convert_time }}</dd>
-      <dt>review</dt>
+      <dt>review time</dt>
       <dd>{{ metadata.review_time }}</dd>
-      <dt>version</dt>
-      <dd>{{ metadata.version }}</dd>
-      <dt>render time</dt>
+      <dt>entries / reviewed = diff rate</dt>
+      <dd>{{ metadata.total_entries }} / {{ metadata.total_reviewed }} = {{ pretty_round(num=(metadata.total_entries / metadata.total_reviewed * 100)) }}%</dd>
+      <dt>generated at</dt>
       <dd>{{ now() | date(format="%Y-%m-%d %H:%M:%S") }}</dd>
     </dl>
   </details>
