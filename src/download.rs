@@ -2,8 +2,6 @@ use std::io::prelude::*;
 
 use anyhow::anyhow;
 use anyhow::{Context, Result};
-use env_proxy;
-use ureq;
 
 pub fn download_tenhou_log(log_id: &str) -> Result<impl Read> {
     let url = format!("https://tenhou.net/5/mjlog2json.cgi?{}", log_id);
