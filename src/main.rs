@@ -27,7 +27,6 @@ use clap::value_t;
 use clap::{App, Arg};
 use convlog::tenhou;
 use dunce::canonicalize;
-use opener;
 use serde_json as json;
 use tee::TeeReader;
 use tempfile::NamedTempFile;

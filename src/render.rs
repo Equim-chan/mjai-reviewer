@@ -10,7 +10,6 @@ use convlog::tenhou::RawPartialLog;
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json as json;
-use tera;
 use tera::{Tera, Value};
 
 static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
