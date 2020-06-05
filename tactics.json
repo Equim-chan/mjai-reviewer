@@ -2,6 +2,7 @@
   "tactics": {
     "agari_prob_est": "ako",
     "base": "default",
+    "do_kan_ordinary": false,
     "do_kakan_inclusive": true,
     "han_shift_prob_kan": [
       0.1,
