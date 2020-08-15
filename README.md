@@ -44,11 +44,13 @@ FLAGS:
 
 OPTIONS:
     -a, --actor <INDEX>             Specify the actor to review. It is the number after "&tw=" in tenhou's log url
-    -d, --akochan-dir <DIR>         Specify the directory of akochan. This will serves as the working directory of
+    -d, --akochan-dir <DIR>         Specify the directory of akochan. This will serve as the working directory of
                                     akochan process. Default value "akochan"
     -i, --in-file <FILE>            Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty, read from
                                     stdin
     -k, --kyokus <ARRAY>            Specify kyokus to review. If ARRAY is empty, review all kyokus. Format: "E1,E4,S3.1"
+        --lang <LANG>               Set the language for the rendered report page. Default value "ja". Supported
+                                    languages: ja, en
         --mjai-out <FILE>           Save the transformed mjai format log to FILE. If FILE is "-", write to stdout
         --out-dir <DIR>             Specify a directory to save the output for mjai logs. If DIR is empty, defaults to
                                     "."
