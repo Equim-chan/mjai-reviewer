@@ -14,12 +14,14 @@ use tera::{Tera, Value};
 
 static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
     let mut tera = Tera::default();
-    tera.register_function("kyoku_to_string", kyoku_to_string);
+    tera.register_function("kyoku_to_string_ja", kyoku_to_string_ja);
+    tera.register_function("kyoku_to_string_en", kyoku_to_string_en);
     tera.register_function("pretty_round", pretty_round);
 
     tera.add_raw_templates(vec![
         ("macros.html", include_str!("../templates/macros.html")),
         ("pai.svg", include_str!("../assets/pai.svg")),
+        ("report.css", include_str!("../templates/report.css")),
         ("report.html", include_str!("../templates/report.html")),
     ])
     .expect("failed to parse template");
@@ -27,7 +29,16 @@ static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
     tera
 });
 
-fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
+#[derive(Serialize)]
+pub enum Language {
+    // The string is used in html lang attribute, as per BCP47.
+    #[serde(rename = "ja")]
+    Japanese,
+    #[serde(rename = "en")]
+    English,
+}
+
+fn kyoku_to_string_ja(args: &HashMap<String, Value>) -> tera::Result<Value> {
     const BAKAZE_KANJI: &[&str] = &["東", "南", "西", "北"];
     const NUM_KANJI: &[&str] = &["一", "二", "三", "四"];
 
@@ -49,6 +60,31 @@ fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
         Ok(Value::String(ret))
     } else {
         Ok(Value::String(ret + " " + &honba.to_string() + " 本場"))
+    }
+}
+
+fn kyoku_to_string_en(args: &HashMap<String, Value>) -> tera::Result<Value> {
+    const BAKAZE_ENG: &[&str] = &["East", "South", "West", "North"];
+    const NUM_ENG: &[&str] = &["1", "2", "3", "4"];
+
+    let kyoku = if let Some(Value::Number(num)) = args.get("kyoku") {
+        usize::try_from(num.as_u64().unwrap_or(0)).unwrap_or(0)
+    } else {
+        0
+    };
+
+    let honba = if let Some(Value::Number(num)) = args.get("honba") {
+        usize::try_from(num.as_u64().unwrap_or(0)).unwrap_or(0)
+    } else {
+        0
+    };
+
+    let ret = BAKAZE_ENG[kyoku / 4].to_owned() + " " + NUM_ENG[kyoku % 4];
+
+    if honba == 0 {
+        Ok(Value::String(ret))
+    } else {
+        Ok(Value::String(ret + "-" + &honba.to_string()))
     }
 }
 
@@ -75,6 +111,7 @@ where
     #[serde(skip_serializing_if = "Option::is_none")]
     splited_logs: Option<L>,
     metadata: &'a Metadata<'a>,
+    lang: Language,
 }
 
 impl<'a, L> View<'a, L>
@@ -85,14 +122,16 @@ where
     pub fn new(
         kyoku_reviews: &'a [KyokuReview],
         target_actor: u8,
-        metadata: &'a Metadata<'a>,
         splited_logs: Option<L>,
+        metadata: &'a Metadata<'a>,
+        lang: Language,
     ) -> Self {
         Self {
             kyokus: kyoku_reviews,
             target_actor,
             splited_logs,
             metadata,
+            lang,
         }
     }
 

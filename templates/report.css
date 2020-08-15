@@ -1,0 +1,148 @@
+html {
+  scroll-behavior: smooth;
+}
+body {
+  max-width: 800px;
+  margin: auto;
+}
+
+h1 {
+  font-size: 2em;
+}
+section {
+  background-color: #fff;
+}
+section h1 {
+  text-align: center;
+}
+
+a, a:visited {
+  color: inherit;
+}
+a.chapter {
+  text-decoration: none;
+}
+
+.face, .back {
+  filter: url(#inset-shadow);
+  fill: #fff;
+}
+.back {
+  fill: #ffba1e;
+}
+.tile {
+  width: 25px;
+  height: 35px;
+  vertical-align: middle;
+}
+
+summary {
+  cursor: pointer;
+}
+details.collapse  {
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  padding: .5em .5em 0;
+}
+details.collapse summary {
+  font-weight: bold;
+  margin: -.5em -.5em 0;
+  padding: .5em;
+}
+details[open].collapse  {
+  padding: .5em;
+  margin-bottom: .5em;
+}
+details[open].collapse summary {
+  border-bottom: 1px solid #aaa;
+  margin-bottom: .5em;
+}
+
+.kyoku-toc,
+.kyoku-heading {
+  display: flex;
+}
+
+.end-status-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.end-status-item {
+  margin-left: 2em;
+}
+
+.end-status {
+  color: #666;
+}
+
+.kyoku-heading .end-status {
+  font-size: 75%;
+  font-weight: normal;
+  line-height: 75%;
+}
+
+.tehai-state {
+  display: flex;
+  list-style: none;
+  padding-left: 0;
+  margin-top: 25px;
+}
+.tsumo {
+  margin-left: .5em;
+}
+.tsumo::before {
+  content: attr(data-content);
+}
+.fuuro {
+  display: flex;
+  list-style: none;
+  padding-left: 0;
+  margin-left: .5em;
+}
+:not(.fuuro) + .fuuro {
+  margin-left: 1em;
+}
+.consumed {
+  display: flex;
+  list-style: none;
+  padding-left: 0;
+}
+.rotated {
+  transform: rotate(90deg) translateX(-25px);
+  transform-origin: bottom left;
+  margin-right: 10px;
+}
+.rotated.added {
+  transform: rotate(90deg) translateX(-50px);
+  transform-origin: bottom left;
+  margin-right: -15px;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+}
+iframe.tenhou {
+  width: 100%;
+  height: 480px;
+  display: block;
+  margin: auto;
+}
+
+table.stat {
+  table-layout: fixed;
+  text-align: center;
+  width: 100%;
+}
+table.stat th, td {
+  padding: 3px;
+}
+table.stat th {
+  font-size: 85%;
+}
+table.stat td {
+  font-size: 90%;
+  line-height: 32px;
+}

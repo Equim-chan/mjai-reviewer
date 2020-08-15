@@ -9,7 +9,7 @@ mod tehai;
 
 use download::download_tenhou_log;
 use metadata::Metadata;
-use render::View;
+use render::{Language, View};
 use review::review;
 use tactics::TacticsJson;
 
@@ -247,6 +247,21 @@ fn main() -> Result<()> {
                 .help("Analyze every move, not only the different ones."),
         )
         .arg(
+            Arg::with_name("lang")
+                .long("lang")
+                .takes_value(true)
+                .value_name("LANG")
+                .help(
+                    "Set the language for the rendered report page. \
+                    Default value \"ja\". \
+                    Supported languages: ja, en",
+                )
+                .validator(|v| match v.as_str() {
+                    "ja" | "en" => Ok(()),
+                    _ => Err(format!("unsupported language {}", v)),
+                }),
+        )
+        .arg(
             Arg::with_name("verbose")
                 .short("v")
                 .long("verbose")
@@ -273,6 +288,7 @@ fn main() -> Result<()> {
     let arg_no_review = matches.is_present("no-review");
     let arg_json = matches.is_present("json");
     let arg_full = matches.is_present("full");
+    let arg_lang = matches.value_of("lang");
     let arg_verbose = matches.is_present("verbose");
 
     if let Some(tenhou_ids_file) = arg_tenhou_ids_file {
@@ -484,6 +500,13 @@ fn main() -> Result<()> {
         }
     };
 
+    // determine language
+    let lang = match arg_lang {
+        Some("ja") | None => Language::Japanese,
+        Some("en") => Language::English,
+        _ => unreachable!(),
+    };
+
     // prepare output, can be a file or stdout
     let mut out: Box<dyn Write> = if let Some(out_file_path) = &opanable_file {
         let out_file = File::create(out_file_path)
@@ -510,7 +533,13 @@ fn main() -> Result<()> {
     };
 
     // render the HTML report page or JSON
-    let view = View::new(&review_result.kyokus, actor, &meta, splited_raw_logs);
+    let view = View::new(
+        &review_result.kyokus,
+        actor,
+        splited_raw_logs,
+        &meta,
+        lang,
+    );
     if arg_json {
         log!("writing output...");
         json::to_writer(&mut out, &view).context("failed to write JSON result")?;

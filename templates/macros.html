@@ -12,64 +12,64 @@
 
 {%- macro render_action(action) -%}
   {%- if action[0].type == "none" -%}
-    スルー
+    {% if lang == "en" %}Pass{% else %}スルー{% endif %}
   {%- elif action[0].type == "dahai" -%}
-    打
+    {% if lang == "en" %}Discard{% else %}打{% endif %}
     {{ self::render_pai(pai=action[0].pai) }}
   {%- elif action[0].type == "reach" -%}
-    打
+    {% if lang == "en" %}Discard{% else %}打{% endif %}
     {{ self::render_pai(pai=action[1].pai) }}
-    リーチ
+    {% if lang == "en" %}Riichi{% else %}リーチ{% endif %}
   {%- elif action[0].type == "hora" -%}
     {%- if action[0].target == action[0].actor -%}
-      ツモ
-    {%- else -%}
-      ロン
+      {% if lang == "en" %}Tsumo{% else %}ツモ{% endif %}
+    {% else -%}
+      {% if lang == "en" %}Ron{% else %}ロン{% endif %}
     {%- endif -%}
   {%- elif action[0].type == "chi" -%}
     {%- for pai in action[0].consumed -%}
       {{- self::render_pai(pai=pai) -}}
     {% endfor %}
-    チー打
+    {% if lang == "en" %}Chii, cut{% else %}チー打{% endif %}
     {{ self::render_pai(pai=action[1].pai) }}
   {%- elif action[0].type == "pon" -%}
     {%- for pai in action[0].consumed -%}
       {{- self::render_pai(pai=pai) -}}
     {% endfor %}
-    ポン打
+    {% if lang == "en" %}Pon, cut{% else %}ポン打{% endif %}
     {{ self::render_pai(pai=action[1].pai) }}
   {%- elif action[0].type == "kakan" or action[0].type == "daiminkan" -%}
-    カン
+    {% if lang == "en" %}&Kan{% else %}カン{% endif %}
     {{ self::render_pai(pai=action[0].pai) }}
-  {%- else -%}
-    カン
+  {%- else -%} {# ankan #}
+    {% if lang == "en" %}Kan{%- else %}カン{% endif %}
     {{ self::render_pai(pai=action[0].consumed[0]) }}
   {%- endif -%}
 {%- endmacro render_action -%}
 
 {%- macro render_actor(actor, target_actor) -%}
   {%- if (actor - target_actor + 4) % 4 == 1 -%}
-    下家
+    {% if lang == "en" %}Shimocha{% else %}下家{% endif %}
   {%- elif (actor - target_actor + 4) % 4 == 2 -%}
-    対面
+    {% if lang == "en" %}Toimen{% else %}対面{% endif %}
   {%- elif (actor - target_actor + 4) % 4 == 3 -%}
-    上家
+    {% if lang == "en" %}Kamicha{% else %}上家{% endif %}
   {%- else -%}
-    自家
+    {% if lang == "en" %}Self{% else %}自家{% endif %}
   {%- endif -%}
 {%- endmacro -%}
 
 {%- macro render_end_status(end_status, target_actor) -%}
   {%- if end_status.type == "hora" -%}
     {%- if end_status.target == end_status.actor -%}
-      ツモ
+      {% if lang == "en" %}Tsumo by&nbsp;{% else %}ツモ：{% endif %}
     {%- else -%}
-      ロン
-    {%- endif -%}:
+      {% if lang == "en" %}Ron by&nbsp;{% else %}ロン：{% endif %}
+    {%- endif -%}
     {{ self::render_actor(actor=end_status.actor, target_actor=target_actor) }}
     {{ end_status.deltas[end_status.actor] }}
   {%- else -%}
-    流局
+    {% if lang == "en" %}Ryuukyoku{% else %}流局{% endif %}
   {%- endif -%}
 {%- endmacro render_end_status -%}
 
@@ -79,14 +79,22 @@
     {%- for pai in entry.state.tehai -%}
       {%- if entry.state.tehai|length == loop.index -%}
         {%- if entry.actor == target_actor -%}
-          <li class="tsumo" data-content="ツモ ">{{- self::render_pai(pai=pai) -}}</li>
+          <li class="tsumo" data-content="{% if lang == "en" %}Draw:{% else %}ツモ{% endif %} ">{{- self::render_pai(pai=pai) -}}</li>
         {%- else -%}
           <li>{{- self::render_pai(pai=pai) -}}</li>
           {%- set content = self::render_actor(actor=entry.actor, target_actor=target_actor) -%}
           {%- if entry.is_kakan -%}
-            {%- set content = content ~ "カン " -%}
+            {%- if lang == "en" -%}
+              {%- set content = content ~ " Kan " -%}
+            {%- else -%}
+              {%- set content = content ~ "カン " -%}
+            {%- endif -%}
           {%- else -%}
-            {%- set content = content ~ "打 " -%}
+            {%- if lang == "en" -%}
+              {%- set content = content ~ " Cut " -%}
+            {%- else -%}
+              {%- set content = content ~ "打 " -%}
+            {%- endif -%}
           {%- endif -%}
           <li class="tsumo" data-content="{{ content }}">{{- self::render_pai(pai=entry.pai) -}}</li>
         {%- endif -%}
