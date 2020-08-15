@@ -192,7 +192,7 @@ fn main() -> Result<()> {
                 .value_name("DIR")
                 .help(
                     "Specify the directory of akochan. \
-                    This will serves as the working directory of akochan process. \
+                    This will serve as the working directory of akochan process. \
                     Default value \"akochan\"",
                 ),
         )
@@ -445,7 +445,7 @@ fn main() -> Result<()> {
 
     log!("players: {:?}", log.names);
     log!("target: {}", log.names[actor as usize]);
-    log!("start review, this may take serval minutes...");
+    log!("start review, this may take several minutes...");
 
     // do the review
     let begin_review = chrono::Local::now();
