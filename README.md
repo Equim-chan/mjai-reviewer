@@ -19,6 +19,9 @@ $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2
 $ # Review with arbitrary pt distribution
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 --pt 75,30,0,-165
 
+$ # Review with placement EV instead of pt EV
+$ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 --use-ranking-exp
+
 $ # Review every move, including moves that already match akochan's choice
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 -f
 
