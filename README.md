@@ -45,8 +45,7 @@ FLAGS:
 OPTIONS:
     -a, --actor <INDEX>             Specify the actor to review. It is the number after "&tw=" in tenhou's log url
     -d, --akochan-dir <DIR>         Specify the directory of akochan. This will serves as the working directory of
-                                    akochan process. Default value is the directory in which --akochan-exe is specified
-    -e, --akochan-exe <EXE>         Specify the executable file of akochan. Default value "akochan/system.exe"
+                                    akochan process. Default value "akochan"
     -i, --in-file <FILE>            Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty, read from
                                     stdin
     -k, --kyokus <ARRAY>            Specify kyokus to review. If ARRAY is empty, review all kyokus. Format: "E1,E4,S3.1"
@@ -177,6 +176,20 @@ $ docker build -t akochan-reviewer:latest .
 ```console
 $ docker run --rm akochan-reviewer:latest --no-open -t 2019050417gm-0029-0000-4f2a8622 -a 3 -o - > report.html
 $ open report.html  # or just open in browser
+```
+
+## Troubleshooting
+### `Assertion failed` errors on Windows
+Set environment variable `OMP_NUM_THREADS=8`.
+
+Under cmd
+```console
+> set OMP_NUM_THREADS=8
+```
+
+under MSYS2
+```console
+$ export OMP_NUM_THREADS=8
 ```
 
 ## Acknowledgment
