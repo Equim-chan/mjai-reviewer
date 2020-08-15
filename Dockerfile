@@ -1,4 +1,4 @@
-FROM rust:1.41
+FROM rust:1.45.2
 
 
 # install akochan deps

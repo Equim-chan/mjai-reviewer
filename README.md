@@ -155,7 +155,7 @@ $ cargo build --release
 ```console
 $ git clone https://github.com/Equim-chan/akochan-reviewer.git
 $ cd akochan-reviewer
-$ git clone https://github.com/Equim-chan/akochan.git
+$ git clone https://github.com/critter-mj/akochan.git
 $ docker build -t akochan-reviewer:latest .
 ```
 
