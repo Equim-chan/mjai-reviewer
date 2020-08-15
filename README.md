@@ -22,7 +22,7 @@ $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 --pt 75,30,0,-165
 $ # Review every move, including moves that already match akochan's choice
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 -f
 
-# Review 東2局1本場 and 東3局 only
+$ # Review 東2局1本場 and 東3局 only
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 -k E2.1,E3
 ```
 
