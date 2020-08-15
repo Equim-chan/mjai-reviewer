@@ -31,6 +31,16 @@
         "code",
         "design"
       ]
+    },
+    {
+      "login": "Euophrys",
+      "name": "Amber",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/47927161?v=4",
+      "profile": "https://euophrys.itch.io/",
+      "contributions": [
+        "translation",
+        "blog"
+      ]
     }
   ],
   "contributorsPerLine": 7

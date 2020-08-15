@@ -209,11 +209,12 @@ akochan itself was licensed separately, see https://github.com/critter-mj/akocha
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://github.com/critter-mj"><img src="https://pbs.twimg.com/profile_images/1005709404623155201/kMTv4X6X_400x400.jpg" width="100px;" alt=""/><br /><sub><b>critter-mj</b></sub></a><br /><a href="#ideas-critter-mj" title="Ideas, Planning, & Feedback">🤔</a> <a href="#tool-critter-mj" title="Tools">🔧</a> <a href="#data-critter-mj" title="Data">🔣</a></td>
-    <td align="center"><a href="https://github.com/yuarasino"><img src="https://avatars2.githubusercontent.com/u/37145593?v=4" width="100px;" alt=""/><br /><sub><b>新篠ゆう</b></sub></a><br /><a href="#ideas-yuarasino" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/Equim-chan/akochan-reviewer/commits?author=yuarasino" title="Code">💻</a> <a href="#design-yuarasino" title="Design">🎨</a></td>
+    <td align="center"><a href="https://github.com/critter-mj"><img src="https://pbs.twimg.com/profile_images/1005709404623155201/kMTv4X6X_400x400.jpg?s=100" width="100px;" alt=""/><br /><sub><b>critter-mj</b></sub></a><br /><a href="#ideas-critter-mj" title="Ideas, Planning, & Feedback">🤔</a> <a href="#tool-critter-mj" title="Tools">🔧</a> <a href="#data-critter-mj" title="Data">🔣</a></td>
+    <td align="center"><a href="https://github.com/yuarasino"><img src="https://avatars2.githubusercontent.com/u/37145593?v=4?s=100" width="100px;" alt=""/><br /><sub><b>新篠ゆう</b></sub></a><br /><a href="#ideas-yuarasino" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/Equim-chan/akochan-reviewer/commits?author=yuarasino" title="Code">💻</a> <a href="#design-yuarasino" title="Design">🎨</a></td>
+    <td align="center"><a href="https://euophrys.itch.io/"><img src="https://avatars0.githubusercontent.com/u/47927161?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Amber</b></sub></a><br /><a href="#translation-Euophrys" title="Translation">🌍</a> <a href="#blog-Euophrys" title="Blogposts">📝</a></td>
   </tr>
 </table>
 
-<!-- markdownlint-enable -->
+<!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
 <!-- ALL-CONTRIBUTORS-LIST:END -->
