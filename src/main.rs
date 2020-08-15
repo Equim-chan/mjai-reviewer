@@ -533,13 +533,7 @@ fn main() -> Result<()> {
     };
 
     // render the HTML report page or JSON
-    let view = View::new(
-        &review_result.kyokus,
-        actor,
-        splited_raw_logs,
-        &meta,
-        lang,
-    );
+    let view = View::new(&review_result.kyokus, actor, splited_raw_logs, &meta, lang);
     if arg_json {
         log!("writing output...");
         json::to_writer(&mut out, &view).context("failed to write JSON result")?;
