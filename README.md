@@ -1,6 +1,7 @@
 # akochan-reviewer
 
 [![GitHub Workflow Status](https://github.com/Equim-chan/akochan-reviewer/workflows/build/badge.svg)](https://github.com/Equim-chan/akochan-reviewer/actions)
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Equim-chan/akochan-reviewer?include_prereleases)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Equim-chan/akochan-reviewer)
 [![License](https://img.shields.io/github/license/Equim-chan/akochan-reviewer)](https://github.com/Equim-chan/akochan-reviewer/blob/master/LICENSE)
 
