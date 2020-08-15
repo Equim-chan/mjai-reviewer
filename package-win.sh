@@ -18,6 +18,7 @@ cp -rt "$OUT_DIR"/akochan \
     system.exe \
     ai.dll \
     params \
+    README.md \
     LICENSE \
     /mingw64/bin/libgcc_s_seh-1.dll \
     /mingw64/bin/libgomp-1.dll \
@@ -30,6 +31,7 @@ cargo build --release
 cp -rt "$OUT_DIR" \
     target/release/akochan-reviewer.exe \
     tactics.json \
+    README.md \
     LICENSE
 popd
 
