@@ -134,7 +134,7 @@ $ make -f Makefile_Linux
 </p>
 </details>
 
-### Build akochan-review
+### Build akochan-reviewer
 Follow the instructions [here](https://www.rust-lang.org/learn/get-started) to install Rust toolchains first, if you haven't yet.
 
 ```console
