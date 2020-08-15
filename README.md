@@ -196,6 +196,7 @@ $ export OMP_NUM_THREADS=8
 
 ## Acknowledgment
 * [critter](https://twitter.com/critter_Eng): The creater of akochan, who also proposed many advise and gave help to the development of akochan-reviewer.
+* [Amber](https://euophrys.itch.io/): Who translated the report page into English, also wrote a [blog post](https://pathofhouou.blogspot.com/2020/08/training-tool-ako-chan-reviewer.html) about akochan-reviewer.
 
 ## License
 [Apache-2.0](https://github.com/Equim-chan/akochan-reviewer/blob/master/LICENSE)
