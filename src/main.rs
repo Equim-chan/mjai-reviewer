@@ -193,18 +193,7 @@ fn main() -> Result<()> {
                 .help(
                     "Specify the directory of akochan. \
                     This will serves as the working directory of akochan process. \
-                    Default value is the directory in which --akochan-exe is specified",
-                ),
-        )
-        .arg(
-            Arg::with_name("akochan-exe")
-                .short("e")
-                .long("akochan-exe")
-                .takes_value(true)
-                .value_name("EXE")
-                .help(
-                    "Specify the executable file of akochan. \
-                    Default value \"akochan/system.exe\"",
+                    Default value \"akochan\"",
                 ),
         )
         .arg(
@@ -273,7 +262,6 @@ fn main() -> Result<()> {
     let arg_mjai_out = matches.value_of_os("mjai-out");
     let arg_tenhou_ids_file = matches.value_of_os("tenhou-ids-file");
     let arg_out_dir = matches.value_of_os("out-dir");
-    let arg_akochan_exe = matches.value_of_os("akochan-exe");
     let arg_akochan_dir = matches.value_of_os("akochan-dir");
     let arg_tactics_config = matches.value_of_os("tactics-config");
     let arg_actor = value_t!(matches, "actor", u8);
@@ -392,32 +380,19 @@ fn main() -> Result<()> {
     let actor = arg_actor.unwrap_or_else(|e| e.exit());
 
     // get paths
-    let akochan_exe = {
-        let path = arg_akochan_exe.map(PathBuf::from).unwrap_or_else(|| {
-            let mut path = if let Ok(current_dir) = env::current_dir() {
-                current_dir
-            } else {
-                PathBuf::from(".")
-            };
-
-            path.push("akochan");
-            path.push("system.exe");
-
-            path
-        });
-
-        canonicalize(&path)
-            .with_context(|| format!("failed to canonicalize akochan_exe path {:?}", path))?
-    };
     let akochan_dir = {
-        let path = arg_akochan_dir.map(PathBuf::from).unwrap_or_else(|| {
-            let mut dir = akochan_exe.clone();
-            dir.pop();
-            dir
-        });
+        let path = arg_akochan_dir
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("akochan"));
 
         canonicalize(&path)
             .with_context(|| format!("failed to canonicalize akochan_dir path {:?}", path))?
+    };
+    let akochan_exe = {
+        let mut path: PathBuf = PathBuf::from(&akochan_dir);
+        path.push("system.exe");
+        canonicalize(&path)
+            .with_context(|| format!("failed to canonicalize akochan_exe path {:?}", path))?
     };
     let (tactics_file_path, tactics) = {
         let path = arg_tactics_config
