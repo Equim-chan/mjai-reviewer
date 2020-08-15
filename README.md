@@ -69,10 +69,10 @@ OPTIONS:
 
 ## Build
 ### Build akochan
-First of all, build [akochan of my fork](https://github.com/Equim-chan/akochan).
+First of all, build [akochan](https://github.com/critter-mj/akochan).
 
 ```console
-$ git clone https://github.com/Equim-chan/akochan.git
+$ git clone https://github.com/critter-mj/akochan.git
 $ cd akochan
 ```
 
@@ -88,20 +88,20 @@ $ pacman -Syu mingw-w64-x86_64-{toolchain,boost}
 Edit `Makefile`:
 
 ```Makefile
-LIBS = -L/mingw64/lib/boost -lws2_32 -L./ -lai
+LIBS = -lboost_system-mt -lws2_32 -L./ -lai -s
 ```
 
 Edit `ai_src/Makefile`:
 
 ```Makefile
-LIBS = -L/mingw64/lib/boost -lws2_32
+LIBS = -lboost_system-mt -lws2_32
 ```
 
 ```console
 $ cd ai_src
-$ make ai.dll
+$ make
 $ cd ..
-$ make system.exe
+$ make
 ```
 
 </p>
@@ -112,29 +112,10 @@ $ make system.exe
 
 ```console
 $ brew install llvm libomp boost
-```
-
-Edit `Makefile_Linux`:
-
-```Makefile
-COMPILER = /usr/local/opt/llvm/bin/clang++
-CFLAGS = -g -MMD -MP -std=c++11 -O3 -fopenmp -I/usr/local/include -I./
-LIBS = -L/usr/local/lib -lboost_system -L./ -lai
-```
-
-Edit `ai_src/Makefile_Linux`:
-
-```Makefile
-COMPILER = /usr/local/opt/llvm/bin/clang++
-CFLAGS = -g -MMD -MP -std=c++11 -O3 -fopenmp -I/usr/local/include
-LIBS = -L/usr/local/lib -lboost_system
-```
-
-```console
 $ cd ai_src
-$ make -f Makefile_Linux libai.so
+$ make -f Makefile_MacOS
 $ cd ..
-$ make -f Makefile_Linux system.exe
+$ make -f Makefile_MacOS
 ```
 
 </p>
@@ -145,9 +126,9 @@ $ make -f Makefile_Linux system.exe
 
 ```console
 $ sudo pacman -Syu base-devel boost
-$ make -f Makefile_Linux libai.so
+$ make -f Makefile_Linux
 $ cd ..
-$ make -f Makefile_Linux system.exe
+$ make -f Makefile_Linux
 ```
 
 </p>
