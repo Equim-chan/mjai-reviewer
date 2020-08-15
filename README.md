@@ -189,7 +189,7 @@ Under cmd
 > set OMP_NUM_THREADS=8
 ```
 
-under MSYS2
+Under MSYS2 bash
 ```console
 $ export OMP_NUM_THREADS=8
 ```
