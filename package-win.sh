@@ -35,5 +35,5 @@ cp -rt "$OUT_DIR" \
     LICENSE
 popd
 
-7z a -tzip akochan.zip "$OUT_DIR"/*
+7z a -tzip akochan-reviewer.zip "$OUT_DIR"/*
 rm -rf "$OUT_DIR"
