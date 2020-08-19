@@ -174,6 +174,11 @@ Under cmd
 > set OMP_NUM_THREADS=8
 ```
 
+Under Powershell
+```console
+> $env:OMP_NUM_THREADS = 8
+```
+
 Under MSYS2 bash
 ```console
 $ export OMP_NUM_THREADS=8
