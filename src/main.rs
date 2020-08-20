@@ -405,7 +405,7 @@ fn main() -> Result<()> {
             .with_context(|| format!("failed to canonicalize akochan_dir path {:?}", path))?
     };
     let akochan_exe = {
-        let mut path: PathBuf = PathBuf::from(&akochan_dir);
+        let mut path = PathBuf::from(&akochan_dir);
         path.push("system.exe");
         canonicalize(&path)
             .with_context(|| format!("failed to canonicalize akochan_exe path {:?}", path))?
