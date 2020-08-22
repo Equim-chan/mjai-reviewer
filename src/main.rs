@@ -13,6 +13,7 @@ use render::{Language, View};
 use review::review;
 use tactics::TacticsJson;
 
+use std::clone::Clone;
 use std::env;
 use std::ffi::OsString;
 use std::fs;
@@ -27,6 +28,7 @@ use clap::value_t;
 use clap::{App, Arg};
 use convlog::tenhou;
 use dunce::canonicalize;
+use regex::Regex;
 use serde_json as json;
 use tee::TeeReader;
 use tempfile::NamedTempFile;
@@ -267,19 +269,20 @@ fn main() -> Result<()> {
                 .long("verbose")
                 .help("Use verbose output"),
         )
+        .arg(Arg::with_name("URL").help("Tenhou vanity URL"))
         .get_matches();
 
     // load options
     let arg_in_file = matches.value_of_os("in-file");
     let arg_out_file = matches.value_of_os("out-file");
-    let arg_tenhou_id = matches.value_of("tenhou-id");
+    let mut arg_tenhou_id = matches.value_of("tenhou-id");
     let arg_tenhou_out = matches.value_of_os("tenhou-out");
     let arg_mjai_out = matches.value_of_os("mjai-out");
     let arg_tenhou_ids_file = matches.value_of_os("tenhou-ids-file");
     let arg_out_dir = matches.value_of_os("out-dir");
     let arg_akochan_dir = matches.value_of_os("akochan-dir");
     let arg_tactics_config = matches.value_of_os("tactics-config");
-    let arg_actor = value_t!(matches, "actor", u8);
+    let mut arg_actor = value_t!(matches, "actor", u8);
     let arg_pt = matches.value_of("pt");
     let arg_kyokus = matches.value_of("kyokus");
     let arg_use_ranking_exp = matches.is_present("use-ranking-exp");
@@ -290,6 +293,7 @@ fn main() -> Result<()> {
     let arg_full = matches.is_present("full");
     let arg_lang = matches.value_of("lang");
     let arg_verbose = matches.is_present("verbose");
+    let arg_url = matches.value_of("URL");
 
     if let Some(tenhou_ids_file) = arg_tenhou_ids_file {
         let out_dir_name = arg_out_dir
@@ -299,9 +303,32 @@ fn main() -> Result<()> {
         return batch_download(&out_dir_name, Path::new(tenhou_ids_file));
     }
 
+    // with no tenhou id or actor, use the vanity url if possible
+    let r = Regex::new(
+        "^https?://tenhou.net/[0-9]/\\?log=(\\d{10}gm-[\\d]+-[\\d]+-[0-9a-f]+)&tw=([0-4])$",
+    )
+    .unwrap();
+    if let Some(url) = arg_url {
+        if let Some(cap) = r.captures(&url) {
+            if arg_tenhou_id.is_none() {
+                if let Some(s) = cap.get(1).map(|x| x.as_str()) {
+                    arg_tenhou_id = Some(s);
+                }
+            }
+            if arg_actor.is_err() {
+                if let Some(s) = cap.get(2).map(|x| x.as_str()) {
+                    arg_actor = Ok(s.parse().unwrap());
+                }
+            }
+        }
+    }
+    // freeze the arguments
+    let tenhou_id_final = arg_tenhou_id;
+    let actor_final = arg_actor;
+
     // get log reader, can be from a file, from stdin, or from HTTP stream
     let log_reader: Box<dyn Read> = {
-        if let Some(tenhou_id) = arg_tenhou_id {
+        if let Some(tenhou_id) = tenhou_id_final {
             let log_stream = download_tenhou_log(tenhou_id)
                 .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id))?;
 
@@ -393,7 +420,7 @@ fn main() -> Result<()> {
     }
 
     // get actor
-    let actor = arg_actor.unwrap_or_else(|e| e.exit());
+    let actor = actor_final.unwrap_or(0);
 
     // get paths
     let akochan_dir = {

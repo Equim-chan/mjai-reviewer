@@ -24,6 +24,7 @@ dunce = "1"
 humantime-serde = "1"
 tempfile = "3.1.0"
 env_proxy = "0.3"
+regex = "1"
 
 [build-dependencies]
 anyhow = "1.0"
