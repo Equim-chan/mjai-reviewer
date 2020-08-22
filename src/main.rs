@@ -271,21 +271,21 @@ fn main() -> Result<()> {
         )
         .arg(
             Arg::with_name("URL")
-            .help("Tenhou vanity URL"),
+                .help("Tenhou vanity URL"),
         )
         .get_matches();
 
     // load options
     let arg_in_file = matches.value_of_os("in-file");
     let arg_out_file = matches.value_of_os("out-file");
-    let arg_tenhou_id : Option<&str> = matches.value_of("tenhou-id");
+    let mut arg_tenhou_id : Option<&str> = matches.value_of("tenhou-id");
     let arg_tenhou_out = matches.value_of_os("tenhou-out");
     let arg_mjai_out = matches.value_of_os("mjai-out");
     let arg_tenhou_ids_file = matches.value_of_os("tenhou-ids-file");
     let arg_out_dir = matches.value_of_os("out-dir");
     let arg_akochan_dir = matches.value_of_os("akochan-dir");
     let arg_tactics_config = matches.value_of_os("tactics-config");
-    let arg_actor = value_t!(matches, "actor", u8);
+    let mut arg_actor = value_t!(matches, "actor", u8);
     let arg_pt = matches.value_of("pt");
     let arg_kyokus = matches.value_of("kyokus");
     let arg_use_ranking_exp = matches.is_present("use-ranking-exp");
@@ -307,46 +307,24 @@ fn main() -> Result<()> {
     }
 
     // with no tenhou id or actor, use the vanity url if possible
-    let r = Regex::new("^http://tenhou.net/[0-9]/\\?log=([0-9]{10}gm-[0-9]{4}-[0-9]{4}-[0-9a-f]{8})&tw=([0-4])$").unwrap();
-    let tenhou_id_final : Option<&str> = match arg_url {
-        Some(url) => {
+    let r = Regex::new("^http://tenhou.net/[0-9]/\\?log=(\\d{10}gm-[\\d]{4}-[\\d]{4}-[0-9a-f]{8})&tw=([0-4])$").unwrap();
+    if let Some(url) = arg_url {
+        if let Some(cap) = r.captures(&url) {
             if arg_tenhou_id.is_none() {
-                let captures = r.captures(&url);
-                match captures {
-                    Some(cap) => {
-                        cap.get(1).map(|x| x.as_str())
-                    }
-                    None => None
+                if let Some(s) = cap.get(1).map(|x| x.as_str()) {
+                    arg_tenhou_id = Some(s);
                 }
-            } else {
-                arg_tenhou_id
             }
-        }
-        None => arg_tenhou_id
-    };
-    let actor_final = match arg_url {
-        Some(url) => {
             if arg_actor.is_err() {
-                let captures = r.captures(&url);
-                match captures {
-                    Some(cap) => {
-                        let actor_str = cap.get(2).map(|x| x.as_str());
-                        match actor_str {
-                            Some(s) => match s.parse() {
-                                Ok(a) => Ok(a),
-                                Err(_) => arg_actor
-                            }
-                            None => arg_actor
-                        }
-                    }
-                    None => arg_actor
+                if let Some(s) = cap.get(2).map(|x| x.as_str()) {
+                    arg_actor = Ok(s.parse().unwrap());
                 }
-            } else {
-                arg_actor
             }
         }
-        None => arg_actor
-    };
+    }
+    // freeze the arguments
+    let tenhou_id_final = arg_tenhou_id;
+    let actor_final = arg_actor;
 
     // get log reader, can be from a file, from stdin, or from HTTP stream
     let log_reader: Box<dyn Read> = {
