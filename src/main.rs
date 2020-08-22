@@ -269,16 +269,13 @@ fn main() -> Result<()> {
                 .long("verbose")
                 .help("Use verbose output"),
         )
-        .arg(
-            Arg::with_name("URL")
-                .help("Tenhou vanity URL"),
-        )
+        .arg(Arg::with_name("URL").help("Tenhou vanity URL"))
         .get_matches();
 
     // load options
     let arg_in_file = matches.value_of_os("in-file");
     let arg_out_file = matches.value_of_os("out-file");
-    let mut arg_tenhou_id : Option<&str> = matches.value_of("tenhou-id");
+    let mut arg_tenhou_id = matches.value_of("tenhou-id");
     let arg_tenhou_out = matches.value_of_os("tenhou-out");
     let arg_mjai_out = matches.value_of_os("mjai-out");
     let arg_tenhou_ids_file = matches.value_of_os("tenhou-ids-file");
@@ -307,7 +304,10 @@ fn main() -> Result<()> {
     }
 
     // with no tenhou id or actor, use the vanity url if possible
-    let r = Regex::new("^http://tenhou.net/[0-9]/\\?log=(\\d{10}gm-[\\d]{4}-[\\d]{4}-[0-9a-f]{8})&tw=([0-4])$").unwrap();
+    let r = Regex::new(
+        "^http://tenhou.net/[0-9]/\\?log=(\\d{10}gm-[\\d]{4}-[\\d]{4}-[0-9a-f]{8})&tw=([0-4])$",
+    )
+    .unwrap();
     if let Some(url) = arg_url {
         if let Some(cap) = r.captures(&url) {
             if arg_tenhou_id.is_none() {
