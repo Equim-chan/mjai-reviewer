@@ -305,7 +305,7 @@ fn main() -> Result<()> {
 
     // with no tenhou id or actor, use the vanity url if possible
     let r = Regex::new(
-        "^https?://tenhou.net/[0-9]/\\?log=(\\d{10}gm-[\\d]{4}-[\\d]{4}-[0-9a-f]{8})&tw=([0-4])$",
+        "^https?://tenhou.net/[0-9]/\\?log=(\\d{10}gm-[\\d]+-[\\d]+-[0-9a-f]+)&tw=([0-4])$",
     )
     .unwrap();
     if let Some(url) = arg_url {
@@ -420,7 +420,7 @@ fn main() -> Result<()> {
     }
 
     // get actor
-    let actor = actor_final.unwrap_or_else(|e| e.exit());
+    let actor = actor_final.unwrap_or(0);
 
     // get paths
     let akochan_dir = {
