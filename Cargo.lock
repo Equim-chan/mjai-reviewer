@@ -11,7 +11,7 @@ dependencies = [
 
 [[package]]
 name = "akochan-reviewer"
-version = "0.1.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -22,6 +22,7 @@ dependencies = [
  "humantime-serde",
  "once_cell",
  "opener",
+ "regex",
  "serde",
  "serde_json",
  "tee",
