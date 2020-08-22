@@ -39,7 +39,7 @@ impl FromStr for KyokuFilter {
                 .map(|p| p.to_uppercase().to_string())
                 .ok_or(ParseError::MissingBakaze)?;
 
-            let offset = match bakaze.as_ref() {
+            let offset = match bakaze.as_str() {
                 "E" => 0,
                 "S" => 4,
                 "W" => 8,

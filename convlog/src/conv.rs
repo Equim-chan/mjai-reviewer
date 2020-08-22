@@ -56,13 +56,13 @@ pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
 
 fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) -> Result<()> {
     // First of all, transform all takes and discards to events.
-    let mut take_events: Vec<_> = (0..4)
+    let mut take_events = (0..4)
         .map(|i| {
             take_action_to_events(i, &kyoku.action_tables[i as usize].takes)
                 .map(|ev| ev.into_iter().peekable())
         })
         .collect::<Result<Vec<_>>>()?;
-    let mut discard_events: Vec<_> = (0..4)
+    let mut discard_events = (0..4)
         .map(|i| {
             discard_action_to_events(i, &kyoku.action_tables[i as usize].discards)
                 .map(|ev| ev.into_iter().peekable())
