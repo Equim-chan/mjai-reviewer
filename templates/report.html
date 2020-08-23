@@ -1,6 +1,6 @@
 {%- import "macros.html" as macros -%}
 
-{%- set_global use_ranking_exp = metadata.pt|join(sep=",") == "-1,-2,-3,-4" -%}
+{%- set_global use_placement_ev = metadata.pt|join(sep=",") == "-1,-2,-3,-4" -%}
 
 <!DOCTYPE html>
 
@@ -147,7 +147,7 @@
                   <tr>
                     <th></th>
                     <th>
-                      {%- if use_ranking_exp -%}
+                      {%- if use_placement_ev -%}
                         {% if lang == "en" %}Placement {% else %}最終順位{%- endif -%}
                       {%- else -%}
                         pt&nbsp;
@@ -157,7 +157,7 @@
                     <th>{% if lang == "en" %}Deal-in{% else %}放銃率{% endif %} (%)</th>
                     <th>
                       {% if lang == "en" %}Post-Deal-in {% else %}放銃後の{% endif %}
-                      {%- if use_ranking_exp -%}
+                      {%- if use_placement_ev -%}
                         {% if lang == "en" %}Placement {% else %}最終順位{% endif %}
                       {%- else -%}
                         pt&nbsp;
@@ -166,7 +166,7 @@
                     </th>
                     <th>
                       {% if lang == "en" %}Tile Passes {% else %}通った後の{% endif %}
-                      {%- if use_ranking_exp -%}
+                      {%- if use_placement_ev -%}
                         {% if lang == "en" %}Placement {% else %}最終順位{% endif %}
                       {%- else -%}
                         pt&nbsp;
@@ -183,7 +183,7 @@
                       </td>
                       <td>
                         {%- if detail.review.pt_exp_total is number -%}
-                          {%- if use_ranking_exp -%}
+                          {%- if use_placement_ev -%}
                             {%- set val = 0 - detail.review.pt_exp_total -%}
                           {%- else -%}
                             {%- set val = detail.review.pt_exp_total -%}
@@ -206,7 +206,7 @@
                       </td>
                       <td>
                         {%- if detail.review.total_houjuu_hai_value_now is number -%}
-                          {%- if use_ranking_exp -%}
+                          {%- if use_placement_ev -%}
                             {%- set val = 0 - detail.review.total_houjuu_hai_value_now -%}
                           {%- else -%}
                             {%- set val = detail.review.total_houjuu_hai_value_now -%}
@@ -220,7 +220,7 @@
                       </td>
                       <td>
                         {%- if detail.review.pt_exp_after is number -%}
-                          {%- if use_ranking_exp -%}
+                          {%- if use_placement_ev -%}
                             {%- set val = 0 - detail.review.pt_exp_after -%}
                           {%- else -%}
                             {%- set val = detail.review.pt_exp_after -%}

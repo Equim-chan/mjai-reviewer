@@ -24,7 +24,7 @@ $ # Review with arbitrary pt distribution
 $ akochan-reviewer --pt 75,30,0,-165 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review with placement EV instead of pt EV
-$ akochan-reviewer --use-ranking-exp "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
+$ akochan-reviewer --use-placement-ev "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review every move, including moves that already match akochan's choice
 $ akochan-reviewer -f "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
@@ -39,16 +39,16 @@ USAGE:
     akochan-reviewer [FLAGS] [OPTIONS] [URL]
 
 FLAGS:
-    -f, --full               Analyze every move, not only the different ones.
-    -h, --help               Prints help information
-        --json               Output review result in JSON instead of HTML
-        --no-open            Do not open the output file in browser after finishing
-        --no-review          Do not review at all. Only download and save files
-        --use-ranking-exp    Use final ranking exp instead of pt exp. This will override --pt and "jun_pt" in --tactics-
-                             config.
-    -V, --version            Prints version information
-    -v, --verbose            Use verbose output
-        --without-viewer     Do not include log viewer in the generated HTML report
+    -f, --full                Analyze every move, not only the different ones.
+    -h, --help                Prints help information
+        --json                Output review result in JSON instead of HTML
+        --no-open             Do not open the output file in browser after finishing
+        --no-review           Do not review at all. Only download and save files
+        --use-placement-ev    Use final placement EV instead of pt EV. This will override --pt and "jun_pt" in
+                              --tactics-config.
+    -V, --version             Prints version information
+    -v, --verbose             Use verbose output
+        --without-viewer      Do not include log viewer in the generated HTML report
 
 OPTIONS:
     -a, --actor <INDEX>             Specify the actor to review. It is the number after "&tw=" in tenhou's log url

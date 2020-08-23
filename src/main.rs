@@ -234,10 +234,10 @@ fn main() -> Result<()> {
                 ),
         )
         .arg(
-            Arg::with_name("use-ranking-exp")
-                .long("use-ranking-exp")
+            Arg::with_name("use-placement-ev")
+                .long("use-placement-ev")
                 .help(
-                    "Use final ranking exp instead of pt exp. \
+                    "Use final placement EV instead of pt EV. \
                     This will override --pt and \"jun_pt\" in --tactics-config.",
                 ),
         )
@@ -284,7 +284,7 @@ fn main() -> Result<()> {
     let arg_actor: Option<u8> = matches.value_of("actor").map(|p| p.parse().unwrap());
     let arg_pt = matches.value_of("pt");
     let arg_kyokus = matches.value_of("kyokus");
-    let arg_use_ranking_exp = matches.is_present("use-ranking-exp");
+    let arg_use_placement_ev = matches.is_present("use-placement-ev");
     let arg_without_reviewer = matches.is_present("without-reviewer");
     let arg_no_open = matches.is_present("no-open");
     let arg_no_review = matches.is_present("no-review");
@@ -462,7 +462,7 @@ fn main() -> Result<()> {
             .with_context(|| format!("failed to parse tactics_config {:?}", canon_path))?;
 
         // opt-in pt
-        let pt_opt = if arg_use_ranking_exp {
+        let pt_opt = if arg_use_placement_ev {
             Some(vec![-1, -2, -3, -4])
         } else if let Some(pt) = arg_pt {
             Some(pt.split(',').map(|p| p.parse::<i32>().unwrap()).collect())
