@@ -13,7 +13,6 @@ use render::{Language, View};
 use review::review;
 use tactics::TacticsJson;
 
-use std::clone::Clone;
 use std::env;
 use std::ffi::OsString;
 use std::fs;
@@ -23,15 +22,15 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 
+use anyhow::anyhow;
 use anyhow::{Context, Result};
-use clap::value_t;
 use clap::{App, Arg};
 use convlog::tenhou;
 use dunce::canonicalize;
-use regex::Regex;
 use serde_json as json;
 use tee::TeeReader;
 use tempfile::NamedTempFile;
+use url::Url;
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
 const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -269,20 +268,20 @@ fn main() -> Result<()> {
                 .long("verbose")
                 .help("Use verbose output"),
         )
-        .arg(Arg::with_name("URL").help("Tenhou vanity URL"))
+        .arg(Arg::with_name("URL").help("Tenhou log URL"))
         .get_matches();
 
     // load options
     let arg_in_file = matches.value_of_os("in-file");
     let arg_out_file = matches.value_of_os("out-file");
-    let mut arg_tenhou_id = matches.value_of("tenhou-id");
+    let arg_tenhou_id = matches.value_of("tenhou-id").map(String::from);
     let arg_tenhou_out = matches.value_of_os("tenhou-out");
     let arg_mjai_out = matches.value_of_os("mjai-out");
     let arg_tenhou_ids_file = matches.value_of_os("tenhou-ids-file");
     let arg_out_dir = matches.value_of_os("out-dir");
     let arg_akochan_dir = matches.value_of_os("akochan-dir");
     let arg_tactics_config = matches.value_of_os("tactics-config");
-    let mut arg_actor = value_t!(matches, "actor", u8);
+    let arg_actor: Option<u8> = matches.value_of("actor").map(|p| p.parse().unwrap());
     let arg_pt = matches.value_of("pt");
     let arg_kyokus = matches.value_of("kyokus");
     let arg_use_ranking_exp = matches.is_present("use-ranking-exp");
@@ -303,32 +302,41 @@ fn main() -> Result<()> {
         return batch_download(&out_dir_name, Path::new(tenhou_ids_file));
     }
 
-    // with no tenhou id or actor, use the vanity url if possible
-    let r = Regex::new(
-        "^https?://tenhou.net/[0-9]/\\?log=(\\d{10}gm-[\\d]+-[\\d]+-[0-9a-f]+)&tw=([0-4])$",
-    )
-    .unwrap();
-    if let Some(url) = arg_url {
-        if let Some(cap) = r.captures(&url) {
-            if arg_tenhou_id.is_none() {
-                if let Some(s) = cap.get(1).map(|x| x.as_str()) {
-                    arg_tenhou_id = Some(s);
+    // get from url if specified
+    let (tenhou_id_final, actor_final) = if let Some(url) = arg_url {
+        let u = Url::parse(url).context("failed to parse URL")?;
+        let (mut log, mut tw) = (None, None);
+        for (k, v) in u.query_pairs() {
+            match &*k {
+                "log" => log = Some(v.into_owned()),
+                "tw" => {
+                    let num: u8 = v.parse().context("\"tw\" must be a number")?;
+                    if num > 3 {
+                        return Err(anyhow!("\"tw\" must be within 0~3, got {}", num));
+                    }
+
+                    tw = Some(num);
                 }
-            }
-            if arg_actor.is_err() {
-                if let Some(s) = cap.get(2).map(|x| x.as_str()) {
-                    arg_actor = Ok(s.parse().unwrap());
-                }
+                _ => continue,
+            };
+
+            if log.is_some() && tw.is_some() {
+                break;
             }
         }
-    }
-    // freeze the arguments
-    let tenhou_id_final = arg_tenhou_id;
-    let actor_final = arg_actor;
+
+        if log.is_none() {
+            return Err(anyhow!("log ID not found in URL {}", url));
+        }
+
+        (arg_tenhou_id.or(log), arg_actor.or(tw).or(Some(0)))
+    } else {
+        (arg_tenhou_id, arg_actor)
+    };
 
     // get log reader, can be from a file, from stdin, or from HTTP stream
     let log_reader: Box<dyn Read> = {
-        if let Some(tenhou_id) = tenhou_id_final {
+        if let Some(tenhou_id) = tenhou_id_final.as_deref() {
             let log_stream = download_tenhou_log(tenhou_id)
                 .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id))?;
 
@@ -420,7 +428,7 @@ fn main() -> Result<()> {
     }
 
     // get actor
-    let actor = actor_final.unwrap_or(0);
+    let actor = actor_final.context("actor is required")?;
 
     // get paths
     let akochan_dir = {
@@ -519,7 +527,7 @@ fn main() -> Result<()> {
             }
         }
         _ => {
-            if let Some(tenhou_id) = arg_tenhou_id {
+            if let Some(tenhou_id) = tenhou_id_final.as_deref() {
                 Some(OsString::from(format!("{}&tw={}.html", tenhou_id, actor)))
             } else {
                 Some(OsString::from("report.html"))
@@ -553,7 +561,7 @@ fn main() -> Result<()> {
         parse_time,
         convert_time,
         review_time,
-        tenhou_id: arg_tenhou_id,
+        tenhou_id: tenhou_id_final.as_deref(),
         total_reviewed: review_result.total_reviewed,
         total_entries: review_result.total_entries,
         version: &format!("v{} ({})", PKG_VERSION, GIT_HASH),

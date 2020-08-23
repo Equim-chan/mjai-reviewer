@@ -14,25 +14,29 @@ Review your Tenhou log with mahjong AI akochan.
 ## Example
 ```console
 $ # Review https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2
+$ # Note that you may need to quote it in the shell to escape the string
+$ akochan-reviewer "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
+
+$ # Alternatively, you can specify the log ID and actor manually
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2
 
 $ # Review with arbitrary pt distribution
-$ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 --pt 75,30,0,-165
+$ akochan-reviewer --pt 75,30,0,-165 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review with placement EV instead of pt EV
-$ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 --use-ranking-exp
+$ akochan-reviewer --use-ranking-exp "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review every move, including moves that already match akochan's choice
-$ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 -f
+$ akochan-reviewer -f "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review 東2局1本場 and 東3局 only
-$ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2 -k E2.1,E3
+$ akochan-reviewer -k E2.1,E3 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 ```
 
 ## Usage
 ```plain
 USAGE:
-    akochan-reviewer [FLAGS] [OPTIONS]
+    akochan-reviewer [FLAGS] [OPTIONS] [URL]
 
 FLAGS:
     -f, --full               Analyze every move, not only the different ones.
@@ -69,6 +73,9 @@ OPTIONS:
                                     review.
         --tenhou-out <FILE>         Save the downloaded tenhou.net/6 format log to FILE when --tenhou-id is specified.
                                     If FILE is "-", write to stdout
+
+ARGS:
+    <URL>    Tenhou log URL
 ```
 
 ## Build
