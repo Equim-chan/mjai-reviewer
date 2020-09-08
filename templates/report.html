@@ -65,8 +65,10 @@
       <dd>{{ metadata.convert_time }}</dd>
       <dt>review time</dt>
       <dd>{{ metadata.review_time }}</dd>
-      <dt>entries / reviewed = diff rate</dt>
-      <dd>{{ metadata.total_entries }} / {{ metadata.total_reviewed }} = {{ pretty_round(num=(metadata.total_entries / metadata.total_reviewed * 100)) }}%</dd>
+      <dt>entries / reviewed = overall deviation rate</dt>
+      <dd>{{ metadata.total_entries }} / {{ metadata.total_reviewed }} = {{ pretty_round(num=(metadata.total_entries / metadata.total_reviewed * 100)) }}% ({{ metadata.total_throttled }} entries were throttled)</dd>
+      <dt>deviation threshold</dt>
+      <dd>{{ metadata.deviation_threshold }}</dd>
       <dt>generated at</dt>
       <dd>{{ now() | date(format="%Y-%m-%d %H:%M:%S") }}</dd>
       <dt>reviewer version</dt>

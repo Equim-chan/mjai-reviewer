@@ -11,6 +11,7 @@ use download::download_tenhou_log;
 use metadata::Metadata;
 use render::{Language, View};
 use review::review;
+use review::ReviewArgs;
 use tactics::TacticsJson;
 
 use std::env;
@@ -75,7 +76,7 @@ fn main() -> Result<()> {
                 })
                 .help(
                     "Specify the actor to review. \
-                    It is the number after \"&tw=\" in tenhou's log url",
+                    It is the number after \"&tw=\" in tenhou's log url.",
                 ),
         )
         .arg(
@@ -86,7 +87,7 @@ fn main() -> Result<()> {
                 .value_name("ARRAY")
                 .help(
                     "Specify kyokus to review. If ARRAY is empty, review all kyokus. \
-                    Format: \"E1,E4,S3.1\"",
+                    Format: \"E1,E4,S3.1\".",
                 ),
         )
         .arg(
@@ -97,7 +98,7 @@ fn main() -> Result<()> {
                 .value_name("FILE")
                 .help(
                     "Specify a tenhou.net/6 format log file to review. \
-                    If FILE is \"-\" or empty, read from stdin",
+                    If FILE is \"-\" or empty, read from stdin.",
                 ),
         )
         .arg(
@@ -110,7 +111,7 @@ fn main() -> Result<()> {
                     "Specify the output file for generated HTML report. \
                     If FILE is \"-\", write to stdout; \
                     if FILE is empty, write to \"{tenhou_id}&tw={actor}.html\" \
-                    if --tenhou-id is specified, otherwise \"report.html\"",
+                    if --tenhou-id is specified, otherwise \"report.html\".",
                 ),
         )
         .arg(
@@ -121,7 +122,7 @@ fn main() -> Result<()> {
                 .value_name("ID")
                 .help(
                     "Specify a Tenhou log ID to review, overriding --in-file. \
-                    Example: \"2019050417gm-0029-0000-4f2a8622\"",
+                    Example: \"2019050417gm-0029-0000-4f2a8622\".",
                 ),
         )
         .arg(
@@ -132,7 +133,7 @@ fn main() -> Result<()> {
                 .help(
                     "Save the downloaded tenhou.net/6 format log to FILE \
                     when --tenhou-id is specified. \
-                    If FILE is \"-\", write to stdout",
+                    If FILE is \"-\", write to stdout.",
                 ),
         )
         .arg(
@@ -142,7 +143,7 @@ fn main() -> Result<()> {
                 .value_name("FILE")
                 .help(
                     "Save the transformed mjai format log to FILE. \
-                    If FILE is \"-\", write to stdout",
+                    If FILE is \"-\", write to stdout.",
                 ),
         )
         .arg(
@@ -162,28 +163,28 @@ fn main() -> Result<()> {
                 .value_name("DIR")
                 .help(
                     "Specify a directory to save the output for mjai logs. \
-                    If DIR is empty, defaults to \".\"",
+                    If DIR is empty, defaults to \".\".",
                 ),
         )
         .arg(
             Arg::with_name("without-viewer")
                 .long("without-viewer")
-                .help("Do not include log viewer in the generated HTML report"),
+                .help("Do not include log viewer in the generated HTML report."),
         )
         .arg(
             Arg::with_name("no-open")
                 .long("no-open")
-                .help("Do not open the output file in browser after finishing"),
+                .help("Do not open the output file in browser after finishing."),
         )
         .arg(
             Arg::with_name("no-review")
                 .long("no-review")
-                .help("Do not review at all. Only download and save files"),
+                .help("Do not review at all. Only download and save files."),
         )
         .arg(
             Arg::with_name("json")
                 .long("json")
-                .help("Output review result in JSON instead of HTML"),
+                .help("Output review result in JSON instead of HTML."),
         )
         .arg(
             Arg::with_name("akochan-dir")
@@ -194,7 +195,7 @@ fn main() -> Result<()> {
                 .help(
                     "Specify the directory of akochan. \
                     This will serve as the working directory of akochan process. \
-                    Default value \"akochan\"",
+                    Default value \"akochan\".",
                 ),
         )
         .arg(
@@ -205,7 +206,7 @@ fn main() -> Result<()> {
                 .value_name("FILE")
                 .help(
                     "Specify the tactics config file for akochan. \
-                    Default value \"tactics.json\"",
+                    Default value \"tactics.json\".",
                 ),
         )
         .arg(
@@ -230,15 +231,38 @@ fn main() -> Result<()> {
                 })
                 .help(
                     "Shortcut to override \"jun_pt\" in --tactics-config. \
-                    Format: \"90,45,0,-135\"",
+                    Format: \"90,45,0,-135\".",
                 ),
         )
         .arg(
             Arg::with_name("use-placement-ev")
+                .short("e")
                 .long("use-placement-ev")
                 .help(
                     "Use final placement EV instead of pt EV. \
                     This will override --pt and \"jun_pt\" in --tactics-config.",
+                ),
+        )
+        .arg(
+            Arg::with_name("deviation-threshold")
+                .short("n")
+                .long("deviation-threshold")
+                .takes_value(true)
+                .value_name("THRESHOLD")
+                .validator(|v| {
+                    v.parse::<f64>()
+                        .map(|_| ())
+                        .map_err(|err| format!("THRESHOLD must be a number: {}", err))
+                })
+                .help(
+                    "THRESHOLD is an absolute value that the reviewer will ignore all \
+                    problematic moves whose EVs are within the range of \
+                    [best EV - THRESHOLD, best EV]. \
+                    This option is effective under both pt and placement EV mode, and is \
+                    ignored under --full. \
+                    It is recommened to use it with --use-placement-ev where the reward \
+                    distribution is fixed and even. \
+                    Default value: \"0\".",
                 ),
         )
         .arg(
@@ -255,7 +279,7 @@ fn main() -> Result<()> {
                 .help(
                     "Set the language for the rendered report page. \
                     Default value \"ja\". \
-                    Supported languages: ja, en",
+                    Supported languages: ja, en.",
                 )
                 .validator(|v| match v.as_str() {
                     "ja" | "en" => Ok(()),
@@ -266,9 +290,9 @@ fn main() -> Result<()> {
             Arg::with_name("verbose")
                 .short("v")
                 .long("verbose")
-                .help("Use verbose output"),
+                .help("Use verbose output."),
         )
-        .arg(Arg::with_name("URL").help("Tenhou log URL"))
+        .arg(Arg::with_name("URL").help("Tenhou log URL."))
         .get_matches();
 
     // load options
@@ -289,6 +313,10 @@ fn main() -> Result<()> {
     let arg_no_open = matches.is_present("no-open");
     let arg_no_review = matches.is_present("no-review");
     let arg_json = matches.is_present("json");
+    let arg_deviation_threshold = matches
+        .value_of("deviation-threshold")
+        .map(|v| v.parse().unwrap())
+        .unwrap_or(0f64);
     let arg_full = matches.is_present("full");
     let arg_lang = matches.value_of("lang");
     let arg_verbose = matches.is_present("verbose");
@@ -500,16 +528,17 @@ fn main() -> Result<()> {
 
     // do the review
     let begin_review = chrono::Local::now();
-    let review_result = review(
-        &akochan_exe,
-        &akochan_dir,
-        &tactics_file_path,
-        &events,
-        actor,
-        arg_full,
-        arg_verbose,
-    )
-    .context("failed to review log")?;
+    let review_args = ReviewArgs {
+        akochan_exe: &akochan_exe,
+        akochan_dir: &akochan_dir,
+        tactics_config: &tactics_file_path,
+        events: &events,
+        target_actor: actor,
+        deviation_threshold: arg_deviation_threshold,
+        full: arg_full,
+        verbose: arg_verbose,
+    };
+    let review_result = review(&review_args).context("failed to review log")?;
 
     // clean up
     if arg_pt.is_some() {
@@ -562,7 +591,9 @@ fn main() -> Result<()> {
         convert_time,
         review_time,
         tenhou_id: tenhou_id_final.as_deref(),
+        deviation_threshold: arg_deviation_threshold,
         total_reviewed: review_result.total_reviewed,
+        total_throttled: review_result.total_throttled,
         total_entries: review_result.total_entries,
         version: &format!("v{} ({})", PKG_VERSION, GIT_HASH),
     };
