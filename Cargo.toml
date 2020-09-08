@@ -1,6 +1,6 @@
 [package]
 name = "akochan-reviewer"
-version = "0.1.6"
+version = "0.3.0"
 authors = ["Equim <sayaka@ekyu.moe>"]
 edition = "2018"
 repository = "https://github.com/Equim-chan/akochan-reviewer"
