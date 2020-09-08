@@ -41,41 +41,49 @@ USAGE:
 FLAGS:
     -f, --full                Analyze every move, not only the different ones.
     -h, --help                Prints help information
-        --json                Output review result in JSON instead of HTML
-        --no-open             Do not open the output file in browser after finishing
-        --no-review           Do not review at all. Only download and save files
-        --use-placement-ev    Use final placement EV instead of pt EV. This will override --pt and "jun_pt" in
+        --json                Output review result in JSON instead of HTML.
+        --no-open             Do not open the output file in browser after finishing.
+        --no-review           Do not review at all. Only download and save files.
+    -e, --use-placement-ev    Use final placement EV instead of pt EV. This will override --pt and "jun_pt" in
                               --tactics-config.
     -V, --version             Prints version information
-    -v, --verbose             Use verbose output
-        --without-viewer      Do not include log viewer in the generated HTML report
+    -v, --verbose             Use verbose output.
+        --without-viewer      Do not include log viewer in the generated HTML report.
 
 OPTIONS:
-    -a, --actor <INDEX>             Specify the actor to review. It is the number after "&tw=" in tenhou's log url
-    -d, --akochan-dir <DIR>         Specify the directory of akochan. This will serve as the working directory of
-                                    akochan process. Default value "akochan"
-    -i, --in-file <FILE>            Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty, read from
-                                    stdin
-    -k, --kyokus <ARRAY>            Specify kyokus to review. If ARRAY is empty, review all kyokus. Format: "E1,E4,S3.1"
-        --lang <LANG>               Set the language for the rendered report page. Default value "ja". Supported
-                                    languages: ja, en
-        --mjai-out <FILE>           Save the transformed mjai format log to FILE. If FILE is "-", write to stdout
-        --out-dir <DIR>             Specify a directory to save the output for mjai logs. If DIR is empty, defaults to
-                                    "."
-    -o, --out-file <FILE>           Specify the output file for generated HTML report. If FILE is "-", write to stdout;
-                                    if FILE is empty, write to "{tenhou_id}&tw={actor}.html" if --tenhou-id is
-                                    specified, otherwise "report.html"
-        --pt <ARRAY>                Shortcut to override "jun_pt" in --tactics-config. Format: "90,45,0,-135"
-    -c, --tactics-config <FILE>     Specify the tactics config file for akochan. Default value "tactics.json"
-    -t, --tenhou-id <ID>            Specify a Tenhou log ID to review, overriding --in-file. Example: "2019050417gm-
-                                    0029-0000-4f2a8622"
-        --tenhou-ids-file <FILE>    Specify a file of Tenhou log ID list to convert to mjai format, implying --no-
-                                    review.
-        --tenhou-out <FILE>         Save the downloaded tenhou.net/6 format log to FILE when --tenhou-id is specified.
-                                    If FILE is "-", write to stdout
+    -a, --actor <INDEX>                      Specify the actor to review. It is the number after "&tw=" in tenhou's log
+                                             url.
+    -d, --akochan-dir <DIR>                  Specify the directory of akochan. This will serve as the working directory
+                                             of akochan process. Default value "akochan".
+    -n, --deviation-threshold <THRESHOLD>    THRESHOLD is an absolute value that the reviewer will ignore all
+                                             problematic moves whose EVs are within the range of [best EV - THRESHOLD,
+                                             best EV]. This option is effective under both pt and placement EV mode, and
+                                             is ignored under --full. It is recommened to use it with --use-placement-ev
+                                             where the reward distribution is fixed and even. Default value: "0".
+    -i, --in-file <FILE>                     Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty,
+                                             read from stdin.
+    -k, --kyokus <ARRAY>                     Specify kyokus to review. If ARRAY is empty, review all kyokus. Format:
+                                             "E1,E4,S3.1".
+        --lang <LANG>                        Set the language for the rendered report page. Default value "ja".
+                                             Supported languages: ja, en.
+        --mjai-out <FILE>                    Save the transformed mjai format log to FILE. If FILE is "-", write to
+                                             stdout.
+        --out-dir <DIR>                      Specify a directory to save the output for mjai logs. If DIR is empty,
+                                             defaults to ".".
+    -o, --out-file <FILE>                    Specify the output file for generated HTML report. If FILE is "-", write to
+                                             stdout; if FILE is empty, write to "{tenhou_id}&tw={actor}.html" if
+                                             --tenhou-id is specified, otherwise "report.html".
+        --pt <ARRAY>                         Shortcut to override "jun_pt" in --tactics-config. Format: "90,45,0,-135".
+    -c, --tactics-config <FILE>              Specify the tactics config file for akochan. Default value "tactics.json".
+    -t, --tenhou-id <ID>                     Specify a Tenhou log ID to review, overriding --in-file. Example:
+                                             "2019050417gm-0029-0000-4f2a8622".
+        --tenhou-ids-file <FILE>             Specify a file of Tenhou log ID list to convert to mjai format, implying
+                                             --no-review.
+        --tenhou-out <FILE>                  Save the downloaded tenhou.net/6 format log to FILE when --tenhou-id is
+                                             specified. If FILE is "-", write to stdout.
 
 ARGS:
-    <URL>    Tenhou log URL
+    <URL>    Tenhou log URL.
 ```
 
 ## Build
