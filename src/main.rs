@@ -260,7 +260,7 @@ fn main() -> Result<()> {
                     [best EV - THRESHOLD, best EV]. \
                     This option is effective under both pt and placement EV mode, and is \
                     ignored under --full. \
-                    It is recommened to use it with --use-placement-ev where the reward \
+                    It is recommended to use it with --use-placement-ev where the reward \
                     distribution is fixed and even. \
                     Default value: \"0\".",
                 ),

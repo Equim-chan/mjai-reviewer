@@ -4,9 +4,11 @@
 echo 'NOTE: make sure to have removed `-march=native` and `-C target-cpu=native`.'
 set -ex
 
+VERSION="$(git describe --tags)"
 AKOCHAN_DIR=$HOME/akochan
 REVIEWER_DIR=$HOME/akochan-reviewer
 OUT_DIR="$(mktemp -d)"
+OUT_FILE="akochan-reviewer-$VERSION-windows-x86_64.zip"
 
 pushd "$AKOCHAN_DIR"
 pushd ai_src
@@ -35,5 +37,11 @@ cp -rt "$OUT_DIR" \
     LICENSE
 popd
 
-7z a -tzip akochan-reviewer.zip "$OUT_DIR"/*
+7z a -tzip "$OUT_FILE" "$OUT_DIR"/*
 rm -rf "$OUT_DIR"
+
+set +x
+echo '## SHA256SUMS
+```plain
+'"$(sha256sum "$OUT_FILE")"'
+```'

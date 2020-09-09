@@ -302,10 +302,12 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
                 } else {
                     // Early turn or high shanten, see `rule_base_flag && !ori_flag` in akochan source.
                     // It is very likely a small difference, so we continue.
+                    total_throttled += 1;
                     continue;
                 }
             } else {
                 // Ditto.
+                total_throttled += 1;
                 continue;
             }
         }

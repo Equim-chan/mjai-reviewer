@@ -58,8 +58,9 @@ OPTIONS:
     -n, --deviation-threshold <THRESHOLD>    THRESHOLD is an absolute value that the reviewer will ignore all
                                              problematic moves whose EVs are within the range of [best EV - THRESHOLD,
                                              best EV]. This option is effective under both pt and placement EV mode, and
-                                             is ignored under --full. It is recommened to use it with --use-placement-ev
-                                             where the reward distribution is fixed and even. Default value: "0".
+                                             is ignored under --full. It is recommended to use it with --use-placement-
+                                             ev where the reward distribution is fixed and even. Default
+                                             value: "0".
     -i, --in-file <FILE>                     Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty,
                                              read from stdin.
     -k, --kyokus <ARRAY>                     Specify kyokus to review. If ARRAY is empty, review all kyokus. Format:
