@@ -161,20 +161,20 @@
                     </th>
                     <th>{% if lang == "en" %}Deal-in{% else %}放銃率{% endif %} (%)</th>
                     <th>
-                      {% if lang == "en" %}Post-Deal-in {% else %}放銃後の{% endif %}
+                      {% if lang == "en" %}Post-Deal-in{% else %}放銃後の{% endif %}
                       {%- if use_placement_ev -%}
-                        {% if lang == "en" %}Placement {% else %}最終順位{% endif %}
+                        {% if lang == "en" %} Placement {% else %}最終順位{% endif %}
                       {%- else -%}
-                        pt&nbsp;
+                        &nbsp;pt&nbsp;
                       {%- endif -%}
                       {% if lang == "en" %}EV{%- else -%}期待値{% endif %}
                     </th>
                     <th>
-                      {% if lang == "en" %}Tile Passes {% else %}通った後の{% endif %}
+                      {% if lang == "en" %}Tile Passes{% else %}通った後の{% endif %}
                       {%- if use_placement_ev -%}
-                        {% if lang == "en" %}Placement {% else %}最終順位{% endif %}
+                        {% if lang == "en" %} Placement {% else %}最終順位{% endif %}
                       {%- else -%}
-                        pt&nbsp;
+                        &nbsp;pt&nbsp;
                       {%- endif -%}
                       {% if lang == "en" %}EV{% else %}期待値{% endif %}
                     </th>
