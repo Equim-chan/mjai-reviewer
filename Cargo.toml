@@ -38,6 +38,6 @@ members = [
 ]
 
 [profile.release]
-lto = true
 debug = false
-codegen-units = 1
+# lto = true
+# codegen-units = 1
