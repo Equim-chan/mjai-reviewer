@@ -77,6 +77,9 @@
   </details>
 
   {%- for item in kyokus -%}
+    {%- if item.entries|length == 0 -%}
+      {%- continue -%}
+    {%- endif -%}
     <section style="z-index: {{ 10 + loop.index0 }}">
       <h1 id="kyoku-{{ item.kyoku }}-{{ item.honba }}" class="kyoku-heading">
         <div class="kyoku-item">
