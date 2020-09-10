@@ -262,7 +262,7 @@ fn main() -> Result<()> {
                     It is recommended to use it with --use-placement-ev where the reward \
                     distribution is fixed and even. \
                     Reference value: 0.05 when using pt and 0.001 when using placement. \
-                    Default value: \"0\".",
+                    Default value: \"0.001\".",
                 ),
         )
         .arg(
@@ -310,7 +310,7 @@ fn main() -> Result<()> {
     let arg_deviation_threshold = matches
         .value_of("deviation-threshold")
         .map(|v| v.parse().unwrap())
-        .unwrap_or(0);
+        .unwrap_or(0.001);
     let arg_lang = matches.value_of("lang");
     let arg_verbose = matches.is_present("verbose");
     let arg_url = matches.value_of("URL");
