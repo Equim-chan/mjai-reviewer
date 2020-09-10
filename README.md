@@ -23,11 +23,14 @@ $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2
 $ # Review with arbitrary pt distribution
 $ akochan-reviewer --pt 75,30,0,-165 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
+$ # Review with arbitrary pt distribution under the acceptance of <=0.05 pt deviation
+$ akochan-reviewer --pt 75,30,0,-165 -n 0.05 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
+
 $ # Review with placement EV instead of pt EV
 $ akochan-reviewer --use-placement-ev "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
-$ # Review every move, including moves that already match akochan's choice
-$ akochan-reviewer -f "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
+$ # Review with placement EV instead of pt EV under the acceptance of <=0.002 placement deviation
+$ akochan-reviewer --use-placement-ev -n 0.002 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review 東2局1本場 and 東3局 only
 $ akochan-reviewer -k E2.1,E3 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
@@ -39,7 +42,6 @@ USAGE:
     akochan-reviewer [FLAGS] [OPTIONS] [URL]
 
 FLAGS:
-    -f, --full                Analyze every move, not only the different ones.
     -h, --help                Prints help information
         --json                Output review result in JSON instead of HTML.
         --no-open             Do not open the output file in browser after finishing.
@@ -57,10 +59,10 @@ OPTIONS:
                                              of akochan process. Default value "akochan".
     -n, --deviation-threshold <THRESHOLD>    THRESHOLD is an absolute value that the reviewer will ignore all
                                              problematic moves whose EVs are within the range of [best EV - THRESHOLD,
-                                             best EV]. This option is effective under both pt and placement EV mode, and
-                                             is ignored under --full. It is recommended to use it with --use-placement-
-                                             ev where the reward distribution is fixed and even. Default
-                                             value: "0".
+                                             best EV]. This option is effective under both pt and placement EV mode. It
+                                             is recommended to use it with --use-placement-ev where the reward
+                                             distribution is fixed and even. Reference value: 0.05 when using pt and
+                                             0.001 when using placement. Default value: "0.001".
     -i, --in-file <FILE>                     Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty,
                                              read from stdin.
     -k, --kyokus <ARRAY>                     Specify kyokus to review. If ARRAY is empty, review all kyokus. Format:
