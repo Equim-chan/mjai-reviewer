@@ -16,7 +16,8 @@ static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
     let mut tera = Tera::default();
     tera.register_function("kyoku_to_string_ja", kyoku_to_string_ja);
     tera.register_function("kyoku_to_string_en", kyoku_to_string_en);
-    tera.register_function("pretty_round", pretty_round);
+    tera.register_function("pretty_round_2", pretty_round_2);
+    tera.register_function("pretty_round_4", pretty_round_4);
 
     tera.add_raw_templates(vec![
         ("macros.html", include_str!("../templates/macros.html")),
@@ -88,7 +89,20 @@ fn kyoku_to_string_en(args: &HashMap<String, Value>) -> tera::Result<Value> {
     }
 }
 
-fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {
+fn pretty_round_2(args: &HashMap<String, Value>) -> tera::Result<Value> {
+    if let Some(Value::Number(num)) = args.get("num") {
+        if let Some(f) = num.as_f64() {
+            let n = (f * 1e4).round() / 1e4;
+            let s = format!("{:.02}", n);
+
+            return Ok(Value::String(s));
+        }
+    }
+
+    Ok(Value::Null)
+}
+
+fn pretty_round_4(args: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Some(Value::Number(num)) = args.get("num") {
         if let Some(f) = num.as_f64() {
             let n = (f * 1e4).round() / 1e4;

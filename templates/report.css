@@ -6,6 +6,12 @@ body {
   margin: auto;
 }
 
+.ako-score {
+  text-align: right;
+  font-style: italic;
+  text-decoration: underline;
+}
+
 h1 {
   font-size: 2em;
 }

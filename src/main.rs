@@ -258,18 +258,12 @@ fn main() -> Result<()> {
                     "THRESHOLD is an absolute value that the reviewer will ignore all \
                     problematic moves whose EVs are within the range of \
                     [best EV - THRESHOLD, best EV]. \
-                    This option is effective under both pt and placement EV mode, and is \
-                    ignored under --full. \
+                    This option is effective under both pt and placement EV mode. \
                     It is recommended to use it with --use-placement-ev where the reward \
                     distribution is fixed and even. \
+                    Reference value: 0.05 when using pt and 0.001 when using placement. \
                     Default value: \"0\".",
                 ),
-        )
-        .arg(
-            Arg::with_name("full")
-                .short("f")
-                .long("full")
-                .help("Analyze every move, not only the different ones."),
         )
         .arg(
             Arg::with_name("lang")
@@ -316,8 +310,7 @@ fn main() -> Result<()> {
     let arg_deviation_threshold = matches
         .value_of("deviation-threshold")
         .map(|v| v.parse().unwrap())
-        .unwrap_or(0f64);
-    let arg_full = matches.is_present("full");
+        .unwrap_or(0);
     let arg_lang = matches.value_of("lang");
     let arg_verbose = matches.is_present("verbose");
     let arg_url = matches.value_of("URL");
@@ -535,7 +528,6 @@ fn main() -> Result<()> {
         events: &events,
         target_actor: actor,
         deviation_threshold: arg_deviation_threshold,
-        full: arg_full,
         verbose: arg_verbose,
     };
     let review_result = review(&review_args).context("failed to review log")?;
@@ -593,8 +585,8 @@ fn main() -> Result<()> {
         tenhou_id: tenhou_id_final.as_deref(),
         deviation_threshold: arg_deviation_threshold,
         total_reviewed: review_result.total_reviewed,
-        total_throttled: review_result.total_throttled,
-        total_entries: review_result.total_entries,
+        total_tolerated: review_result.total_tolerated,
+        total_problems: review_result.total_problems,
         version: &format!("v{} ({})", PKG_VERSION, GIT_HASH),
     };
 

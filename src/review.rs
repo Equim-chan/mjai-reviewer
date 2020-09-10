@@ -15,8 +15,8 @@ use serde_json as json;
 
 pub struct Review {
     pub total_reviewed: usize,
-    pub total_throttled: usize,
-    pub total_entries: usize,
+    pub total_tolerated: usize,
+    pub total_problems: usize,
     pub kyokus: Vec<KyokuReview>,
 }
 
@@ -31,6 +31,7 @@ pub struct KyokuReview {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Entry {
+    pub acceptance: Acceptance,
     pub junme: u8,
     pub actor: u8,
     pub pai: Pai,
@@ -41,6 +42,14 @@ pub struct Entry {
     pub actual: Vec<Event>,   // at most 2 events
 
     pub details: Vec<DetailedAction>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Acceptance {
+    Disagree,
+    Tolerable,
+    Agree,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -65,7 +74,6 @@ pub struct ReviewArgs<'a> {
     pub events: &'a [Event],
     pub target_actor: u8,
     pub deviation_threshold: f64,
-    pub full: bool,
     pub verbose: bool,
 }
 
@@ -77,7 +85,6 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
         events,
         target_actor,
         deviation_threshold,
-        full,
         verbose,
     } = review_args;
 
@@ -123,8 +130,8 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
 
     let events_len = events.len();
     let mut total_reviewed = 0;
-    let mut total_throttled = 0;
-    let mut total_entries = 0;
+    let mut total_tolerated = 0;
+    let mut total_problems = 0;
 
     let mut kyoku_review = KyokuReview::default();
     let mut state = State::new(target_actor);
@@ -259,71 +266,53 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
 
         let is_equal_or_innocent = compare_action(&actual_action, expected_action, target_actor)
             .context("invalid state in event")?;
-        total_reviewed += 1;
-
-        if !full && is_equal_or_innocent {
-            continue;
-        }
-
         let actual_action_strict = next_action_strict(actual_action, target_actor);
-        if !full && deviation_threshold > 0f64 {
-            if let Some(expected_ev) = actions[0].review.pt_exp_total {
-                // this is O(n)
-                // ;(
-                let lookup = actions
-                    .iter()
-                    .find(|&ex| compare_action_strict(&actual_action_strict, &ex.moves))
-                    .map(|detail| detail.review.pt_exp_total);
 
-                match lookup {
-                    Some(Some(actual_ev)) => {
-                        let dev = expected_ev - actual_ev;
-                        if dev <= deviation_threshold {
-                            if verbose {
-                                log!(
-                                "expected_ev - actual_ev <= deviation_threshold ({} - {} = {} < {})",
-                                expected_ev,
-                                actual_ev,
-                                dev,
-                                deviation_threshold,
-                            );
-                            } else {
-                                log!("(review entry throttled by deviation threshold)");
-                            }
-                            total_throttled += 1;
-                            continue;
-                        }
-                    }
-
-                    Some(None) => {
-                        // Early turn or high shanten, see `rule_base_flag && !ori_flag` in
-                        // akochan:ai_src/selector.cpp.
-                        // Skip this situation as it is very likely a small difference,
-                        // probably not those who set --deviation-threshold expect.
-                        total_throttled += 1;
-                        continue;
-                    }
-
-                    None => {
-                        // Usually it is some kind of kan. This is a known issue of akochan.
-                        // It can be mitigated by setting `do_kan_ordinary` to true in tactics.json
+        let acceptance = if is_equal_or_innocent {
+            Acceptance::Agree // it is an acceptable move
+        } else if deviation_threshold <= 0f64 {
+            Acceptance::Disagree // not acceptable and no threshold set, deny
+        } else if let Some(expected_ev) = actions[0].review.pt_exp_total {
+            // this is O(n)
+            // ;(
+            let actual_ev_opt = actions
+                .iter()
+                .find(|&ex| compare_action_strict(&actual_action_strict, &ex.moves))
+                .map(|detail| detail.review.pt_exp_total)
+                .ok_or_else(|| {
+                    anyhow!(
+                        "unable to find player's action in akochan's return, expected to find: {:?}, list: {:?}",
+                        actual_action_strict,
+                        actions.iter().map(|a| a.moves.clone()).collect::<Vec<_>>(),
+                    )
+                })?;
+            if let Some(actual_ev) = actual_ev_opt {
+                let dev = expected_ev - actual_ev;
+                if dev <= deviation_threshold {
+                    if verbose {
                         log!(
-                            "warning: unable to find player's action in akochan's return, expected to find {:?} from {:?}",
-                            actual_action_strict,
-                            actions.iter().map(|a| a.moves.clone()).collect::<Vec<_>>(),
+                            "expected_ev - actual_ev <= deviation_threshold ({} - {} = {} < {})",
+                            expected_ev,
+                            actual_ev,
+                            dev,
+                            deviation_threshold,
                         );
-                        // Skip this situation as it is unclear for akochan, probably not
-                        // those who set --deviation-threshold expect.
-                        continue;
                     }
-                };
+                    Acceptance::Tolerable // not acceptable but tolerable
+                } else {
+                    Acceptance::Disagree // not acceptable, the threshold is set but the value is lower than it
+                }
             } else {
-                // Ditto.
-                total_throttled += 1;
-                continue;
+                // Early turn or high shanten, see `rule_base_flag && !ori_flag` in akochan source.
+                // It is very likely a small difference, so we chose to hide it.
+                Acceptance::Agree
             }
-        }
+        } else {
+            // Ditto.
+            Acceptance::Agree
+        };
 
+        // handle kakan
         let (actor, pai, is_kakan) = match *event {
             Event::Dahai { actor, pai, .. } | Event::Tsumo { actor, pai, .. } => {
                 (actor, pai, false)
@@ -339,7 +328,15 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
             }
         };
 
+        total_reviewed += 1;
+        match acceptance {
+            Acceptance::Disagree => total_problems += 1,
+            Acceptance::Tolerable => total_tolerated += 1,
+            Acceptance::Agree => (),
+        };
+
         let entry = Entry {
+            acceptance,
             junme,
             actor,
             pai,
@@ -349,13 +346,19 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
             actual: actual_action_strict,
             details: actions,
         };
+        log!(
+            "review entry created: {:?} ({}/{}/{}, {:.02})",
+            acceptance,
+            total_problems,
+            total_tolerated,
+            total_reviewed,
+            (1f64 - total_problems as f64 / total_reviewed as f64) * 100f64,
+        );
         if verbose {
             log!("{:?}", entry);
         }
-        entries.push(entry);
 
-        total_entries += 1;
-        log!("review entry created (total {})", total_entries);
+        entries.push(entry);
     }
 
     let ecode = akochan.wait()?;
@@ -368,8 +371,8 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
     }
 
     Ok(Review {
-        total_entries,
-        total_throttled,
+        total_problems,
+        total_tolerated,
         total_reviewed,
         kyokus: kyoku_reviews,
     })
@@ -416,13 +419,16 @@ fn next_action_strict(rough_action: &[Event], target_actor: u8) -> Vec<Event> {
 
 /// Returns true if actual_action is the same as expected_action.
 fn compare_action_strict(actual_action: &[Event], expected_action: &[Event]) -> bool {
-    expected_action.iter().zip(actual_action).all(|(e, a)| {
-        if let (Event::Dahai { pai: ex, .. }, Event::Dahai { pai: ac, .. }) = (e, a) {
-            ex == ac
-        } else {
-            e == a
-        }
-    })
+    expected_action
+        .iter()
+        .zip(actual_action)
+        .all(|(e, a)| match (e, a) {
+            // ignore `tsumogiri`
+            (Event::Dahai { pai: ee, .. }, Event::Dahai { pai: aa, .. }) => ee == aa,
+            // ignore `delta`
+            (Event::Hora { actor: ee, .. }, Event::Hora { actor: aa, .. }) => ee == aa,
+            _ => e == a,
+        })
 }
 
 /// Returns true if actual_action is innocent or the same as expected_action.
