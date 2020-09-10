@@ -270,41 +270,53 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
             if let Some(expected_ev) = actions[0].review.pt_exp_total {
                 // this is O(n)
                 // ;(
-                let actual_ev_opt = actions
+                let lookup = actions
                     .iter()
                     .find(|&ex| compare_action_strict(&actual_action_strict, &ex.moves))
-                    .map(|detail| detail.review.pt_exp_total)
-                    .ok_or_else(|| {
-                        anyhow!(
-                            "unable to find player's action in akochan's return, expected to find: {:?}, list: {:?}",
-                            actual_action_strict,
-                            actions.iter().map(|a| a.moves.clone()).collect::<Vec<_>>(),
-                        )
-                    })?;
+                    .map(|detail| detail.review.pt_exp_total);
 
-                if let Some(actual_ev) = actual_ev_opt {
-                    let dev = expected_ev - actual_ev;
-                    if dev <= deviation_threshold {
-                        if verbose {
-                            log!(
+                match lookup {
+                    Some(Some(actual_ev)) => {
+                        let dev = expected_ev - actual_ev;
+                        if dev <= deviation_threshold {
+                            if verbose {
+                                log!(
                                 "expected_ev - actual_ev <= deviation_threshold ({} - {} = {} < {})",
                                 expected_ev,
                                 actual_ev,
                                 dev,
                                 deviation_threshold,
                             );
-                        } else {
-                            log!("(review entry throttled by deviation threshold)");
+                            } else {
+                                log!("(review entry throttled by deviation threshold)");
+                            }
+                            total_throttled += 1;
+                            continue;
                         }
+                    }
+
+                    Some(None) => {
+                        // Early turn or high shanten, see `rule_base_flag && !ori_flag` in
+                        // akochan:ai_src/selector.cpp.
+                        // Skip this situation as it is very likely a small difference,
+                        // probably not those who set --deviation-threshold expect.
                         total_throttled += 1;
                         continue;
                     }
-                } else {
-                    // Early turn or high shanten, see `rule_base_flag && !ori_flag` in akochan source.
-                    // It is very likely a small difference, so we continue.
-                    total_throttled += 1;
-                    continue;
-                }
+
+                    None => {
+                        // Usually it is some kind of kan. This is a known issue of akochan.
+                        // It can be mitigated by setting `do_kan_ordinary` to true in tactics.json
+                        log!(
+                            "warning: unable to find player's action in akochan's return, expected to find {:?} from {:?}",
+                            actual_action_strict,
+                            actions.iter().map(|a| a.moves.clone()).collect::<Vec<_>>(),
+                        );
+                        // Skip this situation as it is unclear for akochan, probably not
+                        // those who set --deviation-threshold expect.
+                        continue;
+                    }
+                };
             } else {
                 // Ditto.
                 total_throttled += 1;
