@@ -17,8 +17,8 @@ pub struct Metadata<'a> {
 
     pub deviation_threshold: f64,
     pub total_reviewed: usize,
-    pub total_throttled: usize,
-    pub total_entries: usize,
+    pub total_tolerated: usize,
+    pub total_problems: usize,
 
     pub version: &'a str,
 }

@@ -17,6 +17,9 @@
 </head>
 
 <body>
+  {%- set score = pretty_round_2(num=((1 - metadata.total_problems / metadata.total_reviewed) * 100)) -%}
+  <h3 class="ako-score">Score: {{ score }}/100</h3>
+
   <h1>{% if lang == "en" %}Game Summary{% else %}目次{% endif %}</h1>
   <details open class="collapse">
     <summary></summary>
@@ -65,8 +68,8 @@
       <dd>{{ metadata.convert_time }}</dd>
       <dt>review time</dt>
       <dd>{{ metadata.review_time }}</dd>
-      <dt>entries / reviewed = overall deviation rate</dt>
-      <dd>{{ metadata.total_entries }} / {{ metadata.total_reviewed }} = {{ pretty_round(num=(metadata.total_entries / metadata.total_reviewed * 100)) }}% ({{ metadata.total_throttled }} entries were throttled)</dd>
+      <dt>(1 - (problems - tolerated) / reviewed) * 100 = score</dt>
+      <dd>(1 - ({{ metadata.total_problems + metadata.total_tolerated }} - {{ metadata.total_tolerated }}) / {{ metadata.total_reviewed }}) * 100 = {{ score }}</dd>
       <dt>deviation threshold</dt>
       <dd>{{ metadata.deviation_threshold }}</dd>
       <dt>generated at</dt>
@@ -77,9 +80,6 @@
   </details>
 
   {%- for item in kyokus -%}
-    {%- if item.entries|length == 0 -%}
-      {%- continue -%}
-    {%- endif -%}
     <section style="z-index: {{ 10 + loop.index0 }}">
       <h1 id="kyoku-{{ item.kyoku }}-{{ item.honba }}" class="kyoku-heading">
         <div class="kyoku-item">
@@ -117,12 +117,21 @@
       {%- endif -%}
 
       {%- for entry in item.entries -%}
-        <details open class="collapse">
+        {%- if entry.acceptance == "disagree" -%}
+          <details open class="collapse">
+        {%- else -%}
+          <details class="collapse">
+        {%- endif -%}
           <summary>
             {%- if lang == "en" -%}
               Turn {{ entry.junme }}
             {%- else -%}
-              {{ entry.junme }} 巡
+              {{ entry.junme }} 巡&nbsp;&nbsp;&nbsp;
+            {%- endif -%}
+            {%- if entry.acceptance == "disagree" -%}
+              ❌
+            {%- elif entry.acceptance == "tolerable" -%}
+              😐
             {%- endif -%}
           </summary>
           {{- macros::render_tehai_state(entry=entry, target_actor=target_actor) -}}
@@ -194,7 +203,7 @@
                             {%- set val = detail.review.pt_exp_total -%}
                           {%- endif -%}
                           <span title="{{ val }}">
-                            {{- pretty_round(num=val) -}}
+                            {{- pretty_round_4(num=val) -}}
                           </span>
                         {%- else -%}
                           N/A
@@ -203,7 +212,7 @@
                       <td>
                         {%- if detail.review.total_houjuu_hai_prob_now is number -%}
                           <span title="{{ detail.review.total_houjuu_hai_prob_now * 100 }}">
-                            {{- pretty_round(num=(detail.review.total_houjuu_hai_prob_now * 100)) -}}
+                            {{- pretty_round_4(num=(detail.review.total_houjuu_hai_prob_now * 100)) -}}
                           </span>
                         {%- else -%}
                           N/A
@@ -217,7 +226,7 @@
                             {%- set val = detail.review.total_houjuu_hai_value_now -%}
                           {%- endif -%}
                           <span title="{{ val }}">
-                            {{- pretty_round(num=val) -}}
+                            {{- pretty_round_4(num=val) -}}
                           </span>
                         {%- else -%}
                           N/A
@@ -231,7 +240,7 @@
                             {%- set val = detail.review.pt_exp_after -%}
                           {%- endif -%}
                           <span title="{{ val }}">
-                            {{- pretty_round(num=val) -}}
+                            {{- pretty_round_4(num=val) -}}
                           </span>
                         {%- else -%}
                           N/A
