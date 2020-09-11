@@ -126,12 +126,12 @@
             {%- if lang == "en" -%}
               Turn {{ entry.junme }}
             {%- else -%}
-              {{ entry.junme }} 巡&nbsp;&nbsp;&nbsp;
+              {{ entry.junme }} 巡
             {%- endif -%}
             {%- if entry.acceptance == "disagree" -%}
-              ❌
+              &nbsp;&nbsp;&nbsp;❌
             {%- elif entry.acceptance == "tolerable" -%}
-              😐
+              &nbsp;&nbsp;&nbsp;😐
             {%- endif -%}
           </summary>
           {{- macros::render_tehai_state(entry=entry, target_actor=target_actor) -}}
