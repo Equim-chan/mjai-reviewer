@@ -275,37 +275,48 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
         } else if let Some(expected_ev) = actions[0].review.pt_exp_total {
             // this is O(n)
             // ;(
-            let actual_ev_opt = actions
+            let lookup = actions
                 .iter()
                 .find(|&ex| compare_action_strict(&actual_action_strict, &ex.moves))
-                .map(|detail| detail.review.pt_exp_total)
-                .ok_or_else(|| {
-                    anyhow!(
-                        "unable to find player's action in akochan's return, expected to find: {:?}, list: {:?}",
+                .map(|detail| detail.review.pt_exp_total);
+
+            match lookup {
+                None => {
+                    // Usually it is some kind of kan. This is a known issue of akochan.
+                    // It can be mitigated by setting `do_kan_ordinary` to true in tactics.json
+                    log!(
+                        "WARNING: unable to find player's action in akochan's return, expected to find: {:?}, list: {:?}",
                         actual_action_strict,
                         actions.iter().map(|a| a.moves.clone()).collect::<Vec<_>>(),
-                    )
-                })?;
-            if let Some(actual_ev) = actual_ev_opt {
-                let dev = expected_ev - actual_ev;
-                if dev <= deviation_threshold {
-                    if verbose {
-                        log!(
-                            "expected_ev - actual_ev <= deviation_threshold ({} - {} = {} < {})",
-                            expected_ev,
-                            actual_ev,
-                            dev,
-                            deviation_threshold,
-                        );
-                    }
-                    Acceptance::Tolerable // not acceptable but tolerable
-                } else {
-                    Acceptance::Disagree // not acceptable, the threshold is set but the value is lower than it
+                    );
+                    // Skip this situation as it is unclear for akochan, probably not what
+                    // those who set --deviation-threshold expect.
+                    continue;
                 }
-            } else {
-                // Early turn or high shanten, see `rule_base_flag && !ori_flag` in akochan source.
-                // It is very likely a small difference, so we chose to hide it.
-                Acceptance::Agree
+                Some(Some(actual_ev)) => {
+                    let dev = expected_ev - actual_ev;
+                    if dev <= deviation_threshold {
+                        if verbose {
+                            log!(
+                                "expected_ev - actual_ev <= deviation_threshold ({} - {} = {} < {})",
+                                expected_ev,
+                                actual_ev,
+                                dev,
+                                deviation_threshold,
+                            );
+                        }
+                        Acceptance::Tolerable // not acceptable but tolerable
+                    } else {
+                        Acceptance::Disagree // not acceptable, the threshold is set but the value is lower than it
+                    }
+                }
+                Some(None) => {
+                    // Early turn or high shanten, see `rule_base_flag && !ori_flag` in
+                    // akochan:ai_src/selector.cpp.
+                    // Skip this situation as it is very likely a small difference,
+                    // probably not what those who set --deviation-threshold expect.
+                    Acceptance::Agree
+                }
             }
         } else {
             // Ditto.
@@ -328,12 +339,12 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
             }
         };
 
-        total_reviewed += 1;
         match acceptance {
             Acceptance::Disagree => total_problems += 1,
             Acceptance::Tolerable => total_tolerated += 1,
             Acceptance::Agree => (),
         };
+        total_reviewed += 1;
 
         let entry = Entry {
             acceptance,
