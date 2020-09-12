@@ -2,7 +2,6 @@ use crate::metadata::Metadata;
 use crate::review::KyokuReview;
 
 use std::collections::HashMap;
-use std::convert::TryFrom;
 use std::io::prelude::*;
 
 use anyhow::{Context, Result};
@@ -16,8 +15,7 @@ static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
     let mut tera = Tera::default();
     tera.register_function("kyoku_to_string_ja", kyoku_to_string_ja);
     tera.register_function("kyoku_to_string_en", kyoku_to_string_en);
-    tera.register_function("pretty_round_2", pretty_round_2);
-    tera.register_function("pretty_round_4", pretty_round_4);
+    tera.register_function("pretty_round", pretty_round);
 
     tera.add_raw_templates(vec![
         ("macros.html", include_str!("../templates/macros.html")),
@@ -43,24 +41,22 @@ fn kyoku_to_string_ja(args: &HashMap<String, Value>) -> tera::Result<Value> {
     const BAKAZE_KANJI: &[&str] = &["東", "南", "西", "北"];
     const NUM_KANJI: &[&str] = &["一", "二", "三", "四"];
 
-    let kyoku = if let Some(Value::Number(num)) = args.get("kyoku") {
-        usize::try_from(num.as_u64().unwrap_or(0)).unwrap_or(0)
-    } else {
-        0
-    };
-
-    let honba = if let Some(Value::Number(num)) = args.get("honba") {
-        usize::try_from(num.as_u64().unwrap_or(0)).unwrap_or(0)
-    } else {
-        0
-    };
-
-    let ret = BAKAZE_KANJI[kyoku / 4].to_owned() + NUM_KANJI[kyoku % 4] + "局";
+    let kyoku = args.get("kyoku").and_then(|p| p.as_u64()).unwrap_or(0) as usize;
+    let honba = args.get("honba").and_then(|p| p.as_u64()).unwrap_or(0) as usize;
 
     if honba == 0 {
-        Ok(Value::String(ret))
+        Ok(Value::String(format!(
+            "{}{}局",
+            BAKAZE_KANJI[kyoku / 4],
+            NUM_KANJI[kyoku % 4],
+        )))
     } else {
-        Ok(Value::String(ret + " " + &honba.to_string() + " 本場"))
+        Ok(Value::String(format!(
+            "{}{}局 {} 本場",
+            BAKAZE_KANJI[kyoku / 4],
+            NUM_KANJI[kyoku % 4],
+            honba,
+        )))
     }
 }
 
@@ -68,48 +64,34 @@ fn kyoku_to_string_en(args: &HashMap<String, Value>) -> tera::Result<Value> {
     const BAKAZE_ENG: &[&str] = &["East", "South", "West", "North"];
     const NUM_ENG: &[&str] = &["1", "2", "3", "4"];
 
-    let kyoku = if let Some(Value::Number(num)) = args.get("kyoku") {
-        usize::try_from(num.as_u64().unwrap_or(0)).unwrap_or(0)
-    } else {
-        0
-    };
-
-    let honba = if let Some(Value::Number(num)) = args.get("honba") {
-        usize::try_from(num.as_u64().unwrap_or(0)).unwrap_or(0)
-    } else {
-        0
-    };
-
-    let ret = BAKAZE_ENG[kyoku / 4].to_owned() + " " + NUM_ENG[kyoku % 4];
+    let kyoku = args.get("kyoku").and_then(|p| p.as_u64()).unwrap_or(0) as usize;
+    let honba = args.get("honba").and_then(|p| p.as_u64()).unwrap_or(0) as usize;
 
     if honba == 0 {
-        Ok(Value::String(ret))
+        Ok(Value::String(format!(
+            "{} {}",
+            BAKAZE_ENG[kyoku / 4],
+            NUM_ENG[kyoku % 4],
+        )))
     } else {
-        Ok(Value::String(ret + "-" + &honba.to_string()))
+        Ok(Value::String(format!(
+            "{} {}-{}",
+            BAKAZE_ENG[kyoku / 4],
+            NUM_ENG[kyoku % 4],
+            honba,
+        )))
     }
 }
 
-fn pretty_round_2(args: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Some(Value::Number(num)) = args.get("num") {
-        if let Some(f) = num.as_f64() {
-            let n = (f * 1e4).round() / 1e4;
-            let s = format!("{:.02}", n);
+fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {
+    let prec = args.get("prec").and_then(|p| p.as_u64()).unwrap_or(4);
 
-            return Ok(Value::String(s));
-        }
-    }
+    if let Some(num) = args.get("num").and_then(|n| n.as_f64()) {
+        let pow = (10usize).pow(prec as u32) as f64;
+        let f = (num * pow).round() / pow;
+        let s = format!("{:.1$}", f, prec as usize);
 
-    Ok(Value::Null)
-}
-
-fn pretty_round_4(args: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Some(Value::Number(num)) = args.get("num") {
-        if let Some(f) = num.as_f64() {
-            let n = (f * 1e4).round() / 1e4;
-            let s = format!("{:.04}", n);
-
-            return Ok(Value::String(s));
-        }
+        return Ok(Value::String(s));
     }
 
     Ok(Value::Null)

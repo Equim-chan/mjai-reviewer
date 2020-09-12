@@ -17,12 +17,11 @@
 </head>
 
 <body>
-  {%- set score = pretty_round_2(num=((1 - metadata.total_problems / metadata.total_reviewed) * 100)) -%}
+  {%- set score = pretty_round(num=((1 - metadata.total_problems / metadata.total_reviewed) * 100), prec=2) -%}
   <h3 class="ako-score">Score: {{ score }}/100</h3>
 
-  <h1>{% if lang == "en" %}Game Summary{% else %}目次{% endif %}</h1>
   <details open class="collapse">
-    <summary></summary>
+    <summary>{% if lang == "en" %}Game Summary{% else %}目次{% endif %}</summary>
     <div class="kyoku-toc">
       <ol class="kyoku-list">
         {%- for item in kyokus -%}
@@ -203,7 +202,7 @@
                             {%- set val = detail.review.pt_exp_total -%}
                           {%- endif -%}
                           <span title="{{ val }}">
-                            {{- pretty_round_4(num=val) -}}
+                            {{- pretty_round(num=val) -}}
                           </span>
                         {%- else -%}
                           N/A
@@ -212,7 +211,7 @@
                       <td>
                         {%- if detail.review.total_houjuu_hai_prob_now is number -%}
                           <span title="{{ detail.review.total_houjuu_hai_prob_now * 100 }}">
-                            {{- pretty_round_4(num=(detail.review.total_houjuu_hai_prob_now * 100)) -}}
+                            {{- pretty_round(num=(detail.review.total_houjuu_hai_prob_now * 100)) -}}
                           </span>
                         {%- else -%}
                           N/A
@@ -226,7 +225,7 @@
                             {%- set val = detail.review.total_houjuu_hai_value_now -%}
                           {%- endif -%}
                           <span title="{{ val }}">
-                            {{- pretty_round_4(num=val) -}}
+                            {{- pretty_round(num=val) -}}
                           </span>
                         {%- else -%}
                           N/A
@@ -240,7 +239,7 @@
                             {%- set val = detail.review.pt_exp_after -%}
                           {%- endif -%}
                           <span title="{{ val }}">
-                            {{- pretty_round_4(num=val) -}}
+                            {{- pretty_round(num=val) -}}
                           </span>
                         {%- else -%}
                           N/A
