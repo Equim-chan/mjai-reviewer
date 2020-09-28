@@ -587,6 +587,7 @@ fn main() -> Result<()> {
         total_reviewed: review_result.total_reviewed,
         total_tolerated: review_result.total_tolerated,
         total_problems: review_result.total_problems,
+        score: review_result.score,
         version: &format!("v{} ({})", PKG_VERSION, GIT_HASH),
     };
 

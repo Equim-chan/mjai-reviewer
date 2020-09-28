@@ -19,6 +19,7 @@ pub struct Metadata<'a> {
     pub total_reviewed: usize,
     pub total_tolerated: usize,
     pub total_problems: usize,
+    pub score: f64,
 
     pub version: &'a str,
 }

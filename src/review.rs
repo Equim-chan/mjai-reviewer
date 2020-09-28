@@ -17,6 +17,7 @@ pub struct Review {
     pub total_reviewed: usize,
     pub total_tolerated: usize,
     pub total_problems: usize,
+    pub score: f64,
     pub kyokus: Vec<KyokuReview>,
 }
 
@@ -132,6 +133,7 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
     let mut total_reviewed = 0;
     let mut total_tolerated = 0;
     let mut total_problems = 0;
+    let mut raw_score = 0f64;
 
     let mut kyoku_review = KyokuReview::default();
     let mut state = State::new(target_actor);
@@ -268,10 +270,10 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
             .context("invalid state in event")?;
         let actual_action_strict = next_action_strict(actual_action, target_actor);
 
-        let acceptance = if is_equal_or_innocent {
-            Acceptance::Agree // it is an acceptable move
+        let (move_score, acceptance) = if is_equal_or_innocent {
+            (1f64, Acceptance::Agree) // it is an acceptable move
         } else if deviation_threshold <= 0f64 {
-            Acceptance::Disagree // not acceptable and no threshold set, deny
+            (1f64, Acceptance::Disagree) // not acceptable and no threshold set, deny
         } else if let Some(expected_ev) = actions[0].review.pt_exp_total {
             // this is O(n)
             // ;(
@@ -279,6 +281,13 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
                 .iter()
                 .find(|&ex| compare_action_strict(&actual_action_strict, &ex.moves))
                 .map(|detail| detail.review.pt_exp_total);
+
+            let min_ev = actions
+                .last()
+                .unwrap() // actions[0] is already asserted
+                .review
+                .pt_exp_total
+                .context("invalid message, pt_exp_total is None when it shouldn't")?;
 
             match lookup {
                 None => {
@@ -293,7 +302,9 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
                     // those who set --deviation-threshold expect.
                     continue;
                 }
+
                 Some(Some(actual_ev)) => {
+                    let move_score = 1f64 - (expected_ev - actual_ev) / (expected_ev - min_ev);
                     let dev = expected_ev - actual_ev;
                     if dev <= deviation_threshold {
                         if verbose {
@@ -305,22 +316,23 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
                                 deviation_threshold,
                             );
                         }
-                        Acceptance::Tolerable // not acceptable but tolerable
+                        (move_score, Acceptance::Tolerable) // not acceptable but tolerable
                     } else {
-                        Acceptance::Disagree // not acceptable, the threshold is set but the value is lower than it
+                        (move_score, Acceptance::Disagree) // not acceptable, the threshold is set but the value is lower than it
                     }
                 }
+
                 Some(None) => {
                     // Early turn or high shanten, see `rule_base_flag && !ori_flag` in
                     // akochan:ai_src/selector.cpp.
                     // Skip this situation as it is very likely a small difference,
                     // probably not what those who set --deviation-threshold expect.
-                    Acceptance::Agree
+                    (1f64, Acceptance::Agree)
                 }
             }
         } else {
             // Ditto.
-            Acceptance::Agree
+            (1f64, Acceptance::Agree)
         };
 
         // handle kakan
@@ -345,6 +357,7 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
             Acceptance::Agree => (),
         };
         total_reviewed += 1;
+        raw_score += move_score;
 
         let entry = Entry {
             acceptance,
@@ -363,7 +376,7 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
             total_problems,
             total_tolerated,
             total_reviewed,
-            (1f64 - total_problems as f64 / total_reviewed as f64) * 100f64,
+            raw_score / total_reviewed as f64 * 100f64,
         );
         if verbose {
             log!("{:?}", entry);
@@ -385,6 +398,7 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
         total_problems,
         total_tolerated,
         total_reviewed,
+        score: raw_score / total_reviewed as f64,
         kyokus: kyoku_reviews,
     })
 }
