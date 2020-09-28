@@ -371,7 +371,7 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
             details: actions,
         };
         log!(
-            "review entry created: {:?} ({}/{}/{}, {:.02})",
+            "review entry created: {:?} ({}/{}/{}, {:.03})",
             acceptance,
             total_problems,
             total_tolerated,
