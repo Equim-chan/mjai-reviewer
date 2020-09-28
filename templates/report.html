@@ -17,9 +17,6 @@
 </head>
 
 <body>
-  {# {%- set score = pretty_round(num=((1 - metadata.total_problems / metadata.total_reviewed) * 100), prec=2) -%} #}
-  <h3 class="ako-score">Score<sup>(v2)</sup>: {{ pretty_round(num=(metadata.score*100), prec=3) }}/100</h3>
-
   <details open class="collapse">
     <summary>{% if lang == "en" %}Game Summary{% else %}目次{% endif %}</summary>
     <div class="kyoku-toc">
