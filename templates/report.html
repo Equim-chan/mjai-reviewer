@@ -18,7 +18,7 @@
 
 <body>
   {# {%- set score = pretty_round(num=((1 - metadata.total_problems / metadata.total_reviewed) * 100), prec=2) -%} #}
-  <h3 class="ako-score">Score<sup>(v2)</sup>: {{ pretty_round(num=(metadata.score*100), prec=2) }}/100</h3>
+  <h3 class="ako-score">Score<sup>(v2)</sup>: {{ pretty_round(num=(metadata.score*100), prec=3) }}/100</h3>
 
   <details open class="collapse">
     <summary>{% if lang == "en" %}Game Summary{% else %}目次{% endif %}</summary>
@@ -70,10 +70,10 @@
       <dt>(1 - (problems - tolerated) / reviewed) * 100 = score (v1)</dt>
       <dd>(1 - ({{ metadata.total_problems + metadata.total_tolerated }} - {{ metadata.total_tolerated }}) / {{ metadata.total_reviewed }}) * 100 = {{ pretty_round(num=((1 - metadata.total_problems / metadata.total_reviewed) * 100), prec=2) }}</dd>
       <dt>
-        {# \( \displaystyle 100 \times \frac{1}{n}\sum_{i=1}^{n} \frac{E[actual] - E[min]}{E[max] - E[min]} = score \ \text{(v2)} \) #}
-        <math xmlns="http://www.w3.org/1998/Math/MathML"> <mstyle displaystyle="true" scriptlevel="0"> <mn>100</mn> <mo>&#xD7;</mo> <mfrac> <mn>1</mn> <mi>n</mi> </mfrac> <munderover> <mo data-mjx-texclass="OP">&#x2211;</mo> <mrow> <mi>i</mi> <mo>=</mo> <mn>1</mn> </mrow> <mrow> <mi>n</mi> </mrow> </munderover> <mfrac> <mrow> <mi>E</mi> <mo stretchy="false">[</mo> <mi>a</mi> <mi>c</mi> <mi>t</mi> <mi>u</mi> <mi>a</mi> <mi>l</mi> <mo stretchy="false">]</mo> <mo>&#x2212;</mo> <mi>E</mi> <mo stretchy="false">[</mo> <mi>m</mi> <mi>i</mi> <mi>n</mi> <mo stretchy="false">]</mo> </mrow> <mrow> <mi>E</mi> <mo stretchy="false">[</mo> <mi>m</mi> <mi>a</mi> <mi>x</mi> <mo stretchy="false">]</mo> <mo>&#x2212;</mo> <mi>E</mi> <mo stretchy="false">[</mo> <mi>m</mi> <mi>i</mi> <mi>n</mi> <mo stretchy="false">]</mo> </mrow> </mfrac> <mo>=</mo> <mi>s</mi> <mi>c</mi> <mi>o</mi> <mi>r</mi> <mi>e</mi> <mtext>&#xA0;</mtext> <mtext>(v2)</mtext> </mstyle></math>
+        {# \( \displaystyle 100 \times (\frac{1}{n}\sum_{i=1}^{n} \frac{E[actual] - E[min]}{E[max] - E[min]})^2 = score \ \text{(v2)} \) #}
+        <math xmlns="http://www.w3.org/1998/Math/MathML"> <mstyle displaystyle="true" scriptlevel="0"> <mn>100</mn> <mo>&#xD7;</mo> <mo stretchy="false">(</mo> <mfrac> <mn>1</mn> <mi>n</mi> </mfrac> <munderover> <mo data-mjx-texclass="OP">&#x2211;</mo> <mrow> <mi>i</mi> <mo>=</mo> <mn>1</mn> </mrow> <mrow> <mi>n</mi> </mrow> </munderover> <mfrac> <mrow> <mi>E</mi> <mo stretchy="false">[</mo> <mi>a</mi> <mi>c</mi> <mi>t</mi> <mi>u</mi> <mi>a</mi> <mi>l</mi> <mo stretchy="false">]</mo> <mo>&#x2212;</mo> <mi>E</mi> <mo stretchy="false">[</mo> <mi>m</mi> <mi>i</mi> <mi>n</mi> <mo stretchy="false">]</mo> </mrow> <mrow> <mi>E</mi> <mo stretchy="false">[</mo> <mi>m</mi> <mi>a</mi> <mi>x</mi> <mo stretchy="false">]</mo> <mo>&#x2212;</mo> <mi>E</mi> <mo stretchy="false">[</mo> <mi>m</mi> <mi>i</mi> <mi>n</mi> <mo stretchy="false">]</mo> </mrow> </mfrac> <msup> <mo stretchy="false">)</mo> <mn>2</mn> </msup> <mo>=</mo> <mi>s</mi> <mi>c</mi> <mi>o</mi> <mi>r</mi> <mi>e</mi> <mtext>&#xA0;</mtext> <mtext>(v2)</mtext> </mstyle></math>
       </dt>
-      <dd>{{ pretty_round(num=(metadata.score*100), prec=2) }}</dd>
+      <dd>{{ pretty_round(num=(metadata.score*1000), prec=2) }}</dd>
       <dt>deviation threshold</dt>
       <dd>{{ metadata.deviation_threshold }}</dd>
       <dt>generated at</dt>

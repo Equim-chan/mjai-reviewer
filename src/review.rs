@@ -376,7 +376,7 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
             total_problems,
             total_tolerated,
             total_reviewed,
-            raw_score / total_reviewed as f64 * 100f64,
+            (raw_score / total_reviewed as f64).powf(2f64) * 100f64,
         );
         if verbose {
             log!("{:?}", entry);
@@ -398,7 +398,7 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
         total_problems,
         total_tolerated,
         total_reviewed,
-        score: raw_score / total_reviewed as f64,
+        score: (raw_score / total_reviewed as f64).powf(2f64),
         kyokus: kyoku_reviews,
     })
 }
