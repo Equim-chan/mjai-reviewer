@@ -143,6 +143,25 @@ impl Pai {
         self as usize
     }
 
+    #[inline]
+    pub fn as_ord(self) -> impl Ord {
+        match self {
+            Self::AkaMan5 => 16,
+            Self::AkaPin5 => 26,
+            Self::AkaSou5 => 36,
+
+            _ => {
+                let id = self.as_u8();
+
+                if 16 <= id && id < 20 || 26 <= id && id < 30 || 36 <= id && id < 40 {
+                    id + 1
+                } else {
+                    id
+                }
+            }
+        }
+    }
+
     #[allow(clippy::trivially_copy_pass_by_ref)]
     #[inline]
     pub fn serialize_literal<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

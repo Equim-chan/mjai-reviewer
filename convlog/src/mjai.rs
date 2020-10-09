@@ -109,16 +109,17 @@ pub enum Event {
 
 impl Eq for Event {}
 
+// ["5sr", "3p", "6m", ...] => [Pai::AkaSou5, Pai::Pin3, Pai::Man6, ...]
 macro_rules! make_pai_array_from_string_array {
     ($array:ident, $($index:expr),*) => {
-        [$($array[$index].parse().map_err(Error::custom)?),*]
+        [$($array[$index].parse::<Pai>().map_err(Error::custom)?),*]
     };
 }
 
 macro_rules! build_consumed_struct {
     ($name:ident; $n:expr; $($index:expr),*) => {
-        #[derive(Clone, Copy, Serialize)]
-        pub struct $name(pub [Pai; $n]);
+        #[derive(Clone, Copy, Serialize, PartialEq, Eq)]
+        pub struct $name([Pai; $n]);
 
         impl fmt::Debug for $name {
             #[inline]
@@ -127,23 +128,31 @@ macro_rules! build_consumed_struct {
             }
         }
 
-        impl PartialEq for $name {
+        impl From<[Pai; $n]> for $name {
             #[inline]
-            fn eq(&self, other: &Self) -> bool {
-                $(1u64 << self.0[$index].as_u8())|*
-                    == $(1u64 << other.0[$index].as_u8())|*
+            fn from(pais: [Pai; $n]) -> Self {
+                let mut list = pais;
+                list.sort_unstable_by_key(|pai| pai.as_ord());
+                Self(list)
             }
         }
-
-        impl Eq for $name {}
 
         impl<'de> Deserialize<'de> for $name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: Deserializer<'de> {
-                    let s = <[String; $n]>::deserialize(deserializer)?;
-                    Ok($name(make_pai_array_from_string_array!(s, $($index),*)))
-                }
+                D: Deserializer<'de>,
+            {
+                let s = <[String; $n]>::deserialize(deserializer)?;
+                let pais = make_pai_array_from_string_array!(s, $($index),*);
+                Ok($name::from(pais))
+            }
+        }
+
+        impl $name {
+            #[inline]
+            pub const fn as_array(self) -> [Pai; $n] {
+                self.0
+            }
         }
     };
 }

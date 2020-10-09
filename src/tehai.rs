@@ -69,7 +69,7 @@ impl Tehai {
 
         if let Ok(idx) = self
             .inner
-            .binary_search_by_key(&to_ord(pai), |&p| to_ord(p))
+            .binary_search_by_key(&pai.as_ord(), |pai| pai.as_ord())
         {
             self.inner.remove(idx);
         }
@@ -85,7 +85,7 @@ impl Tehai {
         for &pai in pais {
             if let Ok(idx) = self
                 .inner
-                .binary_search_by_key(&to_ord(pai), |&p| to_ord(p))
+                .binary_search_by_key(&pai.as_ord(), |pai| pai.as_ord())
             {
                 self.inner.remove(idx);
             }
@@ -95,31 +95,12 @@ impl Tehai {
     /// Sort the pai. Aka pai will be before normal pai of the same sequence.
     #[inline]
     fn sort(&mut self) {
-        self.inner.sort_unstable_by_key(|&pai| to_ord(pai));
+        self.inner.sort_unstable_by_key(|pai| pai.as_ord());
         self.is_sorted = true;
     }
 
     /// Returns a view of current tehai.
     pub fn view(&self) -> &[Pai] {
         &self.inner
-    }
-}
-
-#[inline]
-fn to_ord(pai: Pai) -> u8 {
-    match pai {
-        Pai::AkaMan5 => 16,
-        Pai::AkaPin5 => 26,
-        Pai::AkaSou5 => 36,
-
-        _ => {
-            let id = pai.as_u8();
-
-            if 16 <= id && id < 20 || 26 <= id && id < 30 || 36 <= id && id < 40 {
-                id + 1
-            } else {
-                id
-            }
-        }
     }
 }

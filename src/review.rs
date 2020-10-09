@@ -425,10 +425,7 @@ fn next_action_strict(rough_action: &[Event], target_actor: u8) -> Vec<Event> {
         Event::Hora { .. } => vec![rough_action
             .iter()
             .take(3)
-            .find(|&a| match *a {
-                Event::Hora { actor, .. } if actor == target_actor => true,
-                _ => false,
-            })
+            .find(|&a| matches!(*a, Event::Hora { actor, .. } if actor == target_actor))
             .cloned()
             .unwrap_or(Event::None)],
 

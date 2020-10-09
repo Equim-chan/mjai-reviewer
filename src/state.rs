@@ -65,7 +65,7 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_multiple(&consumed.0);
+                self.tehai.remove_multiple(&consumed.as_array());
 
                 let fuuro = Fuuro::Chi {
                     target,
@@ -81,7 +81,7 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_multiple(&consumed.0);
+                self.tehai.remove_multiple(&consumed.as_array());
 
                 let fuuro = Fuuro::Pon {
                     target,
@@ -97,7 +97,7 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_multiple(&consumed.0);
+                self.tehai.remove_multiple(&consumed.as_array());
 
                 let fuuro = Fuuro::Daiminkan {
                     target,
@@ -128,8 +128,11 @@ impl State {
                             target: pon_target,
                             pai: pon_pai,
                             consumed: pon_consumed,
-                        } if Consumed3([pon_pai, pon_consumed.0[0], pon_consumed.0[1]])
-                            == consumed =>
+                        } if Consumed3::from([
+                            pon_pai,
+                            pon_consumed.as_array()[0],
+                            pon_consumed.as_array()[1],
+                        ]) == consumed =>
                         {
                             Some((idx, pon_target, pon_pai, pon_consumed))
                         }
@@ -148,7 +151,7 @@ impl State {
             }
 
             Event::Ankan { actor, consumed } if actor == self.actor => {
-                self.tehai.remove_multiple(&consumed.0);
+                self.tehai.remove_multiple(&consumed.as_array());
 
                 let fuuro = Fuuro::Ankan { consumed };
                 self.fuuros.push(fuuro);

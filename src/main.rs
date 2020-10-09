@@ -84,9 +84,9 @@ fn main() -> Result<()> {
                 .short("k")
                 .long("kyokus")
                 .takes_value(true)
-                .value_name("ARRAY")
+                .value_name("LIST")
                 .help(
-                    "Specify kyokus to review. If ARRAY is empty, review all kyokus. \
+                    "Specify kyokus to review. If LIST is empty, review all kyokus. \
                     Format: \"E1,E4,S3.1\".",
                 ),
         )
@@ -213,17 +213,14 @@ fn main() -> Result<()> {
             Arg::with_name("pt")
                 .long("pt")
                 .takes_value(true)
-                .value_name("ARRAY")
+                .value_name("LIST")
                 .validator(|v| {
-                    let arr = v
-                        .split(',')
-                        .map(|p| {
-                            p.parse::<i32>()
-                                .map_err(|err| format!("pt element must be a number: {}", err))
-                        })
-                        .collect::<Vec<Result<_, String>>>();
+                    let list = v.split(',').map(|p| {
+                        p.parse::<i32>()
+                            .map_err(|err| format!("pt element must be a number: {}", err))
+                    });
 
-                    if arr.len() != 4 {
+                    if list.count() != 4 {
                         Err("pt must have exactly 4 elements".to_owned())
                     } else {
                         Ok(())
@@ -548,10 +545,14 @@ fn main() -> Result<()> {
             }
         }
         _ => {
+            let suffix = if arg_json { ".json" } else { ".html" };
             if let Some(tenhou_id) = tenhou_id_final.as_deref() {
-                Some(OsString::from(format!("{}&tw={}.html", tenhou_id, actor)))
+                Some(OsString::from(format!(
+                    "{}&tw={}{}",
+                    tenhou_id, actor, suffix
+                )))
             } else {
-                Some(OsString::from("report.html"))
+                Some(OsString::from(format!("report{}", suffix)))
             }
         }
     };
