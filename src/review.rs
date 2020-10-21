@@ -304,7 +304,14 @@ pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
                 }
 
                 Some(Some(actual_ev)) => {
-                    let move_score = 1f64 - (expected_ev - actual_ev) / (expected_ev - min_ev);
+                    let range = expected_ev - min_ev;
+                    let error = expected_ev - actual_ev;
+                    let move_score = if range > 0f64 {
+                        1f64 - error / range
+                    } else {
+                        1f64
+                    };
+
                     let dev = expected_ev - actual_ev;
                     if dev <= deviation_threshold {
                         if verbose {
