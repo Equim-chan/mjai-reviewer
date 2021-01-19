@@ -78,7 +78,7 @@ pub struct ReviewArgs<'a> {
     pub verbose: bool,
 }
 
-pub fn review<'a>(review_args: &'a ReviewArgs) -> Result<Review> {
+pub fn review(review_args: &ReviewArgs) -> Result<Review> {
     let &ReviewArgs {
         akochan_exe,
         akochan_dir,
