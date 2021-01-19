@@ -53,7 +53,7 @@ impl FromStr for KyokuFilter {
                 .parse()
                 .map_err(ParseError::InvalidKyoku)?;
 
-            if kyoku_num < 1 || kyoku_num > 4 {
+            if !(1..=4).contains(&kyoku_num) {
                 return Err(ParseError::InvalidKyokuRange(kyoku_num));
             }
 

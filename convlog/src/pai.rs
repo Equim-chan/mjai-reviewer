@@ -153,7 +153,10 @@ impl Pai {
             _ => {
                 let id = self.as_u8();
 
-                if 16 <= id && id < 20 || 26 <= id && id < 30 || 36 <= id && id < 40 {
+                if [(16..20), (26..30), (36..40)]
+                    .iter()
+                    .any(|range| range.contains(&id))
+                {
                     id + 1
                 } else {
                     id

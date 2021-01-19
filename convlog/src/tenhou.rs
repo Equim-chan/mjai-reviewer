@@ -181,7 +181,7 @@ impl RawLog {
     }
 
     /// Split one raw tenhou.net/6 log into many by kyokus.
-    pub fn split_by_kyoku<'a>(&'a self) -> Vec<RawPartialLog<'a>> {
+    pub fn split_by_kyoku(&self) -> Vec<RawPartialLog<'_>> {
         let mut ret = vec![];
 
         for kyoku in self.logs.chunks(1) {
