@@ -412,7 +412,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
 
 fn next_action_for_compare(events: &[Event]) -> &[Event] {
     match events[0] {
-        Event::Dora { .. } => next_action_for_compare(&events[1..]),
+        Event::Dora { .. } | Event::ReachAccepted { .. } => next_action_for_compare(&events[1..]),
         Event::Hora { .. } => &events[..3], // considering multiple rons
         Event::Chi { .. } | Event::Pon { .. } | Event::Reach { .. } => &events[..2],
         _ => &events[..1],
