@@ -300,7 +300,7 @@ fn main() -> Result<()> {
     let arg_pt = matches.value_of("pt");
     let arg_kyokus = matches.value_of("kyokus");
     let arg_use_placement_ev = matches.is_present("use-placement-ev");
-    let arg_without_reviewer = matches.is_present("without-reviewer");
+    let arg_without_reviewer = matches.is_present("without-viewer");
     let arg_no_open = matches.is_present("no-open");
     let arg_no_review = matches.is_present("no-review");
     let arg_json = matches.is_present("json");
