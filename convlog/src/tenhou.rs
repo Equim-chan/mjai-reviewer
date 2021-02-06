@@ -175,6 +175,16 @@ pub use json_scheme::{Log as RawLog, PartialLog as RawPartialLog};
 
 impl RawLog {
     #[inline]
+    pub fn hide_names(&mut self) {
+        self.names = [
+            "Aさん".to_owned(),
+            "Bさん".to_owned(),
+            "Cさん".to_owned(),
+            "Dさん".to_owned(),
+        ];
+    }
+
+    #[inline]
     pub fn filter_kyokus(&mut self, kyoku_filter: &KyokuFilter) {
         self.logs
             .retain(|l| kyoku_filter.test(l.meta.kyoku_num, l.meta.honba))

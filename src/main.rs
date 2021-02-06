@@ -172,6 +172,11 @@ fn main() -> Result<()> {
                 .help("Do not include log viewer in the generated HTML report."),
         )
         .arg(
+            Arg::with_name("anonymous")
+                .long("anonymous")
+                .help("Do not include player names."),
+        )
+        .arg(
             Arg::with_name("no-open")
                 .long("no-open")
                 .help("Do not open the output file in browser after finishing."),
@@ -300,7 +305,8 @@ fn main() -> Result<()> {
     let arg_pt = matches.value_of("pt");
     let arg_kyokus = matches.value_of("kyokus");
     let arg_use_placement_ev = matches.is_present("use-placement-ev");
-    let arg_without_reviewer = matches.is_present("without-viewer");
+    let arg_without_viewer = matches.is_present("without-viewer");
+    let arg_anonymous = matches.is_present("anonymous");
     let arg_no_open = matches.is_present("no-open");
     let arg_no_review = matches.is_present("no-review");
     let arg_json = matches.is_present("json");
@@ -393,6 +399,10 @@ fn main() -> Result<()> {
         let mut l: tenhou::RawLog =
             json::from_reader(log_reader).context("failed to parse tenhou log")?;
 
+        if arg_anonymous {
+            l.hide_names();
+        }
+
         // filter kyokus
         if let Some(s) = arg_kyokus {
             let filter = s.parse().context("failed to parse kyoku filter")?;
@@ -407,7 +417,7 @@ fn main() -> Result<()> {
     // See https://manishearth.github.io/blog/2017/04/13/prolonging-temporaries-in-rust/
     // for the technique of extending the lifetime of temp var here.
     let cloned_raw_log;
-    let splited_raw_logs = if !arg_without_reviewer {
+    let splited_raw_logs = if !arg_without_viewer {
         cloned_raw_log = raw_log.clone();
         Some(cloned_raw_log.split_by_kyoku())
     } else {

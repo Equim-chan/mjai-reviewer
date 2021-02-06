@@ -39,9 +39,10 @@ $ akochan-reviewer -k E2.1,E3 "https://tenhou.net/0/?log=2019050417gm-0029-0000-
 ## Usage
 ```plain
 USAGE:
-    akochan-reviewer [FLAGS] [OPTIONS] [URL]
+    akochan-reviewer.exe [FLAGS] [OPTIONS] [URL]
 
 FLAGS:
+        --anonymous           Do not include player names.
     -h, --help                Prints help information
         --json                Output review result in JSON instead of HTML.
         --no-open             Do not open the output file in browser after finishing.
@@ -65,7 +66,7 @@ OPTIONS:
                                              0.001 when using placement. Default value: "0.001".
     -i, --in-file <FILE>                     Specify a tenhou.net/6 format log file to review. If FILE is "-" or empty,
                                              read from stdin.
-    -k, --kyokus <ARRAY>                     Specify kyokus to review. If ARRAY is empty, review all kyokus. Format:
+    -k, --kyokus <LIST>                      Specify kyokus to review. If LIST is empty, review all kyokus. Format:
                                              "E1,E4,S3.1".
         --lang <LANG>                        Set the language for the rendered report page. Default value "ja".
                                              Supported languages: ja, en.
@@ -76,7 +77,7 @@ OPTIONS:
     -o, --out-file <FILE>                    Specify the output file for generated HTML report. If FILE is "-", write to
                                              stdout; if FILE is empty, write to "{tenhou_id}&tw={actor}.html" if
                                              --tenhou-id is specified, otherwise "report.html".
-        --pt <ARRAY>                         Shortcut to override "jun_pt" in --tactics-config. Format: "90,45,0,-135".
+        --pt <LIST>                          Shortcut to override "jun_pt" in --tactics-config. Format: "90,45,0,-135".
     -c, --tactics-config <FILE>              Specify the tactics config file for akochan. Default value "tactics.json".
     -t, --tenhou-id <ID>                     Specify a Tenhou log ID to review, overriding --in-file. Example:
                                              "2019050417gm-0029-0000-4f2a8622".
