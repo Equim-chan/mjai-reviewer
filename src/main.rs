@@ -2,7 +2,6 @@ mod download;
 mod log;
 mod log_source;
 mod metadata;
-mod mjsoul_deobfuse;
 mod raw_log_ext;
 mod render;
 mod report_output;
@@ -353,14 +352,8 @@ fn main() -> Result<()> {
         }
     } else if let Some(id) = arg_tenhou_id {
         LogSource::Tenhou(id)
-    } else if let Some(full_id) = arg_mjsoul_id {
-        let seps: Vec<_> = full_id.split('_').collect();
-        if seps.len() == 3 && seps[2] == "2" {
-            let real_id = mjsoul_deobfuse::decode_log_id(seps[0]);
-            LogSource::MahjongSoul(format!("{}_{}", real_id, seps[1]))
-        } else {
-            LogSource::MahjongSoul(full_id)
-        }
+    } else if let Some(raw_id) = arg_mjsoul_id {
+        LogSource::mjsoul_full_id_with_deobfuse(&raw_id)
     } else if let Some(url) = arg_url {
         let u = Url::parse(url).context("failed to parse URL")?;
         let host = u.host_str().context("url does not have host")?;
@@ -407,14 +400,8 @@ fn main() -> Result<()> {
                 }
 
                 match paipu {
-                    Some(full_id) => {
-                        let seps: Vec<_> = full_id.split('_').collect();
-                        if seps.len() == 3 && seps[2] == "2" {
-                            let real_id = mjsoul_deobfuse::decode_log_id(seps[0]);
-                            LogSource::MahjongSoul(format!("{}_{}", real_id, seps[1]))
-                        } else {
-                            LogSource::MahjongSoul(full_id)
-                        }
+                    Some(raw_id) => {
+                        LogSource::mjsoul_full_id_with_deobfuse(&raw_id)
                     }
                     None => return Err(anyhow!("mahjong soul log ID not found in URL {}", url)),
                 }
