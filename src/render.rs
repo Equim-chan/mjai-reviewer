@@ -37,6 +37,7 @@ pub enum Language {
     English,
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn kyoku_to_string_ja(args: &HashMap<String, Value>) -> tera::Result<Value> {
     const BAKAZE_KANJI: &[&str] = &["東", "南", "西", "北"];
     const NUM_KANJI: &[&str] = &["一", "二", "三", "四"];
@@ -60,6 +61,7 @@ fn kyoku_to_string_ja(args: &HashMap<String, Value>) -> tera::Result<Value> {
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn kyoku_to_string_en(args: &HashMap<String, Value>) -> tera::Result<Value> {
     const BAKAZE_ENG: &[&str] = &["East", "South", "West", "North"];
     const NUM_ENG: &[&str] = &["1", "2", "3", "4"];
@@ -83,6 +85,7 @@ fn kyoku_to_string_en(args: &HashMap<String, Value>) -> tera::Result<Value> {
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {
     let prec = args.get("prec").and_then(|p| p.as_u64()).unwrap_or(4);
 

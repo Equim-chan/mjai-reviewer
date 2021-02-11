@@ -58,10 +58,8 @@
       <dd>{{ metadata.game_length }}</dd>
       <dt>actor id</dt>
       <dd>{{ target_actor }}</dd>
-      <dt>tenhou log id</dt>
-      <dd>{{ metadata.tenhou_id | default(value="N/A") | safe }}</dd>
-      <dt>parse time</dt>
-      <dd>{{ metadata.parse_time }}</dd>
+      <dt>log id</dt>
+      <dd>{{ metadata.log_id | default(value="N/A") | safe }}</dd>
       <dt>convert time</dt>
       <dd>{{ metadata.convert_time }}</dd>
       <dt>review time</dt>

@@ -176,12 +176,14 @@ pub use json_scheme::{Log as RawLog, PartialLog as RawPartialLog};
 impl RawLog {
     #[inline]
     pub fn hide_names(&mut self) {
-        self.names = [
-            "Aさん".to_owned(),
-            "Bさん".to_owned(),
-            "Cさん".to_owned(),
-            "Dさん".to_owned(),
-        ];
+        self.names
+            .iter_mut()
+            .zip('A'..='D')
+            .for_each(|(name, alias)| {
+                name.clear();
+                name.push(alias);
+                name.push_str("さん");
+            });
     }
 
     #[inline]
@@ -279,45 +281,42 @@ impl From<RawLog> for Log {
                     },
                 };
 
-                if let Some(status) = log.results.get(0) {
-                    if let json_scheme::ResultItem::Status(status_text) = status {
-                        if status_text == "和了" {
-                            let hora_details = log.results[1..]
-                                .chunks_exact(2)
-                                .filter_map(|detail_tuple| {
-                                    if let (
-                                        json_scheme::ResultItem::ScoreDeltas(score_deltas),
-                                        json_scheme::ResultItem::HoraDetail(who_target_tuple),
-                                    ) = (&detail_tuple[0], &detail_tuple[1])
-                                    {
-                                        // TODO: it can actually fail, maybe impl TryFrom instead
-                                        let hora_detail = kyoku::HoraDetail {
-                                            score_deltas: *score_deltas,
-                                            who: who_target_tuple[0].as_u64().unwrap_or(0) as u8,
-                                            target: who_target_tuple[1].as_u64().unwrap_or(0) as u8,
-                                        };
-                                        Some(hora_detail)
-                                    } else {
-                                        None
-                                    }
-                                })
-                                .collect();
-
-                            item.end_status = kyoku::EndStatus::Hora {
-                                details: hora_details,
-                            };
-                        } else {
-                            let score_deltas =
-                                if let Some(json_scheme::ResultItem::ScoreDeltas(dts)) =
-                                    log.results.get(1)
+                if let Some(json_scheme::ResultItem::Status(status_text)) = log.results.get(0) {
+                    if status_text == "和了" {
+                        let hora_details = log.results[1..]
+                            .chunks_exact(2)
+                            .filter_map(|detail_tuple| {
+                                if let (
+                                    json_scheme::ResultItem::ScoreDeltas(score_deltas),
+                                    json_scheme::ResultItem::HoraDetail(who_target_tuple),
+                                ) = (&detail_tuple[0], &detail_tuple[1])
                                 {
-                                    *dts
+                                    // TODO: it can actually fail, maybe impl TryFrom instead
+                                    let hora_detail = kyoku::HoraDetail {
+                                        score_deltas: *score_deltas,
+                                        who: who_target_tuple[0].as_u64().unwrap_or(0) as u8,
+                                        target: who_target_tuple[1].as_u64().unwrap_or(0) as u8,
+                                    };
+                                    Some(hora_detail)
                                 } else {
-                                    [0; 4]
-                                };
+                                    None
+                                }
+                            })
+                            .collect();
 
-                            item.end_status = kyoku::EndStatus::Ryukyoku { score_deltas };
-                        }
+                        item.end_status = kyoku::EndStatus::Hora {
+                            details: hora_details,
+                        };
+                    } else {
+                        let score_deltas = if let Some(json_scheme::ResultItem::ScoreDeltas(dts)) =
+                            log.results.get(1)
+                        {
+                            *dts
+                        } else {
+                            [0; 4]
+                        };
+
+                        item.end_status = kyoku::EndStatus::Ryukyoku { score_deltas };
                     }
                 }
 

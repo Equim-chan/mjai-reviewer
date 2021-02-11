@@ -5,7 +5,7 @@
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Equim-chan/akochan-reviewer)
 [![License](https://img.shields.io/github/license/Equim-chan/akochan-reviewer)](https://github.com/Equim-chan/akochan-reviewer/blob/master/LICENSE)
 
-Review your Tenhou log with mahjong AI akochan.
+Review your Tenhou or Mahjong Soul (Jantama) log with mahjong AI akochan.
 
 [***Try it online!***](https://akochan.ekyu.moe) | [Demo result page](https://gh.ekyu.moe/ako-pages/2020030901gm-0029-0000-7a308c98-tw_1-pt_75_30_0_-90-dev_0.05.html)
 
@@ -17,8 +17,13 @@ $ # Review https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2
 $ # Note that you may need to quote it in the shell to escape the string
 $ akochan-reviewer "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
+$ # Review https://game.mahjongsoul.com/?paipu=190425-146daa2a-68c2-4b7e-a8d7-2b5c71b54b00_a458023588
+$ akochan-reviewer "https://game.mahjongsoul.com/?paipu=190425-146daa2a-68c2-4b7e-a8d7-2b5c71b54b00_a458023588"
+
 $ # Alternatively, you can specify the log ID and actor manually
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2
+$ akochan-reviewer -m 190425-146daa2a-68c2-4b7e-a8d7-2b5c71b54b00_a458023588
+$ akochan-reviewer -m 190425-146daa2a-68c2-4b7e-a8d7-2b5c71b54b00 -a 2
 
 $ # Review with arbitrary pt distribution
 $ akochan-reviewer --pt 75,30,0,-165 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
@@ -27,10 +32,10 @@ $ # Review with arbitrary pt distribution under the acceptance of <=0.05 pt devi
 $ akochan-reviewer --pt 75,30,0,-165 -n 0.05 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review with placement EV instead of pt EV
-$ akochan-reviewer --use-placement-ev "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
+$ akochan-reviewer -e "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review with placement EV instead of pt EV under the acceptance of <=0.002 placement deviation
-$ akochan-reviewer --use-placement-ev -n 0.002 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
+$ akochan-reviewer -e -n 0.002 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review 東2局1本場 and 東3局 only
 $ akochan-reviewer -k E2.1,E3 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
@@ -72,6 +77,8 @@ OPTIONS:
                                              Supported languages: ja, en.
         --mjai-out <FILE>                    Save the transformed mjai format log to FILE. If FILE is "-", write to
                                              stdout.
+    -m, --mjsoul-id <ID>                     Specify a Mahjong Soul log ID to review. Example: "200417-e1f9e08d-487f-
+                                             4333-989f-34be08b943c7".
         --out-dir <DIR>                      Specify a directory to save the output for mjai logs. If DIR is empty,
                                              defaults to ".".
     -o, --out-file <FILE>                    Specify the output file for generated HTML report. If FILE is "-", write to
@@ -87,7 +94,7 @@ OPTIONS:
                                              specified. If FILE is "-", write to stdout.
 
 ARGS:
-    <URL>    Tenhou log URL.
+    <URL>    Tenhou or Mahjong Soul log URL.
 ```
 
 ## Build
@@ -206,7 +213,7 @@ $ export OMP_NUM_THREADS=8
 ## Acknowledgment
 * [critter](https://twitter.com/critter_Eng): The creater of akochan, who also proposed many advise and gave help to the development of akochan-reviewer.
 * [新篠ゆう](https://github.com/yuarasino): Who helped a lot with the report page template.
-* [Amber](https://euophrys.itch.io/): Who translated the report page into English, also wrote a [blog post](https://pathofhouou.blogspot.com/2020/08/training-tool-ako-chan-reviewer.html) about akochan-reviewer.
+* [Amber](https://euophrys.itch.io/): English translater of the report page, also has written a [blog post](https://pathofhouou.blogspot.com/2020/08/training-tool-ako-chan-reviewer.html) about akochan-reviewer.
 
 ## License
 [Apache-2.0](https://github.com/Equim-chan/akochan-reviewer/blob/master/LICENSE)

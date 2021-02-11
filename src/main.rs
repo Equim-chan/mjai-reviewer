@@ -1,21 +1,26 @@
 mod download;
 mod log;
+mod log_source;
 mod metadata;
+mod mjsoul_deobfuse;
+mod raw_log_ext;
 mod render;
+mod report_output;
 mod review;
 mod state;
 mod tactics;
 mod tehai;
 
-use download::download_tenhou_log;
+use log_source::LogSource;
 use metadata::Metadata;
+use raw_log_ext::RawLogExt;
 use render::{Language, View};
+use report_output::ReportOutput;
 use review::review;
 use review::ReviewArgs;
 use tactics::TacticsJson;
 
 use std::env;
-use std::ffi::OsString;
 use std::fs;
 use std::fs::File;
 use std::io;
@@ -29,7 +34,6 @@ use clap::{App, Arg};
 use convlog::tenhou;
 use dunce::canonicalize;
 use serde_json as json;
-use tee::TeeReader;
 use tempfile::NamedTempFile;
 use url::Url;
 
@@ -123,6 +127,17 @@ fn main() -> Result<()> {
                 .help(
                     "Specify a Tenhou log ID to review, overriding --in-file. \
                     Example: \"2019050417gm-0029-0000-4f2a8622\".",
+                ),
+        )
+        .arg(
+            Arg::with_name("mjsoul-id")
+                .short("m")
+                .long("mjsoul-id")
+                .takes_value(true)
+                .value_name("ID")
+                .help(
+                    "Specify a Mahjong Soul log ID to review. \
+                    Example: \"200417-e1f9e08d-487f-4333-989f-34be08b943c7\".",
                 ),
         )
         .arg(
@@ -288,13 +303,14 @@ fn main() -> Result<()> {
                 .long("verbose")
                 .help("Use verbose output."),
         )
-        .arg(Arg::with_name("URL").help("Tenhou log URL."))
+        .arg(Arg::with_name("URL").help("Tenhou or Mahjong Soul log URL."))
         .get_matches();
 
     // load options
     let arg_in_file = matches.value_of_os("in-file");
     let arg_out_file = matches.value_of_os("out-file");
     let arg_tenhou_id = matches.value_of("tenhou-id").map(String::from);
+    let arg_mjsoul_id = matches.value_of("mjsoul-id").map(String::from);
     let arg_tenhou_out = matches.value_of_os("tenhou-out");
     let arg_mjai_out = matches.value_of_os("mjai-out");
     let arg_tenhou_ids_file = matches.value_of_os("tenhou-ids-file");
@@ -326,91 +342,160 @@ fn main() -> Result<()> {
         return batch_download(&out_dir_name, Path::new(tenhou_ids_file));
     }
 
-    // get from url if specified
-    let (tenhou_id_final, actor_final) = if let Some(url) = arg_url {
-        let u = Url::parse(url).context("failed to parse URL")?;
-        let (mut log, mut tw) = (None, None);
-        for (k, v) in u.query_pairs() {
-            match &*k {
-                "log" => log = Some(v.into_owned()),
-                "tw" => {
-                    let num: u8 = v.parse().context("\"tw\" must be a number")?;
-                    if num > 3 {
-                        return Err(anyhow!("\"tw\" must be within 0~3, got {}", num));
-                    }
+    // sometimes the log URL contains the actor info
+    let mut actor_opt = arg_actor;
 
-                    tw = Some(num);
-                }
-                _ => continue,
-            };
-
-            if log.is_some() && tw.is_some() {
-                break;
-            }
-        }
-
-        if log.is_none() {
-            return Err(anyhow!("log ID not found in URL {}", url));
-        }
-
-        (arg_tenhou_id.or(log), arg_actor.or(tw).or(Some(0)))
-    } else {
-        (arg_tenhou_id, arg_actor)
-    };
-
-    // get log reader, can be from a file, from stdin, or from HTTP stream
-    let log_reader: Box<dyn Read> = {
-        if let Some(tenhou_id) = tenhou_id_final.as_deref() {
-            let log_stream = download_tenhou_log(tenhou_id)
-                .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id))?;
-
-            // handle --tenhou-out
-            if let Some(tenhou_out) = arg_tenhou_out {
-                if tenhou_out != "-" {
-                    let tenhou_out_file = File::create(tenhou_out).with_context(|| {
-                        format!("failed to create download out file {:?}", tenhou_out)
-                    })?;
-                    Box::new(TeeReader::new(log_stream, tenhou_out_file))
-                } else {
-                    Box::new(TeeReader::new(log_stream, io::stdout()))
-                }
-            } else {
-                Box::new(log_stream)
-            }
+    let log_source = if let Some(filename) = arg_in_file {
+        if filename == "-" {
+            LogSource::Stdin
         } else {
-            match arg_in_file {
-                Some(in_file_path) if in_file_path != "-" => {
-                    let in_file = File::open(in_file_path).with_context(|| {
-                        format!("failed to open tenhou log file {:?}", in_file_path)
-                    })?;
-                    let in_file_reader = BufReader::new(in_file);
+            LogSource::File(filename.to_owned())
+        }
+    } else if let Some(id) = arg_tenhou_id {
+        LogSource::Tenhou(id)
+    } else if let Some(full_id) = arg_mjsoul_id {
+        let seps: Vec<_> = full_id.split('_').collect();
+        if seps.len() == 3 && seps[2] == "2" {
+            let real_id = mjsoul_deobfuse::decode_log_id(seps[0]);
+            LogSource::MahjongSoul(format!("{}_{}", real_id, seps[1]))
+        } else {
+            LogSource::MahjongSoul(full_id)
+        }
+    } else if let Some(url) = arg_url {
+        let u = Url::parse(url).context("failed to parse URL")?;
+        let host = u.host_str().context("url does not have host")?;
+        match host {
+            "tenhou.net" => {
+                let (mut log, mut tw) = (None, None);
+                for (k, v) in u.query_pairs() {
+                    match &*k {
+                        "log" => log = Some(v.into_owned()),
+                        "tw" => {
+                            let num: u8 = v.parse().context("\"tw\" must be a number")?;
+                            if num > 3 {
+                                return Err(anyhow!("\"tw\" must be within 0~3, got {}", num));
+                            }
 
-                    Box::new(in_file_reader)
+                            tw = Some(num);
+                        }
+                        _ => continue,
+                    };
+
+                    if log.is_some() && tw.is_some() {
+                        break;
+                    }
                 }
-                _ => Box::new(io::stdin()),
+
+                actor_opt = actor_opt.or(tw).or(Some(0));
+                match log {
+                    Some(id) => LogSource::Tenhou(id),
+                    None => return Err(anyhow!("tenhou log ID not found in URL {}", url)),
+                }
+            }
+
+            "game.mahjongsoul.com" /* JP */
+            | "mahjongsoul.game.yo-star.com" /* US */
+            | "game.maj-soul.com" /* steam */
+            | "www.majsoul.com" /* legacy CN */
+            | "majsoul.union-game.com" /* legacy CN */ => {
+                let mut paipu = None;
+                for (k, v) in u.query_pairs() {
+                    if k == "paipu" {
+                        paipu = Some(v.into_owned());
+                        break;
+                    }
+                }
+
+                match paipu {
+                    Some(full_id) => {
+                        let seps: Vec<_> = full_id.split('_').collect();
+                        if seps.len() == 3 && seps[2] == "2" {
+                            let real_id = mjsoul_deobfuse::decode_log_id(seps[0]);
+                            LogSource::MahjongSoul(format!("{}_{}", real_id, seps[1]))
+                        } else {
+                            LogSource::MahjongSoul(full_id)
+                        }
+                    }
+                    None => return Err(anyhow!("mahjong soul log ID not found in URL {}", url)),
+                }
+            }
+
+            _ => {
+                return Err(anyhow!(
+                    "specified url is neither from tenhou nor mahjong soul"
+                ))
             }
         }
+    } else {
+        LogSource::Stdin
     };
 
-    // parse tenhou log from reader
-    let begin_parse_log = chrono::Local::now();
-    log!("parsing tenhou log...");
-    let raw_log = {
-        let mut l: tenhou::RawLog =
-            json::from_reader(log_reader).context("failed to parse tenhou log")?;
+    // handle --tenhou-out
+    let tenhou_out = arg_tenhou_out
+        .map(|filename| -> Result<(Box<dyn Write>, _)> {
+            if filename == "-" {
+                Ok((Box::new(io::stdout()), "stdout".to_owned().into()))
+            } else {
+                let file = File::create(filename).with_context(|| {
+                    format!("failed to create tenhou output file {:?}", filename)
+                })?;
+                Ok((Box::new(file), filename.to_owned()))
+            }
+        })
+        .transpose()?;
 
-        if arg_anonymous {
-            l.hide_names();
+    // download and parse tenhou.net/6 log
+    let mut raw_log: tenhou::RawLog = match &log_source {
+        LogSource::Tenhou(id) => {
+            let body = download::tenhou_log(&id)
+                .with_context(|| format!("failed to download tenhou log {}", id))?;
+            if let Some((mut writer, filename)) = tenhou_out {
+                writer.write_all(body.as_bytes()).with_context(|| {
+                    format!("failed to write downloaded tenhou log to {:?}", filename)
+                })?;
+            }
+
+            json::from_str(&body).context("failed to parse tenhou.net/6 log")?
         }
+        LogSource::MahjongSoul(id) => {
+            let body = download::mahjong_soul_log(&id)
+                .with_context(|| format!("failed to download mahjong soul log {}", id))?;
+            if let Some((mut writer, filename)) = tenhou_out {
+                writer.write_all(body.as_bytes()).with_context(|| {
+                    format!("failed to write downloaded tenhou log to {:?}", filename)
+                })?;
+            }
 
-        // filter kyokus
-        if let Some(s) = arg_kyokus {
-            let filter = s.parse().context("failed to parse kyoku filter")?;
-            l.filter_kyokus(&filter);
+            let val: RawLogExt =
+                json::from_str(&body).context("failed to parse tenhou.net/6 log")?;
+
+            actor_opt = actor_opt.or(val.target_actor);
+            val.raw_log
         }
+        LogSource::File(filename) => {
+            let mut file = File::open(&filename)
+                .with_context(|| format!("failed to open tenhou.net/6 log file {:?}", filename))?;
+            let mut body = String::new();
+            file.read_to_string(&mut body)?;
 
-        l
+            json::from_str(&body).context("failed to parse tenhou.net/6 log")?
+        }
+        LogSource::Stdin => {
+            let stdin = io::stdin();
+            let handle = stdin.lock();
+            json::from_reader(handle).context("failed to parse tenhou.net/6 log")?
+        }
     };
+
+    // apply filters
+    if arg_anonymous {
+        raw_log.hide_names();
+    }
+    if let Some(expr) = arg_kyokus {
+        let filter = expr.parse().context("failed to parse kyoku filter")?;
+        raw_log.filter_kyokus(&filter);
+    }
+    let raw_log = raw_log; // mark as immutable
 
     // clone the parsed raw log for possible reuse (split)
     //
@@ -431,17 +516,17 @@ fn main() -> Result<()> {
     // convert from tenhou::Log to Vec<mjai::Event>
     let begin_convert_log = chrono::Local::now();
     log!("converting to mjai events...");
-    let events =
-        convlog::tenhou_to_mjai(&log).context("failed to convert tenhou log into mjai format")?;
+    let events = convlog::tenhou_to_mjai(&log)
+        .context("failed to convert tenhou.net/6 log into mjai format")?;
 
     // handle --mjai-out
     if let Some(mjai_out) = arg_mjai_out {
-        let mut w: Box<dyn Write> = if mjai_out != "-" {
+        let mut w: Box<dyn Write> = if mjai_out == "-" {
+            Box::from(io::stdout())
+        } else {
             let mjai_out_file = File::create(mjai_out)
                 .with_context(|| format!("failed to create mjai out file {:?}", mjai_out))?;
             Box::from(mjai_out_file)
-        } else {
-            Box::from(io::stdout())
         };
 
         for event in &events {
@@ -456,7 +541,11 @@ fn main() -> Result<()> {
     }
 
     // get actor
-    let actor = actor_final.context("actor is required")?;
+    let actor = actor_opt.context("actor is required")?;
+    if actor > 3 {
+        // just in case
+        return Err(anyhow!("must be within 0~3, got {}", actor));
+    }
 
     // get paths
     let akochan_dir = {
@@ -522,9 +611,9 @@ fn main() -> Result<()> {
         }
     };
 
-    log!("players: {:?}", log.names);
+    log!("players: {}", log.names.join(", "));
     log!("target: {}", log.names[actor as usize]);
-    log!("start review, this may take several minutes...");
+    log!("review has started, this may take several minutes...");
 
     // do the review
     let begin_review = chrono::Local::now();
@@ -539,33 +628,11 @@ fn main() -> Result<()> {
     };
     let review_result = review(&review_args).context("failed to review log")?;
 
-    // clean up
+    // clean up temp file
     if arg_pt.is_some() {
         fs::remove_file(&tactics_file_path)
             .with_context(|| format!("failed to clean up temp file {:?}", tactics_file_path))?;
     }
-
-    // determine whether the file can be opened after writing
-    let opanable_file = match arg_out_file {
-        Some(out_file_path) => {
-            if out_file_path != "-" {
-                Some(out_file_path.to_owned())
-            } else {
-                None
-            }
-        }
-        _ => {
-            let suffix = if arg_json { ".json" } else { ".html" };
-            if let Some(tenhou_id) = tenhou_id_final.as_deref() {
-                Some(OsString::from(format!(
-                    "{}&tw={}{}",
-                    tenhou_id, actor, suffix
-                )))
-            } else {
-                Some(OsString::from(format!("report{}", suffix)))
-            }
-        }
-    };
 
     // determine language
     let lang = match arg_lang {
@@ -574,26 +641,42 @@ fn main() -> Result<()> {
         _ => unreachable!(),
     };
 
-    // prepare output, can be a file or stdout
-    let mut out: Box<dyn Write> = if let Some(out_file_path) = &opanable_file {
-        let out_file = File::create(out_file_path)
-            .with_context(|| format!("failed to create HTML report file {:?}", out_file_path))?;
-        Box::new(out_file)
+    // determine output file
+    let out = if let Some(filename) = arg_out_file {
+        if filename == "-" {
+            ReportOutput::Stdout
+        } else {
+            ReportOutput::File(filename.to_owned())
+        }
     } else {
-        Box::new(io::stdout())
+        let suffix = if arg_json { ".json" } else { ".html" };
+        let mut filename = log_source.default_output_filename(actor);
+        filename.push(suffix);
+        ReportOutput::File(filename)
+    };
+
+    // prepare output, can be a file or stdout
+    let mut out_write: Box<dyn Write> = match &out {
+        ReportOutput::File(filename) => Box::new(
+            File::create(&filename)
+                .with_context(|| format!("failed to create output report file {:?}", filename))?,
+        ),
+        ReportOutput::Stdout => Box::new(io::stdout()),
     };
 
     let now = chrono::Local::now();
-    let parse_time = (begin_convert_log - begin_parse_log).to_std()?;
     let convert_time = (begin_review - begin_convert_log).to_std()?;
     let review_time = (now - begin_review).to_std()?;
     let meta = Metadata {
         pt: &tactics.jun_pt,
         game_length: &log.game_length.to_string(),
-        parse_time,
         convert_time,
         review_time,
-        tenhou_id: tenhou_id_final.as_deref(),
+        log_id: if arg_anonymous {
+            None
+        } else {
+            log_source.log_id()
+        },
         deviation_threshold: arg_deviation_threshold,
         total_reviewed: review_result.total_reviewed,
         total_tolerated: review_result.total_tolerated,
@@ -606,21 +689,18 @@ fn main() -> Result<()> {
     let view = View::new(&review_result.kyokus, actor, splited_raw_logs, &meta, lang);
     if arg_json {
         log!("writing output...");
-        json::to_writer(&mut out, &view).context("failed to write JSON result")?;
+        json::to_writer(&mut out_write, &view).context("failed to write JSON result")?;
     } else {
         log!("rendering output...");
-        view.render(&mut out)
+        view.render(&mut out_write)
             .context("failed to render HTML report")?;
     }
 
     // open the output page
     if !arg_json && !arg_no_open {
-        if let Some(out_file_path) = &opanable_file {
-            opener::open(out_file_path).with_context(|| {
-                format!(
-                    "failed to open rendered HTML report file {:?}",
-                    out_file_path
-                )
+        if let ReportOutput::File(filepath) = out {
+            opener::open(&filepath).with_context(|| {
+                format!("failed to open rendered HTML report file {:?}", filepath)
             })?;
         }
     }
@@ -639,12 +719,12 @@ fn batch_download(out_dir_name: &Path, tenhou_ids_file: &Path) -> Result<()> {
         let tenhou_id = line?;
 
         log!("downloading tenhou log {} ...", tenhou_id);
-        let log_stream = download_tenhou_log(&tenhou_id)
+        let body = download::tenhou_log(&tenhou_id)
             .with_context(|| format!("failed to download tenhou log ID={:?}", tenhou_id))?;
 
         log!("parsing tenhou log {} ...", tenhou_id);
         let raw_log: tenhou::RawLog =
-            json::from_reader(log_stream).context("failed to parse tenhou log")?;
+            json::from_str(&body).context("failed to parse tenhou log")?;
         let log = tenhou::Log::from(raw_log);
 
         log!("converting to mjai events...");
