@@ -2,6 +2,8 @@ use anyhow::anyhow;
 use anyhow::{Context, Result};
 use url::form_urlencoded::Serializer;
 
+const TENSOUL_ENDPOINT: &str = "https://tensoul.herokuapp.com/convert";
+
 pub fn tenhou_log(log_id: &str) -> Result<String> {
     let url = format!("https://tenhou.net/5/mjlog2json.cgi?{}", log_id);
 
@@ -26,7 +28,7 @@ pub fn mahjong_soul_log(log_id: &str) -> Result<String> {
     let mut ser = Serializer::new(String::new());
     ser.append_pair("id", log_id);
     let query = ser.finish();
-    let url = format!("https://tensoul.herokuapp.com/convert?{}", query);
+    let url = format!("{}?{}", TENSOUL_ENDPOINT, query);
 
     let mut req = ureq::get(&url);
     req.timeout_connect(20_000);

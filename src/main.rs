@@ -495,7 +495,6 @@ fn main() -> Result<()> {
         let filter = expr.parse().context("failed to parse kyoku filter")?;
         raw_log.filter_kyokus(&filter);
     }
-    let raw_log = raw_log; // mark as immutable
 
     // clone the parsed raw log for possible reuse (split)
     //
