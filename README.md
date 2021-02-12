@@ -7,7 +7,7 @@
 
 Review your Tenhou or Mahjong Soul (Jantama) log with mahjong AI akochan.
 
-[***Try it online!***](https://akochan.ekyu.moe) | [Demo result page](https://gh.ekyu.moe/ako-pages/2020030901gm-0029-0000-7a308c98-tw_1-pt_75_30_0_-90-dev_0.05.html)
+[***Try it online!***](https://akochan.ekyu.moe) | [Demo result page](https://gh.ekyu.moe/akochan-reviewer-demo.html)
 
 **This tool is still in early stages. There are still lots of features to be implemented, and breaking changes may be made at anytime. Suggestions and contributions are welcome. 日本語もおｋ.**
 
