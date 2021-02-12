@@ -4,13 +4,14 @@ html {
 body {
   max-width: 800px;
   margin: auto;
+  background: #f2f2f2;
 }
 
 h1 {
   font-size: 2em;
 }
 section {
-  background-color: #fff;
+  background-color: #f2f2f2;
 }
 section h1 {
   text-align: center;
@@ -25,7 +26,7 @@ a.chapter {
 
 .face, .back {
   filter: url(#inset-shadow);
-  fill: #fff;
+  fill: #f2f2f2;
 }
 .back {
   fill: #ffba1e;
@@ -122,7 +123,7 @@ details[open].collapse summary {
 .sticky {
   position: sticky;
   top: 0;
-  background-color: #fff;
+  background-color: #f2f2f2;
 }
 iframe.tenhou {
   width: 100%;

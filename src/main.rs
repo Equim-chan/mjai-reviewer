@@ -651,12 +651,12 @@ fn main() -> Result<()> {
     };
 
     let now = chrono::Local::now();
-    let convert_time = (begin_review - begin_convert_log).to_std()?;
+    let loading_time = (begin_review - begin_convert_log).to_std()?;
     let review_time = (now - begin_review).to_std()?;
     let meta = Metadata {
         pt: &tactics.jun_pt,
         game_length: &log.game_length.to_string(),
-        convert_time,
+        loading_time,
         review_time,
         log_id: if arg_anonymous {
             None

@@ -9,7 +9,7 @@ pub struct Metadata<'a> {
     pub log_id: Option<&'a str>,
 
     #[serde(with = "humantime_serde")]
-    pub convert_time: Duration,
+    pub loading_time: Duration,
     #[serde(with = "humantime_serde")]
     pub review_time: Duration,
 
