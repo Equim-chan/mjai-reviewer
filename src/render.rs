@@ -87,7 +87,7 @@ fn kyoku_to_string_en(args: &HashMap<String, Value>) -> tera::Result<Value> {
 
 #[allow(clippy::unnecessary_wraps)]
 fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {
-    let prec = args.get("prec").and_then(|p| p.as_u64()).unwrap_or(4);
+    let prec = args.get("prec").and_then(|p| p.as_u64()).unwrap_or(5);
 
     if let Some(num) = args.get("num").and_then(|n| n.as_f64()) {
         let pow = (10usize).pow(prec as u32) as f64;
