@@ -41,9 +41,11 @@
   {%- elif action[0].type == "kakan" or action[0].type == "daiminkan" -%}
     {% if lang == "en" %}&Kan{% else %}カン{% endif %}
     {{ self::render_pai(pai=action[0].pai) }}
-  {%- else -%} {# ankan #}
+  {%- elif action[0].type == "ankan" -%}
     {% if lang == "en" %}Kan{%- else %}カン{% endif %}
     {{ self::render_pai(pai=action[0].consumed[0]) }}
+  {%- elif action[0].type == "ryukyoku" -%}
+    {% if lang == "en" %}Ryuukyoku{%- else %}流局{% endif %}
   {%- endif -%}
 {%- endmacro render_action -%}
 

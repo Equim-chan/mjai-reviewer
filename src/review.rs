@@ -252,7 +252,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
 
         // skip the comparision when
         // 1. it is not our turn and there is no chance to naki
-        // 2. our state is reached and there is no chance to ankan
+        // 2. our state is reached and only tsumogiri is possible
         // 3. 九種九牌
         if actions.len() == 1 {
             if is_reached {
