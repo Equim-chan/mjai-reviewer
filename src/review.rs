@@ -253,14 +253,8 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
         // skip the comparision when
         // 1. it is not our turn and there is no chance to naki
         // 2. our state is reached and only tsumogiri is possible
-        // 3. 九種九牌
-        if actions.len() == 1 {
-            if is_reached {
-                continue;
-            }
-            if let Event::None | Event::Ryukyoku { .. } = actions[0].moves[0] {
-                continue;
-            }
+        if actions.len() == 1 && (is_reached || actions[0].moves[0] == Event::None) {
+            continue;
         }
 
         let expected_action = &actions[0].moves; // best move
@@ -485,9 +479,6 @@ fn compare_action(
     match expected_action[0] {
         Event::Dahai { pai, .. } => {
             match *actual {
-                // ignore 九種九牌
-                Event::Ryukyoku { .. } => Ok(true),
-
                 // ignore the difference of tsumogiri
                 Event::Dahai {
                     pai: actual_pai, ..
@@ -497,19 +488,14 @@ fn compare_action(
             }
         }
 
-        Event::Ankan { consumed, .. } => {
-            match *actual {
-                // ignore 九種九牌
-                Event::Ryukyoku { .. } => Ok(true),
+        Event::Ankan { consumed, .. } => match *actual {
+            Event::Ankan {
+                consumed: actual_consumed,
+                ..
+            } => Ok(actual_consumed == consumed),
 
-                Event::Ankan {
-                    consumed: actual_consumed,
-                    ..
-                } => Ok(actual_consumed == consumed),
-
-                _ => Ok(false),
-            }
-        }
+            _ => Ok(false),
+        },
 
         Event::Kakan { pai, .. } => match *actual {
             Event::Kakan {
@@ -553,9 +539,6 @@ fn compare_action(
 
         Event::Chi { consumed, .. } => {
             match *actual {
-                // ignore 九種九牌
-                Event::Ryukyoku { .. } => Ok(true),
-
                 Event::Tsumo { .. } => Ok(false),
 
                 Event::Chi {
@@ -599,9 +582,6 @@ fn compare_action(
 
         Event::Pon { consumed, .. } => {
             match *actual {
-                // ignore 九種九牌
-                Event::Ryukyoku { .. } => Ok(true),
-
                 Event::Tsumo { .. } => Ok(false),
 
                 Event::Pon {
@@ -645,9 +625,6 @@ fn compare_action(
 
         Event::Daiminkan { .. } => {
             match actual {
-                // ignore 九種九牌
-                Event::Ryukyoku { .. } => Ok(true),
-
                 Event::Tsumo { .. } => Ok(false),
 
                 Event::Daiminkan { .. } => Ok(true),
@@ -672,22 +649,17 @@ fn compare_action(
             }
         })),
 
-        Event::None => {
-            match actual {
-                // ignore 九種九牌
-                Event::Ryukyoku { .. } => Ok(true),
+        Event::None => match actual {
+            Event::Tsumo { .. } => Ok(true),
 
-                Event::Tsumo { .. } => Ok(true),
-
-                _ => {
-                    if let Some(actor) = actual.actor() {
-                        Ok(actor != target_actor)
-                    } else {
-                        Err(anyhow!("unexpected event: {:?}", actual))
-                    }
+            _ => {
+                if let Some(actor) = actual.actor() {
+                    Ok(actor != target_actor)
+                } else {
+                    Err(anyhow!("unexpected event: {:?}", actual))
                 }
             }
-        }
+        },
 
         _ => Err(anyhow!("unexpected event: {:?}", actual)),
     }
