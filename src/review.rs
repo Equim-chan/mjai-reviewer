@@ -540,7 +540,6 @@ fn compare_action(
         Event::Chi { consumed, .. } => {
             match *actual {
                 Event::Tsumo { .. } => Ok(false),
-
                 Event::Chi {
                     consumed: actual_consumed,
                     ..
@@ -583,7 +582,6 @@ fn compare_action(
         Event::Pon { consumed, .. } => {
             match *actual {
                 Event::Tsumo { .. } => Ok(false),
-
                 Event::Pon {
                     consumed: actual_consumed,
                     ..
@@ -611,7 +609,6 @@ fn compare_action(
                         ))
                     }
                 }
-
                 _ => {
                     if let Some(actor) = actual.actor() {
                         // interrupted by opponent's ron
@@ -626,9 +623,7 @@ fn compare_action(
         Event::Daiminkan { .. } => {
             match actual {
                 Event::Tsumo { .. } => Ok(false),
-
                 Event::Daiminkan { .. } => Ok(true),
-
                 _ => {
                     if let Some(actor) = actual.actor() {
                         // interrupted by opponent's ron
@@ -651,7 +646,6 @@ fn compare_action(
 
         Event::None => match actual {
             Event::Tsumo { .. } => Ok(true),
-
             _ => {
                 if let Some(actor) = actual.actor() {
                     Ok(actor != target_actor)
@@ -659,6 +653,11 @@ fn compare_action(
                     Err(anyhow!("unexpected event: {:?}", actual))
                 }
             }
+        },
+
+        Event::Ryukyoku { .. } => match actual {
+            Event::Ryukyoku { .. } => Ok(true),
+            _ => Ok(false),
         },
 
         _ => Err(anyhow!("unexpected event: {:?}", actual)),
