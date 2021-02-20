@@ -41,23 +41,16 @@ impl LogSource {
 
 #[inline]
 fn mjsoul_log_id_from_full(full_id: &str) -> &str {
-    if let Some(underscore_idx) = full_id.find('_') {
-        &full_id[..underscore_idx]
-    } else {
-        full_id
-    }
+    full_id.find('_').map(|i| &full_id[..i]).unwrap_or(full_id)
 }
 
 fn deobfuse_mjsoul_log_id(id: &str) -> String {
-    const ZERO: u8 = b'0';
-    const ALPHA: u8 = b'a';
-
     let mut ret = String::with_capacity(id.len());
     for (i, &code) in id.as_bytes().iter().enumerate() {
-        let o = if (ZERO..ZERO + 10).contains(&code) {
-            code - ZERO
-        } else if (ALPHA..ALPHA + 26).contains(&code) {
-            code - ALPHA + 10
+        let o = if (b'0'..=b'9').contains(&code) {
+            code - b'0'
+        } else if (b'a'..=b'z').contains(&code) {
+            code - b'a' + 10
         } else {
             ret.push(code as char);
             continue;
@@ -65,9 +58,9 @@ fn deobfuse_mjsoul_log_id(id: &str) -> String {
 
         let o = (o + 55 - i as u8) % 36;
         if o < 10 {
-            ret.push((o + ZERO) as char)
+            ret.push((o + b'0') as char)
         } else {
-            ret.push((o + ALPHA - 10) as char)
+            ret.push((o + b'a' - 10) as char)
         }
     }
 
