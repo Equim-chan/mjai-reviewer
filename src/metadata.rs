@@ -7,6 +7,7 @@ pub struct Metadata<'a> {
     pub pt: &'a [i32; 4],
     pub game_length: &'a str,
     pub log_id: Option<&'a str>,
+    pub use_placement_ev: bool,
 
     #[serde(with = "humantime_serde")]
     pub loading_time: Duration,

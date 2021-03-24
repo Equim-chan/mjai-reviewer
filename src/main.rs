@@ -663,6 +663,7 @@ fn main() -> Result<()> {
         } else {
             log_source.log_id()
         },
+        use_placement_ev: arg_use_placement_ev,
         deviation_threshold: arg_deviation_threshold,
         total_reviewed: review_result.total_reviewed,
         total_tolerated: review_result.total_tolerated,
