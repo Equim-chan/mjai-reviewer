@@ -209,6 +209,11 @@ impl RawLog {
     }
 
     #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.logs.is_empty()
+    }
+
+    #[inline]
     pub fn len(&self) -> usize {
         self.logs.len()
     }
