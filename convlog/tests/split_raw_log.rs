@@ -1,14 +1,17 @@
 mod testdata;
 
 use convlog::*;
-use testdata::TESTDATA;
+use testdata::{TestCase, TESTDATA};
 
 use serde_json as json;
 
 #[test]
 fn test_split_by_kyoku() {
-    TESTDATA.iter().for_each(|data| {
-        let raw_log: tenhou::RawLog = json::from_str(data).expect("failed to parse tenhou log");
+    TESTDATA.iter().for_each(|TestCase { description, data }| {
+        let raw_log: tenhou::RawLog = json::from_str(data).expect(&*format!(
+            "failed to parse tenhou log (case: {})",
+            description
+        ));
         let splited_raw_logs = raw_log.split_by_kyoku();
 
         let log = tenhou::Log::from(raw_log.clone());
@@ -23,8 +26,14 @@ fn test_split_by_kyoku() {
             ..log.clone()
         };
 
-        let mjai_log = tenhou_to_mjai(&log).expect("failed to transform tenhou log");
-        let mjai_log_joined = tenhou_to_mjai(&joined_logs).expect("failed to transform tenhou log");
+        let mjai_log = tenhou_to_mjai(&log).expect(&*format!(
+            "failed to transform tenhou (case: {})",
+            description
+        ));
+        let mjai_log_joined = tenhou_to_mjai(&joined_logs).expect(&*format!(
+            "failed to transform tenhou (case: {})",
+            description
+        ));
 
         assert_eq!(mjai_log, mjai_log_joined);
     });

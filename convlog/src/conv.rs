@@ -2,9 +2,12 @@ use crate::mjai;
 use crate::tenhou;
 use crate::Pai;
 
+use std::cmp::Ordering;
 use std::convert::TryFrom;
 
 use thiserror::Error;
+
+const REGRESSION_LIMIT: u8 = 10;
 
 #[derive(Debug, Error)]
 pub enum ConvertError {
@@ -37,24 +40,43 @@ pub type Result<T> = std::result::Result<T, ConvertError>;
 
 /// Transform a tenhou.net/6 format log into mjai format.
 pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
-    let mut events = vec![];
-
-    events.push(mjai::Event::StartGame {
+    let mut events = vec![mjai::Event::StartGame {
         kyoku_first: log.game_length as u8,
         aka_flag: log.has_aka,
         names: log.names.clone(),
-    });
+    }];
 
     for kyoku in &log.kyokus {
-        tenhou_kyoku_to_mjai_events(&mut events, kyoku)?;
+        let mut regressions = vec![];
+        let mut first_error = None;
+
+        let result = (0..REGRESSION_LIMIT).find_map(|_| {
+            match tenhou_kyoku_to_mjai_events(kyoku, &mut regressions) {
+                Ok(kyoku_events) => Some(kyoku_events),
+                Err(err) => {
+                    first_error.get_or_insert(err);
+                    None
+                }
+            }
+        });
+
+        if let Some(kyoku_events) = result {
+            events.extend(kyoku_events);
+        } else if let Some(err) = first_error {
+            return Err(err);
+        }
     }
 
     events.push(mjai::Event::EndGame);
-
     Ok(events)
 }
 
-fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) -> Result<()> {
+fn tenhou_kyoku_to_mjai_events(
+    kyoku: &tenhou::Kyoku,
+    regressions: &mut Vec<usize>,
+) -> Result<Vec<mjai::Event>> {
+    let mut events = vec![];
+
     // First of all, transform all takes and discards to events.
     let mut take_events = (0..4)
         .map(|i| {
@@ -105,7 +127,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
     });
 
     let mut actor = oya as usize;
-    loop {
+    for idx in 0.. {
         // Start to process a take event.
         let take = take_events[actor]
             .next()
@@ -140,7 +162,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
         // Check if the kyoku ends here, can be ryukyoku (九種九牌) or tsumo.
         // Here it simply checks if there is no more discard for current actor.
         if discard_events[actor].peek().is_none() {
-            end_kyoku(events, kyoku);
+            end_kyoku(&mut events, kyoku);
             break;
         }
 
@@ -163,7 +185,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
         events.push(discard.clone());
 
         // Process previous minkan.
-        if need_new_dora {
+        if matches!(discard, mjai::Event::Dahai { .. }) && need_new_dora {
             events.push(mjai::Event::Dora {
                 dora_marker: dora_feed
                     .next()
@@ -201,7 +223,7 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
         // Here it simply checks if there is no more take for every single
         // actor.
         if (0..4).all(|i| take_events[i].peek().is_none()) {
-            end_kyoku(events, kyoku);
+            end_kyoku(&mut events, kyoku);
             break;
         }
 
@@ -260,15 +282,46 @@ fn tenhou_kyoku_to_mjai_events(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Ky
             // will be impossible to take as he will have no chance to Pon from
             // the same actor without Tsumo first.
             //
-            // There is one exception to make the Chi legal though, if the actor
+            // There is one exception to make the Chi legal though - the actor
             // takes another naki (Pon) before him, which is rare to be seen and
             // it seems not possible to properly describe it on tenhou.net/6.
             .max_by_key(|&(_, naki_ord)| naki_ord)
             .map(|(i, _)| i)
+            .and_then(|i| {
+                // I really can't think of a better way.
+                //
+                // The regression here is to mitigate the
+                // real-naki-of-two-identical-discard problem. If you are
+                // wondering, check `confusing_nakis` in testdata and load them
+                // into tenhou.net/6 to see what the problem is.
+                match regressions.last() {
+                    Some(last) => match idx.cmp(last) {
+                        Ordering::Greater => {
+                            // new branch, most likely
+                            regressions.push(idx);
+                            Some(i)
+                        }
+                        Ordering::Equal => {
+                            // where the regression happens
+                            regressions.pop();
+                            None
+                        }
+                        Ordering::Less => {
+                            // not the time to perform regression
+                            Some(i)
+                        }
+                    },
+                    None => {
+                        // the first regression point
+                        regressions.push(idx);
+                        Some(i)
+                    }
+                }
+            })
             .unwrap_or((actor + 1) % 4);
     }
 
-    Ok(())
+    Ok(events)
 }
 
 fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<mjai::Event>> {

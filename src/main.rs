@@ -481,6 +481,9 @@ fn main() -> Result<()> {
     if let Some(expr) = arg_kyokus {
         let filter = expr.parse().context("failed to parse kyoku filter")?;
         raw_log.filter_kyokus(&filter);
+        if raw_log.len() == 0 {
+            return Err(anyhow!("no kyoku to review (invalid filter?)"));
+        }
     }
 
     // clone the parsed raw log for possible reuse (split)

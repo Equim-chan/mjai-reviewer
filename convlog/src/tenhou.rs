@@ -207,6 +207,11 @@ impl RawLog {
 
         ret
     }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.logs.len()
+    }
 }
 
 impl From<RawPartialLog<'_>> for RawLog {
