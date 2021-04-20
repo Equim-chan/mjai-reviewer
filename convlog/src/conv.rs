@@ -149,6 +149,8 @@ fn tenhou_kyoku_to_mjai_events(
         ],
     });
 
+    eprintln!("{}, {}", kyoku.meta.kyoku_num % 4 + 1, kyoku.meta.honba);
+
     let mut actor = oya as usize;
     for idx in 0.. {
         // Start to process a take event.
@@ -347,13 +349,15 @@ fn tenhou_kyoku_to_mjai_events(
                     Some(next) => {
                         let mut process_dahai = |pai| {
                             match pai {
-                                // tsumogiri
+                                // tsumogiri or daiminkan
                                 Pai::Unknown => {
+                                    eprintln!("{:?}", take_events[actor].peek());
                                     match take_events[actor].peek() {
-                                        // Fill the tsumogiri dahai with tsumo pai
+                                        // Fill the tsumogiri dahai with tsumo
+                                        // pai, see confusing_nakis_3.json
                                         Some(&mjai::Event::Tsumo { pai, .. }) => Some(pai),
-                                        // tsumogiri must have a tsumo, not pon or chi
-                                        _ => unreachable!(),
+                                        // daiminkan, see confusing_nakis_4.json
+                                        _ => None,
                                     }
                                 }
 
@@ -417,7 +421,7 @@ fn tenhou_kyoku_to_mjai_events(
                                 }
                             },
 
-                            // The next discard event is ankan or kakan
+                            // The next discard event is kan
                             _ => Some(i),
                         }
                     }
