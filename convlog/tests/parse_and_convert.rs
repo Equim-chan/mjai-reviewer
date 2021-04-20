@@ -15,6 +15,6 @@ fn test_parse_and_convert() {
             description
         ));
 
-        assert!(!mjai_log.is_empty());
+        assert!(mjai_log.len() >= 4);
     });
 }

@@ -2,12 +2,13 @@ use crate::mjai;
 use crate::tenhou;
 use crate::Pai;
 
-use std::cmp::Ordering;
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::convert::TryFrom;
 
 use thiserror::Error;
 
-const REGRESSION_LIMIT: u8 = 10;
+const BACKTRACK_LIMIT: u8 = 10;
 
 #[derive(Debug, Error)]
 pub enum ConvertError {
@@ -34,9 +35,27 @@ pub enum ConvertError {
 
     #[error("tsumogiri should not exist in discard table")]
     UnexpectedTsumogiri,
+
+    #[error(
+        "naki with unmatched target pai: \
+        at kyoku={kyoku} honba={honba} for actor={actor}: \
+        action={action:?}, expected dahai={last_dahai:?}"
+    )]
+    NakiWithUnmatchedTargetPai {
+        action: mjai::Event,
+        last_dahai: Pai,
+        kyoku: u8,
+        honba: u8,
+        actor: u8,
+    },
 }
 
 pub type Result<T> = std::result::Result<T, ConvertError>;
+
+#[derive(Debug)]
+struct BackTrack {
+    use_the_first_branch: bool,
+}
 
 /// Transform a tenhou.net/6 format log into mjai format.
 pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
@@ -46,12 +65,13 @@ pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
         names: log.names.clone(),
     }];
 
+    let mut backtracks = HashMap::new();
     for kyoku in &log.kyokus {
-        let mut regressions = vec![];
+        backtracks.clear();
         let mut first_error = None;
 
-        let result = (0..REGRESSION_LIMIT).find_map(|_| {
-            match tenhou_kyoku_to_mjai_events(kyoku, &mut regressions) {
+        let result = (0..BACKTRACK_LIMIT).find_map(|_| {
+            match tenhou_kyoku_to_mjai_events(kyoku, &mut backtracks) {
                 Ok(kyoku_events) => Some(kyoku_events),
                 Err(err) => {
                     first_error.get_or_insert(err);
@@ -73,7 +93,7 @@ pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
 
 fn tenhou_kyoku_to_mjai_events(
     kyoku: &tenhou::Kyoku,
-    regressions: &mut Vec<usize>,
+    backtracks: &mut HashMap<usize, BackTrack>,
 ) -> Result<Vec<mjai::Event>> {
     let mut events = vec![];
 
@@ -140,6 +160,14 @@ fn tenhou_kyoku_to_mjai_events(
         // Record the pai so that it can be filled in tsumogiri dahai.
         if let mjai::Event::Tsumo { pai, .. } = take {
             last_tsumo = pai;
+        } else if matches!(take.naki_info(), Some((_, pai)) if pai != last_dahai) {
+            return Err(ConvertError::NakiWithUnmatchedTargetPai {
+                action: take,
+                last_dahai,
+                kyoku: kyoku.meta.kyoku_num,
+                honba: kyoku.meta.honba,
+                actor: actor as u8,
+            });
         }
 
         // If a reach event was emitted before, set it as accepted now.
@@ -290,32 +318,49 @@ fn tenhou_kyoku_to_mjai_events(
             .and_then(|i| {
                 // I really can't think of a better way.
                 //
-                // The regression here is to mitigate the
+                // The backtrack here is to mitigate the
                 // real-naki-of-two-identical-discard problem. If you are
                 // wondering, check `confusing_nakis` in testdata and load them
                 // into tenhou.net/6 to see what the problem is.
-                match regressions.last() {
-                    Some(last) => match idx.cmp(last) {
-                        Ordering::Greater => {
-                            // new branch, most likely
-                            regressions.push(idx);
-                            Some(i)
+                if let Some(next) = discard_events[actor].peek() {
+                    let dahai = match *next {
+                        mjai::Event::Dahai { pai, .. } => Some(pai),
+                        mjai::Event::Reach { .. } => {
+                            let mut cloned = discard_events[actor].clone();
+                            if let Some(mjai::Event::Dahai { pai, .. }) = cloned.nth(1) {
+                                Some(pai)
+                            } else {
+                                None
+                            }
                         }
-                        Ordering::Equal => {
-                            // where the regression happens
-                            regressions.pop();
-                            None
+                        _ => None,
+                    };
+
+                    match dahai {
+                        Some(pai) if pai == last_dahai => {
+                            let entry = backtracks.entry(idx);
+                            match entry {
+                                Entry::Occupied(mut o) => {
+                                    let mut bc = o.get_mut();
+                                    if bc.use_the_first_branch {
+                                        bc.use_the_first_branch = false;
+                                    } else {
+                                        o.remove_entry();
+                                    }
+                                    None
+                                }
+                                Entry::Vacant(v) => {
+                                    v.insert(BackTrack {
+                                        use_the_first_branch: true,
+                                    });
+                                    Some(i)
+                                }
+                            }
                         }
-                        Ordering::Less => {
-                            // not the time to perform regression
-                            Some(i)
-                        }
-                    },
-                    None => {
-                        // the first regression point
-                        regressions.push(idx);
-                        Some(i)
+                        _ => Some(i),
                     }
+                } else {
+                    Some(i)
                 }
             })
             .unwrap_or((actor + 1) % 4);
