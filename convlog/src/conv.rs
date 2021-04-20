@@ -37,13 +37,15 @@ pub enum ConvertError {
     UnexpectedTsumogiri,
 
     #[error(
-        "naki with unmatched target pai: \
+        "unexpected naki: \
         at kyoku={kyoku} honba={honba} for actor={actor}: \
-        action={action:?}, expected dahai={last_dahai:?}"
+        action={action:?}, expected pai={last_dahai:?} \
+        from={last_actor:?}"
     )]
-    NakiWithUnmatchedTargetPai {
+    UnexpectedNaki {
         action: mjai::Event,
         last_dahai: Pai,
+        last_actor: Option<u8>,
         kyoku: u8,
         honba: u8,
         actor: u8,
@@ -123,6 +125,7 @@ fn tenhou_kyoku_to_mjai_events(
     let mut reach_flag: Option<usize> = None;
     let mut last_tsumo = Pai::Unknown;
     let mut last_dahai = Pai::Unknown;
+    let mut last_actor: Option<u8> = None;
     let mut need_new_dora = false;
 
     events.push(mjai::Event::StartKyoku {
@@ -160,14 +163,21 @@ fn tenhou_kyoku_to_mjai_events(
         // Record the pai so that it can be filled in tsumogiri dahai.
         if let mjai::Event::Tsumo { pai, .. } = take {
             last_tsumo = pai;
-        } else if matches!(take.naki_info(), Some((_, pai)) if pai != last_dahai) {
-            return Err(ConvertError::NakiWithUnmatchedTargetPai {
-                action: take,
-                last_dahai,
-                kyoku: kyoku.meta.kyoku_num,
-                honba: kyoku.meta.honba,
-                actor: actor as u8,
-            });
+        } else if let Some((target, pai)) = take.naki_info() {
+            if pai != last_dahai
+                || last_actor
+                    .filter(|&a| a != target || a == actor as u8)
+                    .is_some()
+            {
+                return Err(ConvertError::UnexpectedNaki {
+                    action: take,
+                    last_dahai,
+                    last_actor,
+                    kyoku: kyoku.meta.kyoku_num,
+                    honba: kyoku.meta.honba,
+                    actor: actor as u8,
+                });
+            }
         }
 
         // If a reach event was emitted before, set it as accepted now.
@@ -286,6 +296,7 @@ fn tenhou_kyoku_to_mjai_events(
         //
         // There are some edge cases when there are multiple candidates for the
         // next actor, which will be handled by the second pass of the filter.
+        last_actor = Some(actor as u8);
         actor = (0..4)
             .filter(|&i| i != actor)
             // First pass, filter the naki that takes the specific tile from the
@@ -322,45 +333,62 @@ fn tenhou_kyoku_to_mjai_events(
                 // real-naki-of-two-identical-discard problem. If you are
                 // wondering, check `confusing_nakis` in testdata and load them
                 // into tenhou.net/6 to see what the problem is.
-                if let Some(next) = discard_events[actor].peek() {
-                    let dahai = match *next {
-                        mjai::Event::Dahai { pai, .. } => Some(pai),
-                        mjai::Event::Reach { .. } => {
-                            let mut cloned = discard_events[actor].clone();
-                            if let Some(mjai::Event::Dahai { pai, .. }) = cloned.nth(1) {
-                                Some(pai)
-                            } else {
-                                None
-                            }
-                        }
-                        _ => None,
-                    };
-
-                    match dahai {
-                        Some(pai) if pai == last_dahai => {
-                            let entry = backtracks.entry(idx);
-                            match entry {
-                                Entry::Occupied(mut o) => {
-                                    let mut bc = o.get_mut();
-                                    if bc.use_the_first_branch {
-                                        bc.use_the_first_branch = false;
-                                    } else {
-                                        o.remove_entry();
-                                    }
-                                    None
+                match discard_events[actor].peek() {
+                    None => Some(i),
+                    Some(next) => {
+                        let dahai = match *next {
+                            mjai::Event::Dahai { pai, .. } => Some(pai),
+                            mjai::Event::Reach { .. } => {
+                                let mut cloned = discard_events[actor].clone();
+                                if let Some(mjai::Event::Dahai { pai, .. }) = cloned.nth(1) {
+                                    Some(pai)
+                                } else {
+                                    unreachable!()
                                 }
+                            }
+                            _ => None,
+                        };
+
+                        match dahai {
+                            // Condition: if the actor discard the exact same
+                            // pai at the next step, which leads to all the
+                            // confusions.
+                            Some(pai) if pai == last_dahai => match backtracks.entry(idx) {
                                 Entry::Vacant(v) => {
+                                    // Take the first dahai as the real naki.
                                     v.insert(BackTrack {
                                         use_the_first_branch: true,
                                     });
                                     Some(i)
                                 }
-                            }
+
+                                Entry::Occupied(mut o) => {
+                                    // This is where the backtrack happens.
+                                    let mut bc = o.get_mut();
+                                    if bc.use_the_first_branch {
+                                        // When this branch is reached, it is
+                                        // likely the first branch has failed,
+                                        // that is, the real naki doesn't seem
+                                        // to be the first discard, so we will
+                                        // try the second discard.
+                                        bc.use_the_first_branch = false;
+                                    } else {
+                                        // Both branches are wrong, backtrack
+                                        // further to the previous point of
+                                        // divergence.
+                                        //
+                                        // None is still returned here to
+                                        // trigger an error at the end of the
+                                        // outer function so that the backtrack
+                                        // can continue.
+                                        o.remove_entry();
+                                    }
+                                    None
+                                }
+                            },
+                            _ => Some(i),
                         }
-                        _ => Some(i),
                     }
-                } else {
-                    Some(i)
                 }
             })
             .unwrap_or((actor + 1) % 4);
