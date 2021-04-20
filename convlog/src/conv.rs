@@ -345,13 +345,31 @@ fn tenhou_kyoku_to_mjai_events(
                     None => Some(i),
 
                     Some(next) => {
+                        let mut process_dahai = |pai| {
+                            match pai {
+                                // tsumogiri
+                                Pai::Unknown => {
+                                    match take_events[actor].peek() {
+                                        // Fill the tsumogiri dahai with tsumo pai
+                                        Some(&mjai::Event::Tsumo { pai, .. }) => Some(pai),
+                                        // tsumogiri must have a tsumo, not pon or chi
+                                        _ => unreachable!(),
+                                    }
+                                }
+
+                                // tedashi, can be after chi or pon
+                                _ => Some(pai),
+                            }
+                        };
+
                         let dahai = match *next {
-                            mjai::Event::Dahai { pai, .. } => Some(pai),
+                            mjai::Event::Dahai { pai, .. } => process_dahai(pai),
                             mjai::Event::Reach { .. } => {
                                 let mut cloned = discard_events[actor].clone();
                                 if let Some(mjai::Event::Dahai { pai, .. }) = cloned.nth(1) {
-                                    Some(pai)
+                                    process_dahai(pai)
                                 } else {
+                                    // dahai is the only possible event after reach
                                     unreachable!()
                                 }
                             }

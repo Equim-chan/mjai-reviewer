@@ -29,6 +29,10 @@ pub const TESTDATA: &[TestCase] = &[
         data: include_str!("confusing_nakis_2.json"),
     },
     TestCase {
+        description: "confusing_nakis_3",
+        data: include_str!("confusing_nakis_3.json"),
+    },
+    TestCase {
         description: "double_kakan_then_chankan",
         data: include_str!("double_kakan_then_chankan.json"),
     },
