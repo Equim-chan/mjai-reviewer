@@ -326,15 +326,24 @@ fn tenhou_kyoku_to_mjai_events(
             // it seems not possible to properly describe it on tenhou.net/6.
             .max_by_key(|&(_, naki_ord)| naki_ord)
             .map(|(i, _)| i)
+            // Backtracking, mitigate the real-naki-of-two-identical-discard
+            // problem. If you are wondering, check `confusing_nakis` in
+            // testdata and load them into tenhou.net/6 to see what the problem
+            // is.
+            //
+            // Basically, the condition of such problem to occur is when actor A
+            // discard the exact same pai at the next step, without giving actor
+            // B any chance to tsumo, while actor B actually pon'd this pai. In
+            // the end, we are not sure which one of the two identical dahais
+            // actor A make is corresponding to actor B's pon.
+            //
+            // I really can't think of a better way to solve this.
             .and_then(|i| {
-                // I really can't think of a better way.
-                //
-                // The backtrack here is to mitigate the
-                // real-naki-of-two-identical-discard problem. If you are
-                // wondering, check `confusing_nakis` in testdata and load them
-                // into tenhou.net/6 to see what the problem is.
                 match discard_events[actor].peek() {
+                    // There is no more discard for this actor, so no chance for
+                    // the problem to exist.
                     None => Some(i),
+
                     Some(next) => {
                         let dahai = match *next {
                             mjai::Event::Dahai { pai, .. } => Some(pai),
@@ -346,6 +355,8 @@ fn tenhou_kyoku_to_mjai_events(
                                     unreachable!()
                                 }
                             }
+
+                            // The next discard event is ankan or kakan
                             _ => None,
                         };
 
@@ -355,7 +366,8 @@ fn tenhou_kyoku_to_mjai_events(
                             // confusions.
                             Some(pai) if pai == last_dahai => match backtracks.entry(idx) {
                                 Entry::Vacant(v) => {
-                                    // Take the first dahai as the real naki.
+                                    // Try taking the first dahai as the real
+                                    // naki.
                                     v.insert(BackTrack {
                                         use_the_first_branch: true,
                                     });
@@ -386,6 +398,8 @@ fn tenhou_kyoku_to_mjai_events(
                                     None
                                 }
                             },
+
+                            // The next discard event is ankan or kakan
                             _ => Some(i),
                         }
                     }
