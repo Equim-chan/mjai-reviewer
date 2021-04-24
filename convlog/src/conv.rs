@@ -149,8 +149,6 @@ fn tenhou_kyoku_to_mjai_events(
         ],
     });
 
-    eprintln!("{}, {}", kyoku.meta.kyoku_num % 4 + 1, kyoku.meta.honba);
-
     let mut actor = oya as usize;
     for idx in 0.. {
         // Start to process a take event.
@@ -351,7 +349,6 @@ fn tenhou_kyoku_to_mjai_events(
                             match pai {
                                 // tsumogiri or daiminkan
                                 Pai::Unknown => {
-                                    eprintln!("{:?}", take_events[actor].peek());
                                     match take_events[actor].peek() {
                                         // Fill the tsumogiri dahai with tsumo
                                         // pai, see confusing_nakis_3.json
