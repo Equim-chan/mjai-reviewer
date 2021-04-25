@@ -8,8 +8,6 @@ use std::convert::TryFrom;
 
 use thiserror::Error;
 
-const BACKTRACK_LIMIT: u8 = 10;
-
 #[derive(Debug, Error)]
 pub enum ConvertError {
     #[error("invalid naki string: {0:?}")]
@@ -18,18 +16,18 @@ pub enum ConvertError {
     #[error("invalid pai string: {0:?}")]
     InvalidPai(String),
 
-    #[error("insufficient dora indicators: at kyoku={kyoku} honba={honba}")]
+    #[error("insufficient dora indicators: at kyoku {kyoku} honba {honba}")]
     InsufficientDoraIndicators { kyoku: u8, honba: u8 },
 
     #[error(
         "insufficient take sequence size: \
-        at kyoku={kyoku} honba={honba} for actor={actor}"
+        at kyoku{kyoku} honba {honba} for actor {actor}"
     )]
     InsufficientTakes { kyoku: u8, honba: u8, actor: u8 },
 
     #[error(
         "insufficient discard sequence size: \
-        at kyoku={kyoku} honba={honba} for actor={actor}"
+        at kyoku{kyoku} honba {honba} for actor {actor}"
     )]
     InsufficientDiscards { kyoku: u8, honba: u8, actor: u8 },
 
@@ -38,9 +36,9 @@ pub enum ConvertError {
 
     #[error(
         "unexpected naki: \
-        at kyoku={kyoku} honba={honba} for actor={actor}: \
-        action={action:?}, expected pai={last_dahai:?} \
-        from={last_actor:?}"
+        at kyoku{kyoku} honba {honba} for actor {actor}: \
+        action {action:?}, expected pai {last_dahai:?} \
+        from {last_actor:?}"
     )]
     UnexpectedNaki {
         action: mjai::Event,
@@ -67,51 +65,31 @@ pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
         names: log.names.clone(),
     }];
 
-    let mut backtracks = HashMap::new();
     for kyoku in &log.kyokus {
-        backtracks.clear();
-        let mut first_error = None;
-
-        let result = (0..BACKTRACK_LIMIT).find_map(|_| {
-            match tenhou_kyoku_to_mjai_events(kyoku, &mut backtracks) {
-                Ok(kyoku_events) => Some(kyoku_events),
-                Err(err) => {
-                    first_error.get_or_insert(err);
-                    None
-                }
-            }
-        });
-
-        if let Some(kyoku_events) = result {
-            events.extend(kyoku_events);
-        } else if let Some(err) = first_error {
-            return Err(err);
-        }
+        let kyoku_events = tenhou_kyoku_to_mjai_events(kyoku)?;
+        events.extend(kyoku_events);
     }
 
     events.push(mjai::Event::EndGame);
     Ok(events)
 }
 
-fn tenhou_kyoku_to_mjai_events(
-    kyoku: &tenhou::Kyoku,
-    backtracks: &mut HashMap<usize, BackTrack>,
-) -> Result<Vec<mjai::Event>> {
-    let mut events = vec![];
-
+fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>> {
     // First of all, transform all takes and discards to events.
-    let mut take_events = (0..4)
-        .map(|i| {
-            take_action_to_events(i, &kyoku.action_tables[i as usize].takes)
-                .map(|ev| ev.into_iter().peekable())
+    let (take_events, discard_events): (Vec<_>, Vec<_>) = (0..4)
+        .map(|a| {
+            parse_takes_and_discards_to_mjai(
+                a,
+                &kyoku.action_tables[a as usize].takes,
+                &kyoku.action_tables[a as usize].discards,
+            )
         })
-        .collect::<Result<Vec<_>>>()?;
-    let mut discard_events = (0..4)
-        .map(|i| {
-            discard_action_to_events(i, &kyoku.action_tables[i as usize].discards)
-                .map(|ev| ev.into_iter().peekable())
-        })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
+        .unzip();
+
+    // Prepare for backtracks.
+    let mut backtracks = HashMap::new();
 
     // Then emit the events in order.
     let oya = kyoku.meta.kyoku_num % 4;
@@ -121,157 +99,127 @@ fn tenhou_kyoku_to_mjai_events(
         2 => Pai::West,
         _ => Pai::North,
     };
-    let mut dora_feed = kyoku.dora_indicators.clone().into_iter();
-    let mut reach_flag: Option<usize> = None;
-    let mut last_tsumo = Pai::Unknown;
-    let mut last_dahai = Pai::Unknown;
-    let mut last_actor: Option<u8> = None;
-    let mut need_new_dora = false;
 
-    events.push(mjai::Event::StartKyoku {
-        bakaze,
-        kyoku: kyoku.meta.kyoku_num % 4 + 1,
-        honba: kyoku.meta.honba,
-        kyotaku: kyoku.meta.kyotaku,
-        dora_marker: dora_feed
-            .next()
-            .ok_or(ConvertError::InsufficientDoraIndicators {
-                kyoku: kyoku.meta.kyoku_num,
-                honba: kyoku.meta.honba,
-            })?,
-        oya,
-        scores: kyoku.scoreboard,
-        tehais: [
-            kyoku.action_tables[0].haipai,
-            kyoku.action_tables[1].haipai,
-            kyoku.action_tables[2].haipai,
-            kyoku.action_tables[3].haipai,
-        ],
-    });
+    let attempt = |backtracks: &mut HashMap<Pai, BackTrack>| -> Result<Vec<mjai::Event>> {
+        let mut events = vec![];
 
-    let mut actor = oya as usize;
-    for idx in 0.. {
-        // Start to process a take event.
-        let take = take_events[actor]
-            .next()
-            .ok_or(ConvertError::InsufficientTakes {
-                kyoku: kyoku.meta.kyoku_num,
-                honba: kyoku.meta.honba,
-                actor: actor as u8,
-            })?;
-
-        // Record the pai so that it can be filled in tsumogiri dahai.
-        if let mjai::Event::Tsumo { pai, .. } = take {
-            last_tsumo = pai;
-        } else if let Some((target, pai)) = take.naki_info() {
-            if pai != last_dahai
-                || last_actor
-                    .filter(|&a| a != target || a == actor as u8)
-                    .is_some()
-            {
-                return Err(ConvertError::UnexpectedNaki {
-                    action: take,
-                    last_dahai,
-                    last_actor,
+        let mut dora_feed = kyoku.dora_indicators.clone().into_iter();
+        events.push(mjai::Event::StartKyoku {
+            bakaze,
+            kyoku: kyoku.meta.kyoku_num % 4 + 1,
+            honba: kyoku.meta.honba,
+            kyotaku: kyoku.meta.kyotaku,
+            dora_marker: dora_feed
+                .next()
+                .ok_or(ConvertError::InsufficientDoraIndicators {
                     kyoku: kyoku.meta.kyoku_num,
                     honba: kyoku.meta.honba,
-                    actor: actor as u8,
-                });
-            }
-        }
+                })?,
+            oya,
+            scores: kyoku.scoreboard,
+            tehais: [
+                kyoku.action_tables[0].haipai,
+                kyoku.action_tables[1].haipai,
+                kyoku.action_tables[2].haipai,
+                kyoku.action_tables[3].haipai,
+            ],
+        });
 
-        // If a reach event was emitted before, set it as accepted now.
-        if let Some(actor) = reach_flag.take() {
-            events.push(mjai::Event::ReachAccepted { actor: actor as u8 });
-        }
+        let mut discard_sets: Vec<_> = (0..4)
+            .map(|a| {
+                let mut m = HashMap::new();
+                for discard in &discard_events[a] {
+                    if let mjai::Event::Dahai { pai, .. } = *discard {
+                        m.entry(pai).and_modify(|v| *v += 1).or_insert(1);
+                    }
+                }
+                m
+            })
+            .collect();
+        let mut take_i = [0; 4];
+        let mut discard_i = [0; 4];
 
-        // If the take is daiminkan, skip one discard and immediately consume
-        // the next take event from the same actor.
-        if let mjai::Event::Daiminkan { .. } = take {
-            events.push(take);
-            discard_events[actor].next();
-            need_new_dora = true;
-            continue;
-        }
+        let mut reach_flag: Option<usize> = None;
+        let mut last_dahai = Pai::Unknown;
+        let mut last_actor: Option<u8> = None;
+        let mut need_new_dora = false;
 
-        // Emit the take event.
-        events.push(take);
+        let mut actor = oya as usize;
 
-        // Check if the kyoku ends here, can be ryukyoku (九種九牌) or tsumo.
-        // Here it simply checks if there is no more discard for current actor.
-        if discard_events[actor].peek().is_none() {
-            end_kyoku(&mut events, kyoku);
-            break;
-        }
-
-        // Start to process a discard event.
-        let discard = discard_events[actor]
-            .next()
-            .ok_or(ConvertError::InsufficientDiscards {
-                kyoku: kyoku.meta.kyoku_num,
-                honba: kyoku.meta.honba,
-                actor: actor as u8,
-            })?
-            .fill_possible_tsumogiri(last_tsumo);
-
-        // Record the pai to check if someone naki it.
-        if let mjai::Event::Dahai { pai, .. } = discard {
-            last_dahai = pai;
-        }
-
-        // Emit the discard event.
-        events.push(discard.clone());
-
-        // Process previous minkan.
-        if matches!(discard, mjai::Event::Dahai { .. }) && need_new_dora {
-            events.push(mjai::Event::Dora {
-                dora_marker: dora_feed
-                    .next()
-                    .ok_or(ConvertError::InsufficientDoraIndicators {
+        loop {
+            // Start to process a take event.
+            let take =
+                &*take_events[actor]
+                    .get(take_i[actor])
+                    .ok_or(ConvertError::InsufficientTakes {
                         kyoku: kyoku.meta.kyoku_num,
                         honba: kyoku.meta.honba,
-                    })?,
-            });
-            need_new_dora = false;
-        }
+                        actor: actor as u8,
+                    })?;
+            take_i[actor] += 1;
 
-        // Process reach declare.
-        //
-        // A reach declare consists of two events (reach
-        // + dahai).
-        if let mjai::Event::Reach { .. } = discard {
-            reach_flag = Some(actor);
+            if let Some((target, pai)) = take.naki_info() {
+                if pai != last_dahai
+                    || last_actor
+                        .filter(|&a| a != target || a == actor as u8)
+                        .is_some()
+                {
+                    return Err(ConvertError::UnexpectedNaki {
+                        action: take.clone(),
+                        last_dahai,
+                        last_actor,
+                        kyoku: kyoku.meta.kyoku_num,
+                        honba: kyoku.meta.honba,
+                        actor: actor as u8,
+                    });
+                }
+            }
 
-            let dahai = discard_events[actor]
-                .next()
+            // If a reach event was emitted before, set it as accepted now.
+            if let Some(actor) = reach_flag.take() {
+                events.push(mjai::Event::ReachAccepted { actor: actor as u8 });
+            }
+
+            // If the take is daiminkan, immediately consume the next take event
+            // from the same actor.
+            if let mjai::Event::Daiminkan { .. } = *take {
+                events.push(take.clone());
+                need_new_dora = true;
+                continue;
+            }
+
+            // Emit the take event.
+            events.push(take.clone());
+
+            // Check if the kyoku ends here, can be ryukyoku (九種九牌) or tsumo.
+            // Here it simply checks if there is no more discard for current actor.
+            if discard_i[actor] >= discard_events[actor].len() {
+                end_kyoku(&mut events, kyoku);
+                break;
+            }
+
+            // Start to process a discard event.
+            let discard = discard_events[actor]
+                .get(discard_i[actor])
                 .ok_or(ConvertError::InsufficientDiscards {
                     kyoku: kyoku.meta.kyoku_num,
                     honba: kyoku.meta.honba,
                     actor: actor as u8,
                 })?
-                .fill_possible_tsumogiri(last_tsumo);
-            if let mjai::Event::Dahai { pai, .. } = dahai {
+                .clone();
+            discard_i[actor] += 1;
+
+            // Record the pai to check if someone naki it.
+            if let mjai::Event::Dahai { pai, .. } = discard {
                 last_dahai = pai;
+                discard_sets[actor].entry(pai).and_modify(|v| *v -= 1);
             }
-            events.push(dahai);
-        }
 
-        // Check if the kyoku ends here, can be ryukyoku or ron.
-        //
-        // Here it simply checks if there is no more take for every single
-        // actor.
-        if (0..4).all(|i| take_events[i].peek().is_none()) {
-            end_kyoku(&mut events, kyoku);
-            break;
-        }
+            // Emit the discard event.
+            events.push(discard.clone());
 
-        // Check if the last discard was ankan or kakan.
-        //
-        // For kan, it will immediately consume the next take event from the
-        // same actor.
-        match discard {
-            mjai::Event::Ankan { .. } => {
-                // ankan triggers a dora event immediately.
+            // Process previous minkan.
+            if matches!(discard, mjai::Event::Dahai { .. }) && need_new_dora {
                 events.push(mjai::Event::Dora {
                     dora_marker: dora_feed.next().ok_or(
                         ConvertError::InsufficientDoraIndicators {
@@ -280,154 +228,229 @@ fn tenhou_kyoku_to_mjai_events(
                         },
                     )?,
                 });
-                continue;
+                need_new_dora = false;
             }
-            mjai::Event::Kakan { .. } => {
-                need_new_dora = true;
-                continue;
+
+            // Process reach declare.
+            //
+            // A reach declare consists of two events (reach
+            // + dahai).
+            if let mjai::Event::Reach { .. } = discard {
+                reach_flag = Some(actor);
+
+                let dahai = discard_events[actor]
+                    .get(discard_i[actor])
+                    .ok_or(ConvertError::InsufficientDiscards {
+                        kyoku: kyoku.meta.kyoku_num,
+                        honba: kyoku.meta.honba,
+                        actor: actor as u8,
+                    })?
+                    .clone();
+                discard_i[actor] += 1;
+                if let mjai::Event::Dahai { pai, .. } = dahai {
+                    last_dahai = pai;
+                    discard_sets[actor].entry(pai).and_modify(|v| *v -= 1);
+                }
+                events.push(dahai);
             }
-            _ => (),
+
+            // Check if the kyoku ends here, can be ryukyoku or ron.
+            //
+            // Here it simply checks if there is no more take for every single
+            // actor.
+            if (0..4).all(|a| take_i[a] >= take_events[a].len()) {
+                end_kyoku(&mut events, kyoku);
+                break;
+            }
+
+            // Check if the last discard was ankan or kakan.
+            //
+            // For kan, it will immediately consume the next take event from the
+            // same actor.
+            match discard {
+                mjai::Event::Ankan { .. } => {
+                    // ankan triggers a dora event immediately.
+                    events.push(mjai::Event::Dora {
+                        dora_marker: dora_feed.next().ok_or(
+                            ConvertError::InsufficientDoraIndicators {
+                                kyoku: kyoku.meta.kyoku_num,
+                                honba: kyoku.meta.honba,
+                            },
+                        )?,
+                    });
+                    continue;
+                }
+                mjai::Event::Kakan { .. } => {
+                    need_new_dora = true;
+                    continue;
+                }
+                _ => (),
+            }
+
+            // Decide who is the next actor.
+            //
+            // For most of the time, if someone takes taki of the previous discard,
+            // then it will be him, otherwise it will be the shimocha.
+            //
+            // There are some edge cases when there are multiple candidates for the
+            // next actor, which will be handled by the second pass of the filter.
+            last_actor = Some(actor as u8);
+            actor = (0..4)
+                .filter(|&a| a != actor)
+                // First pass, filter the naki that takes the specific tile from the
+                // specific target.
+                .filter_map(|a| {
+                    if let Some(take) = take_events[a].get(take_i[a]) {
+                        if let Some((target, pai)) = take.naki_info() {
+                            if target == (actor as u8) && pai == last_dahai {
+                                return Some((a, take.naki_to_ord()));
+                            }
+                        }
+                    }
+
+                    None
+                })
+                // Second pass, compare the nakis and filter out the final
+                // candidate.
+                //
+                // If a Chi and a Pon that calls the same tile from the same actor
+                // can take place at the same time, then Pon must be the first to
+                // take place, because if the Chi is the first instead, then the Pon
+                // will be impossible to take as he will have no chance to Pon from
+                // the same actor without Tsumo first.
+                //
+                // There is one exception to make the Chi legal though - the actor
+                // takes another naki (Pon) before him, which is rare to be seen and
+                // it seems not possible to properly describe it on tenhou.net/6.
+                .max_by_key(|&(_, naki_ord)| naki_ord)
+                .map(|(a, _)| a)
+                // Backtracking, mitigate the real-naki-of-two-identical-discard
+                // problem. If you are wondering, check `confusing_nakis` in
+                // testdata and load them into tenhou.net/6 to see what the problem
+                // is.
+                //
+                // Basically, the condition of such problem to occur is when actor A
+                // discard the exact same pai at the next step, without giving actor
+                // B any chance to tsumo, while actor B actually pon'd this pai. In
+                // the end, we are not sure which one of the two identical dahais
+                // actor A make is corresponding to actor B's pon.
+                //
+                // I really can't think of a better way to solve this.
+                .and_then(|a| {
+                    if discard_i[actor] >= discard_events[actor].len() {
+                        // There is no more discard for this actor, so no chance for
+                        // the problem to exist.
+                        return Some(a);
+                    }
+
+                    let has_same_dahai_in_future = discard_sets[actor]
+                        .get(&last_dahai)
+                        .filter(|&&v| v > 0)
+                        .is_some();
+                    if !has_same_dahai_in_future {
+                        // no candidate
+                        return Some(a);
+                    }
+
+                    match backtracks.entry(last_dahai) {
+                        Entry::Vacant(v) => {
+                            // Try taking the first dahai as the real naki.
+                            v.insert(BackTrack {
+                                use_the_first_branch: true,
+                            });
+                            Some(a)
+                        }
+                        Entry::Occupied(mut o) => {
+                            // This is where the backtrack happens.
+                            let mut bc = o.get_mut();
+                            if bc.use_the_first_branch {
+                                // When this branch is reached, it is likely the
+                                // first branch has failed, that is, the real naki
+                                // doesn't seem to be the first discard, so we will
+                                // try the second discard.
+                                bc.use_the_first_branch = false;
+                            } else {
+                                // Both branches are wrong, backtrack further to the
+                                // previous point of divergence.
+                                //
+                                // None is still returned here to trigger an error
+                                // at the end of the outer function so that the
+                                // backtrack can continue.
+                                o.remove_entry();
+                            }
+                            None
+                        }
+                    }
+                })
+                .unwrap_or((actor + 1) % 4);
         }
 
-        // Decide who is the next actor.
-        //
-        // For most of the time, if someone takes taki of the previous discard,
-        // then it will be him, otherwise it will be the shimocha.
-        //
-        // There are some edge cases when there are multiple candidates for the
-        // next actor, which will be handled by the second pass of the filter.
-        last_actor = Some(actor as u8);
-        actor = (0..4)
-            .filter(|&i| i != actor)
-            // First pass, filter the naki that takes the specific tile from the
-            // specific target.
-            .filter_map(|i| {
-                if let Some(take) = take_events[i].peek() {
-                    if let Some((target, pai)) = take.naki_info() {
-                        if target == (actor as u8) && pai == last_dahai {
-                            return Some((i, take.naki_to_ord()));
-                        }
-                    }
+        Ok(events)
+    };
+
+    let mut first_error = None;
+    loop {
+        match attempt(&mut backtracks) {
+            Ok(events) => return Ok(events),
+            Err(err) => {
+                first_error = first_error.or(Some(err));
+                if backtracks.is_empty() {
+                    return Err(first_error.unwrap());
                 }
-
-                None
-            })
-            // Second pass, compare the nakis and filter out the final
-            // candidate.
-            //
-            // If a Chi and a Pon that calls the same tile from the same actor
-            // can take place at the same time, then Pon must be the first to
-            // take place, because if the Chi is the first instead, then the Pon
-            // will be impossible to take as he will have no chance to Pon from
-            // the same actor without Tsumo first.
-            //
-            // There is one exception to make the Chi legal though - the actor
-            // takes another naki (Pon) before him, which is rare to be seen and
-            // it seems not possible to properly describe it on tenhou.net/6.
-            .max_by_key(|&(_, naki_ord)| naki_ord)
-            .map(|(i, _)| i)
-            // Backtracking, mitigate the real-naki-of-two-identical-discard
-            // problem. If you are wondering, check `confusing_nakis` in
-            // testdata and load them into tenhou.net/6 to see what the problem
-            // is.
-            //
-            // Basically, the condition of such problem to occur is when actor A
-            // discard the exact same pai at the next step, without giving actor
-            // B any chance to tsumo, while actor B actually pon'd this pai. In
-            // the end, we are not sure which one of the two identical dahais
-            // actor A make is corresponding to actor B's pon.
-            //
-            // I really can't think of a better way to solve this.
-            .and_then(|i| {
-                match discard_events[actor].peek() {
-                    // There is no more discard for this actor, so no chance for
-                    // the problem to exist.
-                    None => Some(i),
-
-                    Some(next) => {
-                        let mut process_dahai = |pai| {
-                            match pai {
-                                // tsumogiri or daiminkan
-                                Pai::Unknown => {
-                                    match take_events[actor].peek() {
-                                        // Fill the tsumogiri dahai with tsumo
-                                        // pai, see confusing_nakis_3.json
-                                        Some(&mjai::Event::Tsumo { pai, .. }) => Some(pai),
-                                        // daiminkan, see confusing_nakis_4.json
-                                        _ => None,
-                                    }
-                                }
-
-                                // tedashi, can be after chi or pon
-                                _ => Some(pai),
-                            }
-                        };
-
-                        let dahai = match *next {
-                            mjai::Event::Dahai { pai, .. } => process_dahai(pai),
-                            mjai::Event::Reach { .. } => {
-                                let mut cloned = discard_events[actor].clone();
-                                if let Some(mjai::Event::Dahai { pai, .. }) = cloned.nth(1) {
-                                    process_dahai(pai)
-                                } else {
-                                    // dahai is the only possible event after reach
-                                    unreachable!()
-                                }
-                            }
-
-                            // The next discard event is ankan or kakan
-                            _ => None,
-                        };
-
-                        match dahai {
-                            // Condition: if the actor discard the exact same
-                            // pai at the next step, which leads to all the
-                            // confusions.
-                            Some(pai) if pai == last_dahai => match backtracks.entry(idx) {
-                                Entry::Vacant(v) => {
-                                    // Try taking the first dahai as the real
-                                    // naki.
-                                    v.insert(BackTrack {
-                                        use_the_first_branch: true,
-                                    });
-                                    Some(i)
-                                }
-
-                                Entry::Occupied(mut o) => {
-                                    // This is where the backtrack happens.
-                                    let mut bc = o.get_mut();
-                                    if bc.use_the_first_branch {
-                                        // When this branch is reached, it is
-                                        // likely the first branch has failed,
-                                        // that is, the real naki doesn't seem
-                                        // to be the first discard, so we will
-                                        // try the second discard.
-                                        bc.use_the_first_branch = false;
-                                    } else {
-                                        // Both branches are wrong, backtrack
-                                        // further to the previous point of
-                                        // divergence.
-                                        //
-                                        // None is still returned here to
-                                        // trigger an error at the end of the
-                                        // outer function so that the backtrack
-                                        // can continue.
-                                        o.remove_entry();
-                                    }
-                                    None
-                                }
-                            },
-
-                            // The next discard event is kan
-                            _ => Some(i),
-                        }
-                    }
-                }
-            })
-            .unwrap_or((actor + 1) % 4);
+            }
+        };
     }
+}
 
-    Ok(events)
+fn parse_takes_and_discards_to_mjai(
+    actor: u8,
+    takes: &[tenhou::ActionItem],
+    discards: &[tenhou::ActionItem],
+) -> Result<(Vec<mjai::Event>, Vec<mjai::Event>)> {
+    let mjai_takes = take_action_to_events(actor, takes)?;
+    let mut mjai_discards = discard_action_to_events(actor, discards)?;
+    finalize_discards(&mjai_takes, &mut mjai_discards);
+
+    Ok((mjai_takes, mjai_discards))
+}
+
+/// 1. fill in possible tsumogiri pais
+/// 2. skip discards of daiminkans
+fn finalize_discards(takes: &[mjai::Event], discards: &mut Vec<mjai::Event>) {
+    let mut di = 0;
+    for take in takes {
+        if di >= discards.len() {
+            break;
+        }
+
+        if matches!(discards[di], mjai::Event::Reach { .. }) {
+            di += 1;
+        }
+
+        if let mjai::Event::Dahai {
+            pai,
+            tsumogiri,
+            actor,
+        } = discards[di]
+        {
+            if tsumogiri {
+                if let mjai::Event::Tsumo { pai: tsumo, .. } = *take {
+                    discards[di] = mjai::Event::Dahai {
+                        pai: tsumo,
+                        tsumogiri,
+                        actor,
+                    }
+                }
+            } else if pai == Pai::Unknown {
+                // `take` is daiminkan, skip one discard and immediately consume
+                // the next take.
+                discards.remove(di);
+                continue;
+            }
+        };
+
+        di += 1;
+    }
 }
 
 fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<mjai::Event>> {
@@ -723,22 +746,4 @@ fn pai_from_bytes(b: &[u8]) -> Result<Pai> {
         .map_err(|_| ConvertError::InvalidPai(s.clone().into_owned()))?;
 
     Pai::try_from(id).map_err(|_| ConvertError::InvalidPai(s.clone().into_owned()))
-}
-
-impl mjai::Event {
-    #[inline]
-    fn fill_possible_tsumogiri(self, last_tsumo: Pai) -> Self {
-        match self {
-            mjai::Event::Dahai {
-                actor,
-                tsumogiri: true,
-                ..
-            } => mjai::Event::Dahai {
-                actor,
-                pai: last_tsumo,
-                tsumogiri: true,
-            },
-            _ => self,
-        }
-    }
 }
