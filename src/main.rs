@@ -570,8 +570,10 @@ fn main() -> Result<()> {
         // opt-in pt
         let pt_opt = if arg_use_placement_ev {
             Some(vec![-1, -2, -3, -4])
+        } else if let Some(pt) = arg_pt {
+            Some(pt.split(',').map(|p| p.parse::<i32>().unwrap()).collect())
         } else {
-            arg_pt.map(|pt| pt.split(',').map(|p| p.parse::<i32>().unwrap()).collect())
+            None
         };
 
         if let Some(pt) = pt_opt {

@@ -3,15 +3,12 @@ use crate::pai::Pai;
 use std::fmt;
 
 use serde::de::Error;
-use serde::ser::SerializeSeq;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_with::{serde_as, DisplayFromStr};
+use serde::{Deserialize, Deserializer, Serialize};
 
 /// Describes an event in mjlog format.
 ///
 /// Note that this is a simplified version of mjlog, but it is sufficient for
 /// akochan to read.
-#[serde_as]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
@@ -24,27 +21,27 @@ pub enum Event {
         names: [String; 4],
     },
     StartKyoku {
-        #[serde_as(as = "DisplayFromStr")]
+        #[serde(deserialize_with = "Pai::deserialize_mjai_str")]
         bakaze: Pai,
-        #[serde_as(as = "DisplayFromStr")]
+        #[serde(deserialize_with = "Pai::deserialize_mjai_str")]
         dora_marker: Pai,
         kyoku: u8, // counts from 1
         honba: u8,
         kyotaku: u8,
         oya: u8,
         scores: [i32; 4],
-        #[serde_as(as = "[[DisplayFromStr; 13]; 4]")]
+        #[serde(deserialize_with = "deserialize_tehais_from_str")]
         tehais: [[Pai; 13]; 4],
     },
 
     Tsumo {
         actor: u8,
-        #[serde_as(as = "DisplayFromStr")]
+        #[serde(deserialize_with = "Pai::deserialize_mjai_str")]
         pai: Pai,
     },
     Dahai {
         actor: u8,
-        #[serde_as(as = "DisplayFromStr")]
+        #[serde(deserialize_with = "Pai::deserialize_mjai_str")]
         pai: Pai,
         tsumogiri: bool,
     },
@@ -52,27 +49,27 @@ pub enum Event {
     Chi {
         actor: u8,
         target: u8,
-        #[serde_as(as = "DisplayFromStr")]
+        #[serde(deserialize_with = "Pai::deserialize_mjai_str")]
         pai: Pai,
         consumed: Consumed2,
     },
     Pon {
         actor: u8,
         target: u8,
-        #[serde_as(as = "DisplayFromStr")]
+        #[serde(deserialize_with = "Pai::deserialize_mjai_str")]
         pai: Pai,
         consumed: Consumed2,
     },
     Daiminkan {
         actor: u8,
         target: u8,
-        #[serde_as(as = "DisplayFromStr")]
+        #[serde(deserialize_with = "Pai::deserialize_mjai_str")]
         pai: Pai,
         consumed: Consumed3,
     },
     Kakan {
         actor: u8,
-        #[serde_as(as = "DisplayFromStr")]
+        #[serde(deserialize_with = "Pai::deserialize_mjai_str")]
         pai: Pai,
         consumed: Consumed3,
     },
@@ -81,7 +78,7 @@ pub enum Event {
         consumed: Consumed4,
     },
     Dora {
-        #[serde_as(as = "DisplayFromStr")]
+        #[serde(deserialize_with = "Pai::deserialize_mjai_str")]
         dora_marker: Pai,
     },
 
@@ -121,7 +118,7 @@ macro_rules! make_pai_array_from_string_array {
 
 macro_rules! build_consumed_struct {
     ($name:ident; $n:expr; $($index:expr),*) => {
-        #[derive(Clone, Copy, PartialEq, Eq)]
+        #[derive(Clone, Copy, Serialize, PartialEq, Eq)]
         pub struct $name([Pai; $n]);
 
         impl fmt::Debug for $name {
@@ -137,20 +134,6 @@ macro_rules! build_consumed_struct {
                 let mut list = pais;
                 list.sort_unstable_by_key(|pai| pai.as_ord());
                 Self(list)
-            }
-        }
-
-        impl Serialize for $name {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
-            {
-                let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
-                self.0
-                    .iter()
-                    .map(|p| p.to_string())
-                    .try_for_each(|p| seq.serialize_element(&p))?;
-                seq.end()
             }
         }
 
@@ -177,6 +160,20 @@ macro_rules! build_consumed_struct {
 build_consumed_struct!(Consumed2; 2; 0, 1);
 build_consumed_struct!(Consumed3; 3; 0, 1, 2);
 build_consumed_struct!(Consumed4; 4; 0, 1, 2, 3);
+
+fn deserialize_tehais_from_str<'de, D>(deserializer: D) -> Result<[[Pai; 13]; 4], D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = <[[String; 13]; 4]>::deserialize(deserializer)?;
+    let (s0, s1, s2, s3) = (&s[0], &s[1], &s[2], &s[3]);
+    Ok([
+        make_pai_array_from_string_array!(s0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+        make_pai_array_from_string_array!(s1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+        make_pai_array_from_string_array!(s2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+        make_pai_array_from_string_array!(s3, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+    ])
+}
 
 impl Event {
     #[inline]
