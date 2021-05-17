@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 use convlog::mjai::{Consumed2, Consumed3, Consumed4, Event};
 use convlog::Pai;
 use serde::Serialize;
+use serde_with::{serde_as, DisplayFromStr};
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct State {
@@ -164,28 +165,34 @@ impl State {
     }
 }
 
+#[serde_as]
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
 pub enum Fuuro {
     Chi {
         target: u8,
+        #[serde_as(as = "DisplayFromStr")]
         pai: Pai,
         consumed: Consumed2,
     },
     Pon {
         target: u8,
+        #[serde_as(as = "DisplayFromStr")]
         pai: Pai,
         consumed: Consumed2,
     },
     Daiminkan {
         target: u8,
+        #[serde_as(as = "DisplayFromStr")]
         pai: Pai,
         consumed: Consumed3,
     },
     Kakan {
+        #[serde_as(as = "DisplayFromStr")]
         pai: Pai,
         previous_pon_target: u8,
+        #[serde_as(as = "DisplayFromStr")]
         previous_pon_pai: Pai,
         consumed: Consumed2,
     },

@@ -12,6 +12,7 @@ use convlog::mjai::Event;
 use convlog::Pai;
 use serde::{Deserialize, Serialize};
 use serde_json as json;
+use serde_with::{serde_as, DisplayFromStr};
 
 pub struct Review {
     pub total_reviewed: usize,
@@ -30,11 +31,13 @@ pub struct KyokuReview {
     pub entries: Vec<Entry>,
 }
 
+#[serde_as]
 #[derive(Debug, Clone, Serialize)]
 pub struct Entry {
     pub acceptance: Acceptance,
     pub junme: u8,
     pub actor: u8,
+    #[serde_as(as = "DisplayFromStr")]
     pub pai: Pai,
     pub is_kakan: bool, // for chankan
     pub state: State,

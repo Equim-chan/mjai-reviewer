@@ -1,4 +1,5 @@
 use convlog::Pai;
+
 use serde::ser::{Serialize, SerializeSeq, Serializer};
 
 #[derive(Debug, Clone, Default)]
@@ -33,7 +34,7 @@ impl Serialize for Tehai {
     {
         let mut seq = serializer.serialize_seq(Some(self.inner.len()))?;
         for el in &self.inner {
-            seq.serialize_element(&el)?;
+            seq.serialize_element(&el.to_string())?;
         }
         seq.end()
     }

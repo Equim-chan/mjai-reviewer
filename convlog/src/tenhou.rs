@@ -82,7 +82,6 @@ pub struct ActionTable {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ActionItem {
-    #[serde(serialize_with = "Pai::serialize_literal")]
     Pai(Pai),
     Tsumogiri(u8), // must be 60
     Naki(String),
@@ -103,27 +102,21 @@ mod json_scheme {
     pub(super) struct Kyoku {
         pub(super) meta: kyoku::Meta,
         pub(super) scoreboard: [i32; 4],
-        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) dora_indicators: Vec<Pai>,
-        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) ura_indicators: Vec<Pai>,
 
-        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) haipai_0: [Pai; 13],
         pub(super) takes_0: Vec<ActionItem>,
         pub(super) discards_0: Vec<ActionItem>,
 
-        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) haipai_1: [Pai; 13],
         pub(super) takes_1: Vec<ActionItem>,
         pub(super) discards_1: Vec<ActionItem>,
 
-        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) haipai_2: [Pai; 13],
         pub(super) takes_2: Vec<ActionItem>,
         pub(super) discards_2: Vec<ActionItem>,
 
-        #[serde(serialize_with = "Pai::serialize_slice_literal")]
         pub(super) haipai_3: [Pai; 13],
         pub(super) takes_3: Vec<ActionItem>,
         pub(super) discards_3: Vec<ActionItem>,

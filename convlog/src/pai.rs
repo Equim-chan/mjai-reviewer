@@ -5,16 +5,14 @@ use std::str::FromStr;
 
 use num_enum::TryFromPrimitive;
 use once_cell::sync::Lazy;
-use serde::ser::SerializeSeq;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_repr::Deserialize_repr as DeserializeRepr;
+use serde_repr::Serialize_repr as SerializeRepr;
 use thiserror::Error;
 
 /// Describes a pai in tenhou.net/6 format.
 ///
-/// By default, it deserializes from u8 (as in tenhou.net/6), but serializes to
-/// String (as in mjai).
-#[derive(Debug, Clone, Copy, PartialEq, Hash, DeserializeRepr, TryFromPrimitive)]
+/// It de/serializes as an `u8` in tenhou.net/6 format.
+#[derive(Debug, Clone, Copy, PartialEq, Hash, SerializeRepr, DeserializeRepr, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Pai {
     Unknown = 0,
@@ -116,16 +114,6 @@ impl fmt::Display for Pai {
     }
 }
 
-impl Serialize for Pai {
-    #[inline]
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.collect_str(self)
-    }
-}
-
 impl Default for Pai {
     #[inline]
     fn default() -> Self {
@@ -163,38 +151,5 @@ impl Pai {
                 }
             }
         }
-    }
-
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    #[inline]
-    pub fn serialize_literal<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_u8(self.as_u8())
-    }
-
-    pub fn serialize_slice_literal<S, P>(pais: P, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-        P: AsRef<[Self]>,
-    {
-        let pais_ref = pais.as_ref();
-        let mut seq = serializer.serialize_seq(Some(pais_ref.len()))?;
-        for e in pais_ref {
-            seq.serialize_element(&e.as_u8())?;
-        }
-        seq.end()
-    }
-
-    pub fn deserialize_mjai_str<'de, D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error;
-
-        let s = String::deserialize(deserializer)?;
-        let pai = s.parse().map_err(Error::custom)?;
-        Ok(pai)
     }
 }
