@@ -1,7 +1,6 @@
 use crate::mjai;
 use crate::tenhou;
 use crate::Pai;
-
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -513,6 +512,7 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                                 pai_from_bytes(&naki[5..7])?,
                             ]),
                         }),
+
                         // from shimocha
                         // e.g. "3737p37" => pon 7s from shimocha
                         4 => Ok(mjai::Event::Pon {
@@ -738,7 +738,6 @@ fn end_kyoku(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) {
     events.push(mjai::Event::EndKyoku);
 }
 
-#[inline]
 fn pai_from_bytes(b: &[u8]) -> Result<Pai> {
     let s = String::from_utf8_lossy(b);
     let id: u8 = s

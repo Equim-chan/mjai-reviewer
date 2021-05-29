@@ -1,6 +1,5 @@
 use crate::log;
 use crate::state::State;
-
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::Path;
@@ -136,7 +135,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
     let mut total_reviewed = 0;
     let mut total_tolerated = 0;
     let mut total_problems = 0;
-    let mut raw_score = 0f64;
+    let mut raw_score = 0.;
 
     let mut kyoku_review = KyokuReview::default();
     let mut state = State::new(target_actor);
@@ -198,7 +197,6 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
                 if actor != target_actor {
                     continue;
                 }
-
                 junme += 1;
             }
 
@@ -206,7 +204,6 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
                 if actor == target_actor {
                     junme += 1;
                 }
-
                 continue;
             }
 
@@ -214,7 +211,6 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
                 if actor == target_actor {
                     is_reached = true;
                 }
-
                 continue;
             }
 
@@ -268,9 +264,9 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
         let actual_action_strict = next_action_strict(actual_action, target_actor);
 
         let (move_score, acceptance) = if is_equal_or_innocent {
-            (1f64, Acceptance::Agree) // it is an acceptable move
-        } else if deviation_threshold <= 0f64 {
-            (1f64, Acceptance::Disagree) // not acceptable and no threshold set, deny
+            (1., Acceptance::Agree) // it is an acceptable move
+        } else if deviation_threshold <= 0. {
+            (1., Acceptance::Disagree) // not acceptable and no threshold set, deny
         } else if let Some(expected_ev) = actions[0].review.pt_exp_total {
             // this is O(n)
             // ;(
@@ -303,11 +299,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
                 Some(Some(actual_ev)) => {
                     let range = expected_ev - min_ev;
                     let error = expected_ev - actual_ev;
-                    let move_score = if range > 0f64 {
-                        1f64 - error / range
-                    } else {
-                        1f64
-                    };
+                    let move_score = if range > 0. { 1. - error / range } else { 1. };
 
                     let dev = expected_ev - actual_ev;
                     if dev <= deviation_threshold {
@@ -331,12 +323,12 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
                     // akochan:ai_src/selector.cpp.
                     // Skip this situation as it is very likely a small difference,
                     // probably not what those who set --deviation-threshold expect.
-                    (1f64, Acceptance::Agree)
+                    (1., Acceptance::Agree)
                 }
             }
         } else {
             // Ditto.
-            (1f64, Acceptance::Agree)
+            (1., Acceptance::Agree)
         };
 
         // handle kakan
@@ -344,9 +336,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
             Event::Dahai { actor, pai, .. } | Event::Tsumo { actor, pai, .. } => {
                 (actor, pai, false)
             }
-
             Event::Kakan { actor, pai, .. } => (actor, pai, true),
-
             _ => {
                 return Err(anyhow!(
                     "invalid state: no actor or pai found, event: {:?}",
@@ -380,7 +370,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
             total_problems,
             total_tolerated,
             total_reviewed,
-            (raw_score / total_reviewed as f64).powf(2f64) * 100f64,
+            (raw_score / total_reviewed as f64).powf(2.) * 100.,
         );
         if verbose {
             log!("{:?}", entry);
@@ -402,7 +392,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
         total_problems,
         total_tolerated,
         total_reviewed,
-        score: (raw_score / total_reviewed as f64).powf(2f64),
+        score: (raw_score / total_reviewed as f64).powf(2.),
         kyokus: kyoku_reviews,
     })
 }
@@ -486,7 +476,6 @@ fn compare_action(
                 Event::Dahai {
                     pai: actual_pai, ..
                 } => Ok(actual_pai == pai),
-
                 _ => Ok(false),
             }
         }
@@ -496,7 +485,6 @@ fn compare_action(
                 consumed: actual_consumed,
                 ..
             } => Ok(actual_consumed == consumed),
-
             _ => Ok(false),
         },
 
@@ -504,7 +492,6 @@ fn compare_action(
             Event::Kakan {
                 pai: actual_pai, ..
             } => Ok(actual_pai == pai),
-
             _ => Ok(false),
         },
 
@@ -535,7 +522,6 @@ fn compare_action(
                         ))
                     }
                 }
-
                 _ => Ok(false),
             }
         }
@@ -570,7 +556,6 @@ fn compare_action(
                         ))
                     }
                 }
-
                 _ => {
                     if let Some(actor) = actual.actor() {
                         // interrupted by opponent's pon, daiminkan or ron
@@ -648,7 +633,8 @@ fn compare_action(
         })),
 
         Event::None => match actual {
-            Event::Tsumo { .. } => Ok(true),
+            // issue #19
+            Event::Tsumo { .. } | Event::Ryukyoku { .. } => Ok(true),
             _ => {
                 if let Some(actor) = actual.actor() {
                     Ok(actor != target_actor)

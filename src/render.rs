@@ -1,6 +1,5 @@
 use crate::metadata::Metadata;
 use crate::review::KyokuReview;
-
 use std::collections::HashMap;
 use std::io::prelude::*;
 
@@ -45,20 +44,17 @@ fn kyoku_to_string_ja(args: &HashMap<String, Value>) -> tera::Result<Value> {
     let kyoku = args.get("kyoku").and_then(|p| p.as_u64()).unwrap_or(0) as usize;
     let honba = args.get("honba").and_then(|p| p.as_u64()).unwrap_or(0) as usize;
 
-    if honba == 0 {
-        Ok(Value::String(format!(
-            "{}{}局",
-            BAKAZE_KANJI[kyoku / 4],
-            NUM_KANJI[kyoku % 4],
-        )))
+    let s = if honba == 0 {
+        format!("{}{}局", BAKAZE_KANJI[kyoku / 4], NUM_KANJI[kyoku % 4])
     } else {
-        Ok(Value::String(format!(
+        format!(
             "{}{}局 {} 本場",
             BAKAZE_KANJI[kyoku / 4],
             NUM_KANJI[kyoku % 4],
             honba,
-        )))
-    }
+        )
+    };
+    Ok(Value::String(s))
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -69,20 +65,12 @@ fn kyoku_to_string_en(args: &HashMap<String, Value>) -> tera::Result<Value> {
     let kyoku = args.get("kyoku").and_then(|p| p.as_u64()).unwrap_or(0) as usize;
     let honba = args.get("honba").and_then(|p| p.as_u64()).unwrap_or(0) as usize;
 
-    if honba == 0 {
-        Ok(Value::String(format!(
-            "{} {}",
-            BAKAZE_ENG[kyoku / 4],
-            NUM_ENG[kyoku % 4],
-        )))
+    let s = if honba == 0 {
+        format!("{} {}", BAKAZE_ENG[kyoku / 4], NUM_ENG[kyoku % 4])
     } else {
-        Ok(Value::String(format!(
-            "{} {}-{}",
-            BAKAZE_ENG[kyoku / 4],
-            NUM_ENG[kyoku % 4],
-            honba,
-        )))
-    }
+        format!("{} {}-{}", BAKAZE_ENG[kyoku / 4], NUM_ENG[kyoku % 4], honba)
+    };
+    Ok(Value::String(s))
 }
 
 #[allow(clippy::unnecessary_wraps)]

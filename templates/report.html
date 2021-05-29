@@ -65,7 +65,7 @@
       <dt>(1 - (problems - tolerated) / reviewed) * 100 = score (v1)</dt>
       <dd>(1 - ({{ metadata.total_problems + metadata.total_tolerated }} - {{ metadata.total_tolerated }}) / {{ metadata.total_reviewed }}) * 100 = {{ pretty_round(num=((1 - metadata.total_problems / metadata.total_reviewed) * 100), prec=2) }}</dd>
       <dt>
-        <span id="score-latex">\( \displaystyle 100 \times (\frac{1}{n}\sum_{i=1}^{n} \frac{E[actual] - E[min]}{E[max] - E[min]})^2 = score \ \text{(v2)} \)</span>
+        <span id="score-latex">\( \displaystyle 100 \times (\frac{1}{n}\sum_{i=1}^{n} \frac{E_i[actual] - E_i[min]}{E_i[max] - E_i[min]})^2 = score \ \text{(v2)} \)</span>
       </dt>
       <dd>{{ pretty_round(num=(metadata.score*100), prec=3) }}</dd>
       <dt>deviation threshold</dt>

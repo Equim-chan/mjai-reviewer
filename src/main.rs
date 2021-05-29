@@ -10,15 +10,14 @@ mod state;
 mod tactics;
 mod tehai;
 
-use log_source::LogSource;
-use metadata::Metadata;
-use raw_log_ext::RawLogExt;
-use render::{Language, View};
-use report_output::ReportOutput;
-use review::review;
-use review::ReviewArgs;
-use tactics::TacticsJson;
-
+use self::log_source::LogSource;
+use self::metadata::Metadata;
+use self::raw_log_ext::RawLogExt;
+use self::render::{Language, View};
+use self::report_output::ReportOutput;
+use self::review::review;
+use self::review::ReviewArgs;
+use self::tactics::TacticsJson;
 use std::env;
 use std::fs;
 use std::fs::File;
