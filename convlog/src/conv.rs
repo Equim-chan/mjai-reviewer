@@ -141,7 +141,10 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
         let mut reach_flag: Option<usize> = None;
         let mut last_dahai = Pai::Unknown;
         let mut last_actor: Option<u8> = None;
-        let mut need_new_dora = false;
+        let mut need_new_dora_at_discard = false;
+        // This is for Kakan only because chankan is possible until an actual
+        // tsumo.
+        let mut need_new_dora_at_tsumo = false;
 
         let mut actor = oya as usize;
 
@@ -181,8 +184,27 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
 
             // If the take is daiminkan, immediately consume the next take event
             // from the same actor.
-            if let mjai::Event::Daiminkan { .. } = *take {
-                if need_new_dora {
+            match *take {
+                mjai::Event::Daiminkan { .. } => {
+                    if need_new_dora_at_discard {
+                        events.push(mjai::Event::Dora {
+                            dora_marker: dora_feed.next().ok_or(
+                                ConvertError::InsufficientDoraIndicators {
+                                    kyoku: kyoku.meta.kyoku_num,
+                                    honba: kyoku.meta.honba,
+                                },
+                            )?,
+                        });
+                    }
+
+                    events.push(take.clone());
+                    need_new_dora_at_discard = true;
+                    continue;
+                }
+
+                // This is for Kakan only because chankan is possible until an
+                // actual tsumo.
+                mjai::Event::Tsumo { .. } if need_new_dora_at_tsumo => {
                     events.push(mjai::Event::Dora {
                         dora_marker: dora_feed.next().ok_or(
                             ConvertError::InsufficientDoraIndicators {
@@ -191,12 +213,11 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                             },
                         )?,
                     });
+                    need_new_dora_at_tsumo = false;
                 }
 
-                events.push(take.clone());
-                need_new_dora = true;
-                continue;
-            }
+                _ => (),
+            };
 
             // Emit the take event.
             events.push(take.clone());
@@ -229,21 +250,26 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
             events.push(discard.clone());
 
             // Process previous minkan.
-            if need_new_dora
-                && matches!(
-                    discard,
-                    mjai::Event::Dahai { .. } | mjai::Event::Kakan { .. }
-                )
-            {
-                events.push(mjai::Event::Dora {
-                    dora_marker: dora_feed.next().ok_or(
-                        ConvertError::InsufficientDoraIndicators {
-                            kyoku: kyoku.meta.kyoku_num,
-                            honba: kyoku.meta.honba,
-                        },
-                    )?,
-                });
-                need_new_dora = false;
+            if need_new_dora_at_discard {
+                match discard {
+                    mjai::Event::Dahai { .. } | mjai::Event::Ankan { .. } => {
+                        events.push(mjai::Event::Dora {
+                            dora_marker: dora_feed.next().ok_or(
+                                ConvertError::InsufficientDoraIndicators {
+                                    kyoku: kyoku.meta.kyoku_num,
+                                    honba: kyoku.meta.honba,
+                                },
+                            )?,
+                        });
+                        need_new_dora_at_discard = false;
+                    }
+
+                    mjai::Event::Kakan { .. } if need_new_dora_at_discard => {
+                        need_new_dora_at_tsumo = true;
+                        need_new_dora_at_discard = false;
+                    }
+                    _ => (),
+                };
             }
 
             // Process reach declare.
@@ -296,7 +322,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                     continue;
                 }
                 mjai::Event::Kakan { .. } => {
-                    need_new_dora = true;
+                    need_new_dora_at_discard = true;
                     continue;
                 }
                 _ => (),
