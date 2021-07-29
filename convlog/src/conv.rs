@@ -182,6 +182,17 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
             // If the take is daiminkan, immediately consume the next take event
             // from the same actor.
             if let mjai::Event::Daiminkan { .. } = *take {
+                if need_new_dora {
+                    events.push(mjai::Event::Dora {
+                        dora_marker: dora_feed.next().ok_or(
+                            ConvertError::InsufficientDoraIndicators {
+                                kyoku: kyoku.meta.kyoku_num,
+                                honba: kyoku.meta.honba,
+                            },
+                        )?,
+                    });
+                }
+
                 events.push(take.clone());
                 need_new_dora = true;
                 continue;
@@ -221,9 +232,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
             if need_new_dora
                 && matches!(
                     discard,
-                    mjai::Event::Dahai { .. }
-                        | mjai::Event::Daiminkan { .. }
-                        | mjai::Event::Kakan { .. }
+                    mjai::Event::Dahai { .. } | mjai::Event::Kakan { .. }
                 )
             {
                 events.push(mjai::Event::Dora {
