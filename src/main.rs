@@ -433,7 +433,7 @@ fn main() -> Result<()> {
     // download and parse tenhou.net/6 log
     let mut raw_log: tenhou::RawLog = match &log_source {
         LogSource::Tenhou(id) => {
-            let body = download::tenhou_log(&id)
+            let body = download::tenhou_log(id)
                 .with_context(|| format!("failed to download tenhou log {}", id))?;
             if let Some((mut writer, filename)) = tenhou_out {
                 writer.write_all(body.as_bytes()).with_context(|| {
@@ -444,7 +444,7 @@ fn main() -> Result<()> {
             json::from_str(&body).context("failed to parse tenhou.net/6 log")?
         }
         LogSource::MahjongSoul(id) => {
-            let body = download::mahjong_soul_log(&id)
+            let body = download::mahjong_soul_log(id)
                 .with_context(|| format!("failed to download mahjong soul log {}", id))?;
             if let Some((mut writer, filename)) = tenhou_out {
                 writer.write_all(body.as_bytes()).with_context(|| {
@@ -544,12 +544,12 @@ fn main() -> Result<()> {
         canonicalize(&path)
             .with_context(|| format!("failed to canonicalize akochan_dir path {:?}", path))?
     };
-    let akochan_exe = {
-        let mut path = PathBuf::from(&akochan_dir);
-        path.push("system.exe");
-        canonicalize(&path)
-            .with_context(|| format!("failed to canonicalize akochan_exe path {:?}", path))?
-    };
+    let akochan_exe = canonicalize(
+        [&*akochan_dir, "system.exe".as_ref()]
+            .iter()
+            .collect::<PathBuf>(),
+    )
+    .context("failed to canonicalize akochan_exe path")?;
     let (tactics_file_path, tactics) = {
         let path = arg_tactics_config
             .map(PathBuf::from)

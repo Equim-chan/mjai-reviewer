@@ -5,8 +5,7 @@ use std::io::BufReader;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use anyhow::anyhow;
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use convlog::mjai::Event;
 use convlog::Pai;
 use serde::{Deserialize, Serialize};
@@ -227,9 +226,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
 
         // should have at least 4, e.g. dahai -> ryukyoku -> end_kyoku -> end_game
         if events.len() < i + 4 {
-            return Err(anyhow!(
-                "wrong size of input events, expected to have 4 more"
-            ));
+            bail!("wrong size of input events, expected to have 4 more");
         }
 
         // be careful, stdout_lines.next() may block.
@@ -259,7 +256,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
         let expected_action = &actions[0].moves; // best move
         let actual_action = next_action_for_compare(&events[(i + 1)..]);
 
-        let is_equal_or_innocent = compare_action(&actual_action, expected_action, target_actor)
+        let is_equal_or_innocent = compare_action(actual_action, expected_action, target_actor)
             .context("invalid state in event")?;
         let actual_action_strict = next_action_strict(actual_action, target_actor);
 
@@ -338,10 +335,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
             }
             Event::Kakan { actor, pai, .. } => (actor, pai, true),
             _ => {
-                return Err(anyhow!(
-                    "invalid state: no actor or pai found, event: {:?}",
-                    event
-                ))
+                bail!("invalid state: no actor or pai found, event: {:?}", event)
             }
         };
 
@@ -382,9 +376,9 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
     let ecode = akochan.wait()?;
     if !ecode.success() {
         if let Some(code) = ecode.code() {
-            return Err(anyhow!("non-zero exit code: {}", code));
+            bail!("non-zero exit code: {}", code);
         } else {
-            return Err(anyhow!("non-zero exit code: Process terminated by signal"));
+            bail!("non-zero exit code: Process terminated by signal");
         }
     }
 
@@ -510,16 +504,10 @@ fn compare_action(
                         if let Some(&Event::Dahai { pai, .. }) = next_expected {
                             Ok(actual_pai == pai)
                         } else {
-                            Err(anyhow!(
-                                "event after Reach is not Dahai, got {:?}",
-                                next_expected
-                            ))
+                            bail!("event after Reach is not Dahai, got {:?}", next_expected)
                         }
                     } else {
-                        Err(anyhow!(
-                            "event after Reach is not Dahai, got {:?}",
-                            next_actual
-                        ))
+                        bail!("event after Reach is not Dahai, got {:?}", next_actual)
                     }
                 }
                 _ => Ok(false),
@@ -544,16 +532,10 @@ fn compare_action(
                         if let Some(&Event::Dahai { pai, .. }) = next_expected {
                             Ok(actual_pai == pai)
                         } else {
-                            Err(anyhow!(
-                                "event after Chi is not Dahai, got {:?}",
-                                next_expected
-                            ))
+                            bail!("event after Chi is not Dahai, got {:?}", next_expected)
                         }
                     } else {
-                        Err(anyhow!(
-                            "event after Chi is not Dahai, got {:?}",
-                            next_actual
-                        ))
+                        bail!("event after Chi is not Dahai, got {:?}", next_actual)
                     }
                 }
                 _ => {
@@ -561,7 +543,7 @@ fn compare_action(
                         // interrupted by opponent's pon, daiminkan or ron
                         Ok(actor != target_actor)
                     } else {
-                        Err(anyhow!("unexpected event: {:?}", actual))
+                        bail!("unexpected event: {:?}", actual)
                     }
                 }
             }
@@ -585,16 +567,10 @@ fn compare_action(
                         if let Some(&Event::Dahai { pai, .. }) = next_expected {
                             Ok(actual_pai == pai)
                         } else {
-                            Err(anyhow!(
-                                "event after Pon is not Dahai, got {:?}",
-                                next_expected
-                            ))
+                            bail!("event after Pon is not Dahai, got {:?}", next_expected)
                         }
                     } else {
-                        Err(anyhow!(
-                            "event after Pon is not Dahai, got {:?}",
-                            next_actual
-                        ))
+                        bail!("event after Pon is not Dahai, got {:?}", next_actual)
                     }
                 }
                 _ => {
@@ -602,7 +578,7 @@ fn compare_action(
                         // interrupted by opponent's ron
                         Ok(actor != target_actor)
                     } else {
-                        Err(anyhow!("unexpected event: {:?}", actual))
+                        bail!("unexpected event: {:?}", actual)
                     }
                 }
             }
@@ -617,7 +593,7 @@ fn compare_action(
                         // interrupted by opponent's ron
                         Ok(actor != target_actor)
                     } else {
-                        Err(anyhow!("unexpected event: {:?}", actual))
+                        bail!("unexpected event: {:?}", actual)
                     }
                 }
             }
@@ -639,7 +615,7 @@ fn compare_action(
                 if let Some(actor) = actual.actor() {
                     Ok(actor != target_actor)
                 } else {
-                    Err(anyhow!("unexpected event: {:?}", actual))
+                    bail!("unexpected event: {:?}", actual)
                 }
             }
         },
@@ -649,6 +625,6 @@ fn compare_action(
             _ => Ok(false),
         },
 
-        _ => Err(anyhow!("unexpected event: {:?}", actual)),
+        _ => bail!("unexpected event: {:?}", actual),
     }
 }

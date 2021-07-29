@@ -191,7 +191,7 @@ impl RawLog {
 
         for kyoku in self.logs.chunks(1) {
             let kyoku_log = RawPartialLog {
-                parent: &self,
+                parent: self,
                 logs: kyoku,
             };
 

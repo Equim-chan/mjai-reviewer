@@ -25,7 +25,7 @@ impl State {
         }
     }
 
-    /// Argument `event` must be either a
+    /// Argument `event` must be one of
     ///
     /// * StartKyoku
     /// * Tsumo

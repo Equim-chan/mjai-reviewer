@@ -134,7 +134,7 @@ where
                     Err(err) => format!("even serializations failed: {}", err),
                 }
             })?;
-        w.write_all(&result.as_bytes())?;
+        w.write_all(result.as_bytes())?;
 
         Ok(())
     }

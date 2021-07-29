@@ -32,7 +32,7 @@ impl LogSource {
     #[inline]
     pub fn log_id(&self) -> Option<&str> {
         match self {
-            LogSource::Tenhou(id) => Some(&id),
+            LogSource::Tenhou(id) => Some(id),
             LogSource::MahjongSoul(full_id) => Some(mjsoul_log_id_from_full(full_id)),
             _ => None,
         }
