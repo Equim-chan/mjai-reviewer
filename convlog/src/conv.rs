@@ -304,7 +304,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
 
             // Decide who is the next actor.
             //
-            // For most of the time, if someone takes taki of the previous discard,
+            // For most of the time, if someone takes naki of the previous discard,
             // then it will be him, otherwise it will be the shimocha.
             //
             // There are some edge cases when there are multiple candidates for the
