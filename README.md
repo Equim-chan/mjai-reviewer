@@ -209,6 +209,15 @@ Under MSYS2 bash
 ```console
 $ export OMP_NUM_THREADS=8
 ```
+### Failed to download mahjong soul log
+Download it locally, see [tensoul](https://github.com/Equim-chan/tensoul)
+```console
+$ cd tensoul
+$ # set envs
+$ # ...
+$ node . MAHJONG_SOUL_LOG_ID > tenhou_log.json
+$ akochan-reviewer -i tenhou_log.json -a ACTOR -e
+```
 
 ## Acknowledgment
 * [critter](https://twitter.com/critter_Eng): The creater of akochan, who also proposed many advise and gave help to the development of akochan-reviewer.
