@@ -8,7 +8,7 @@ For a long time, the reviewer had been able to retrieve mjsoul logs via https://
 
 However, the heroku instance where tensoul is deployed (`\https://tensoul.herokuapp.com`) seems to be banned by mjsoul recently as the login command keeps getting error code 151. Migrating the instance to another region could mitigate the problem, but I have already done it once. Currently both of the two regions heroku provides are banned and I have no choice.
 
-== Manual (Browser)
+== Instructions (Browser)
 === Install tempermonkey extenstion on your browser
 https://www.tampermonkey.net/[Here]
 
@@ -26,7 +26,7 @@ $ # Example:
 $ akochan-reviewer -i log.json -a 2
 ----
 
-== Manual (Majsoul+)
+== Instructions (Majsoul+)
 === Install mod
 Heads https://repo.riichi.moe/library.html#resources-majplus[here] and search for "Save logs".
 
