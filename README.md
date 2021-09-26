@@ -11,6 +11,8 @@ Review your Tenhou or Mahjong Soul (Jantama) log with mahjong AI akochan.
 
 **This tool is still in early stages. There are still lots of features to be implemented, and breaking changes may be made at anytime. Suggestions and contributions are welcome. 日本語もおｋ.**
 
+### [How to Review Mahjong Soul Logs (updated 2021-09-26)](https://github.com/Equim-chan/akochan-reviewer/blob/master/mjsoul.adoc)
+
 ## Example
 ```console
 $ # Review https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2
@@ -18,12 +20,9 @@ $ # Note that you may need to quote it in the shell to escape the string
 $ akochan-reviewer "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 $ # Review https://game.mahjongsoul.com/?paipu=190425-146daa2a-68c2-4b7e-a8d7-2b5c71b54b00_a458023588
-$ akochan-reviewer "https://game.mahjongsoul.com/?paipu=190425-146daa2a-68c2-4b7e-a8d7-2b5c71b54b00_a458023588"
 
 $ # Alternatively, you can specify the log ID and actor manually
 $ akochan-reviewer -t 2019050417gm-0029-0000-4f2a8622 -a 2
-$ akochan-reviewer -m 190425-146daa2a-68c2-4b7e-a8d7-2b5c71b54b00_a458023588
-$ akochan-reviewer -m 190425-146daa2a-68c2-4b7e-a8d7-2b5c71b54b00 -a 2
 
 $ # Review with arbitrary pt distribution
 $ akochan-reviewer --pt 75,30,0,-165 "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
