@@ -766,6 +766,7 @@ fn end_kyoku(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) {
                 actor: detail.who,
                 target: detail.target,
                 deltas: Some(detail.score_deltas),
+                ura_markers: Some(kyoku.ura_indicators.clone()),
             }));
         }
 

@@ -95,10 +95,13 @@ pub enum Event {
         actor: u8,
         target: u8,
 
-        // it is an Option because akochan won't send this field, but we need to
+        // It is an Option because akochan won't send this field, but we need to
         // record the field.
         #[serde(skip_serializing_if = "Option::is_none")]
         deltas: Option<[i32; 4]>,
+
+        #[serde(skip_serializing_if = "Option::is_none")]
+        ura_markers: Option<Vec<Pai>>,
     },
     Ryukyoku {
         #[serde(skip_serializing_if = "Option::is_none")]
