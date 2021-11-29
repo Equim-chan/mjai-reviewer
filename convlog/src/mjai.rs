@@ -101,6 +101,7 @@ pub enum Event {
         deltas: Option<[i32; 4]>,
 
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(default)]
         #[serde_as(as = "Option<Vec<DisplayFromStr>>")]
         ura_markers: Option<Vec<Pai>>,
     },
