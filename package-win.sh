@@ -22,10 +22,10 @@ cp -rt "$OUT_DIR"/akochan \
     params \
     README.md \
     LICENSE \
-    /mingw64/bin/libgcc_s_seh-1.dll \
-    /mingw64/bin/libgomp-1.dll \
-    /mingw64/bin/libstdc++-6.dll \
-    /mingw64/bin/libwinpthread-1.dll
+    /ucrt64/bin/libgcc_s_seh-1.dll \
+    /ucrt64/bin/libgomp-1.dll \
+    /ucrt64/bin/libstdc++-6.dll \
+    /ucrt64/bin/libwinpthread-1.dll
 popd
 
 pushd "$REVIEWER_DIR"
