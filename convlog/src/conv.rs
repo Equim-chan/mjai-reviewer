@@ -261,7 +261,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                         need_new_dora_at_discard = false;
                     }
 
-                    mjai::Event::Kakan { .. } if need_new_dora_at_discard => {
+                    mjai::Event::Kakan { .. } => {
                         need_new_dora_at_tsumo = true;
                     }
                     _ => (),
