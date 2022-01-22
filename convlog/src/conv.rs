@@ -246,9 +246,6 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                 discard_sets[actor].entry(pai).and_modify(|v| *v -= 1);
             }
 
-            // Emit the discard event.
-            events.push(discard.clone());
-
             // Process previous minkan.
             if need_new_dora_at_discard {
                 match discard {
@@ -270,6 +267,9 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                     _ => (),
                 };
             }
+
+            // Emit the discard event.
+            events.push(discard.clone());
 
             // Process reach declare.
             //
