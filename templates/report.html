@@ -17,6 +17,9 @@
 <body>
   <h1>{% if lang == "en" %}Replay Examination{% else %}牌譜検討{% endif %}</h1>
 
+  <input type="radio" name="style" id="radio_style_v" checked="true" onclick="toggleStyle()" />vertical
+  <input type="radio" name="style" id="radio_style_h" onclick="toggleStyle()" />horizontal
+
   <details open class="collapse">
     <summary>{% if lang == "en" %}Game Summary{% else %}目次{% endif %}</summary>
     <div class="kyoku-toc">
@@ -99,7 +102,7 @@
       </h1>
 
       {%- if splited_logs is defined -%}
-        <div class="sticky" style="z-index: {{ 15 + loop.index0 }}">
+        <div class="sticky l-box" style="z-index: {{ 15 + loop.index0 }}">
           <details open class="collapse">
             <summary>{% if lang == "en" %}Replay Viewer{%- else -%}牌譜ビューア{% endif %}</summary>
             <iframe
@@ -114,6 +117,7 @@
         </div>
       {%- endif -%}
 
+      <div class="r-box">
       {%- for entry in item.entries -%}
         {%- if entry.acceptance == "disagree" -%}
           <details open class="collapse">
@@ -252,9 +256,35 @@
           {%- endif -%}
         </details>
       {%- endfor -%}
+      </div>
     </section>
   {%- endfor -%}
 
+  <script>
+    function toggleStyle() {
+      if (document.getElementById("radio_style_v").checked) {
+        document.body.removeAttribute("horizontal")
+        lboxes = document.querySelectorAll(".l-box")
+        for (var i = 0; i < lboxes.length; i++) {
+          lboxes[i].removeAttribute("horizontal")
+        }
+        rboxes = document.querySelectorAll(".r-box")
+        for (var i = 0; i < rboxes.length; i++) {
+          rboxes[i].removeAttribute("horizontal")
+        }
+      } else {
+        document.body.setAttribute("horizontal", "1")
+        lboxes = document.querySelectorAll(".l-box")
+        for (var i = 0; i < lboxes.length; i++) {
+          lboxes[i].setAttribute("horizontal", "1")
+        }
+        rboxes = document.querySelectorAll(".r-box")
+        for (var i = 0; i < rboxes.length; i++) {
+          rboxes[i].setAttribute("horizontal", "1")
+        }
+      }
+    }
+  </script>
   <style>{%- include "report.css" -%}</style>
   {%- include "pai.svg" -%}
 

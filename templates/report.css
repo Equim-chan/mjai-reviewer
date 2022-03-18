@@ -6,6 +6,9 @@ body {
   margin: auto;
   background: #f2f2f2;
 }
+body[horizontal] {
+  max-width: 1600px;
+}
 
 h1 {
   font-size: 2em;
@@ -146,4 +149,11 @@ table.stat th {
 table.stat td {
   font-size: 90%;
   line-height: 32px;
+}
+.l-box[horizontal] {
+  float: left;
+  width: 50%;
+}
+.r-box[horizontal] {
+  margin-left: 50%;
 }
