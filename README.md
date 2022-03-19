@@ -74,6 +74,8 @@ OPTIONS:
                                              "E1,E4,S3.1".
         --lang <LANG>                        Set the language for the rendered report page. Default value "ja".
                                              Supported languages: ja, en.
+        --layout <LAYOUT>                    Set the layout for the rendered report page. Default value "vertical".
+                                             Supported layout: vertical, v, horizontal, h.
         --mjai-out <FILE>                    Save the transformed mjai format log to FILE. If FILE is "-", write to
                                              stdout.
     -m, --mjsoul-id <ID>                     Specify a Mahjong Soul log ID to review. Example: "200417-e1f9e08d-487f-
