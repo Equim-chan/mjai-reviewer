@@ -5,3 +5,4 @@ Cargo.lock
 .vscode/
 
 *.html
+.DS_Store
