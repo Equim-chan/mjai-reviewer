@@ -167,6 +167,10 @@ mod json_scheme {
 pub use json_scheme::{Log as RawLog, PartialLog as RawPartialLog};
 
 impl RawLog {
+    pub fn get_names(&self) -> &[String; 4] {
+        &self.names
+    }
+
     #[inline]
     pub fn hide_names(&mut self) {
         self.names

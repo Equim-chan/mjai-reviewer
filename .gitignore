@@ -2,4 +2,6 @@
 **/*.rs.bk
 Cargo.lock
 
+.vscode/
+
 *.html
