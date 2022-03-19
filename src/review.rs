@@ -149,7 +149,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
             log!("> {}", to_write);
         }
 
-        // upate the state
+        // update the state
         state.update(event).context("failed to update state")?;
 
         // this match does two things:
@@ -246,7 +246,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
             continue;
         }
 
-        // skip the comparision when
+        // skip the comparison when
         // 1. it is not our turn and there is no chance to naki
         // 2. our state is reached and only tsumogiri is possible
         if actions.len() == 1 && (is_reached || actions[0].moves[0] == Event::None) {
