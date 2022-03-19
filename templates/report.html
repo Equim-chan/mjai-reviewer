@@ -14,11 +14,11 @@
   <title>{% if lang == "en" %}Replay Examination{% else %}牌譜検討{% endif %}</title>
 </head>
 
-<body>
+<body {% if layout == "horizontal" %} horizontal="1" {% endif %} >
   <h1>{% if lang == "en" %}Replay Examination{% else %}牌譜検討{% endif %}</h1>
 
-  <input type="radio" name="style" id="radio_style_v" checked="true" onclick="toggleStyle()" />vertical
-  <input type="radio" name="style" id="radio_style_h" onclick="toggleStyle()" />horizontal
+  <input type="radio" name="style" id="radio_style_v" {% if layout == "vertical" %} checked="true" {% endif %} onclick="toggleStyle()" />vertical
+  <input type="radio" name="style" id="radio_style_h" {% if layout == "horizontal" %} checked="true" {% endif %} onclick="toggleStyle()" />horizontal
 
   <details open class="collapse">
     <summary>{% if lang == "en" %}Game Summary{% else %}目次{% endif %}</summary>
@@ -102,7 +102,7 @@
       </h1>
 
       {%- if splited_logs is defined -%}
-        <div class="sticky l-box" style="z-index: {{ 15 + loop.index0 }}">
+        <div class="sticky l-box" style="z-index: {{ 15 + loop.index0 }}" {% if layout == "horizontal" %} horizontal="1" {% endif %} >
           <details open class="collapse">
             <summary>{% if lang == "en" %}Replay Viewer{%- else -%}牌譜ビューア{% endif %}</summary>
             <iframe
@@ -117,7 +117,7 @@
         </div>
       {%- endif -%}
 
-      <div class="r-box">
+      <div class="r-box" {% if layout == "horizontal" %} horizontal="1" {% endif %} >
       {%- for entry in item.entries -%}
         {%- if entry.acceptance == "disagree" -%}
           <details open class="collapse">
