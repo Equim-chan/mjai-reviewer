@@ -492,6 +492,13 @@ fn main() -> Result<()> {
                     actor_opt = Some(idx as u8)
                 }
             }
+            // can not find actor index by name, return available players name
+            anyhow::ensure!(
+                actor_opt.is_some(),
+                "there is no player named \"{}\", available players: {}",
+                actor_name,
+                raw_log.get_names().join(", "),
+            );
         }
     }
 
