@@ -17,8 +17,8 @@
 <body {% if layout == "horizontal" %} horizontal="1" {% endif %} >
   <h1>{% if lang == "en" %}Replay Examination{% else %}牌譜検討{% endif %}</h1>
 
-  <input type="radio" name="style" id="radio_style_v" {% if layout == "vertical" %} checked="true" {% endif %} onclick="toggleStyle()" />vertical
-  <input type="radio" name="style" id="radio_style_h" {% if layout == "horizontal" %} checked="true" {% endif %} onclick="toggleStyle()" />horizontal
+  <label for="radio_style_v"><input type="radio" name="style" id="radio_style_v" {% if layout == "vertical" %} checked="true" {% endif %} onclick="toggleStyle()" />vertical</label>
+  <label for="radio_style_v"><input type="radio" name="style" id="radio_style_h" {% if layout == "horizontal" %} checked="true" {% endif %} onclick="toggleStyle()" />horizontal</label>
 
   <details open class="collapse">
     <summary>{% if lang == "en" %}Game Summary{% else %}目次{% endif %}</summary>
