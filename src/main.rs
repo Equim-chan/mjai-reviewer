@@ -493,13 +493,12 @@ fn main() -> Result<()> {
                 }
             }
             // can not find actor index by name, return available players name
-            if actor_opt.is_none() {
-                return Err(anyhow!(
-                    "there are no player with name \"{}\", available players: {}",
-                    actor_name,
-                    raw_log.get_names().join(", ")
-                ));
-            }
+            anyhow::ensure!(
+                actor_opt.is_some(),
+                "there is no player named \"{}\", available players: {}",
+                actor_name,
+                raw_log.get_names().join(", "),
+            );
         }
     }
 
