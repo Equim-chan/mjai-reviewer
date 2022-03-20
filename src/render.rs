@@ -21,6 +21,7 @@ static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
         ("pai.svg", include_str!("../assets/pai.svg")),
         ("report.css", include_str!("../templates/report.css")),
         ("report.html", include_str!("../templates/report.html")),
+        ("report.js", include_str!("../templates/report.js")),
     ])
     .expect("failed to parse template");
 
