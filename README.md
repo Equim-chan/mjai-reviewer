@@ -60,6 +60,8 @@ FLAGS:
 OPTIONS:
     -a, --actor <INDEX>                      Specify the actor to review. It is the number after "&tw=" in tenhou's log
                                              url.
+        --actor-name <ACTOR_NAME>            Specify the actor name to review when --in-file is specified and --actor is
+                                             not specified
     -d, --akochan-dir <DIR>                  Specify the directory of akochan. This will serve as the working directory
                                              of akochan process. Default value "akochan".
     -n, --deviation-threshold <THRESHOLD>    THRESHOLD is an absolute value that the reviewer will ignore all
