@@ -492,6 +492,14 @@ fn main() -> Result<()> {
                     actor_opt = Some(idx as u8)
                 }
             }
+            // can not find actor index by name, return available players name
+            if actor_opt.is_none() {
+                return Err(anyhow!(
+                    "there are no player with name \"{}\", available players: {}",
+                    actor_name,
+                    raw_log.get_names().join(", ")
+                ));
+            }
         }
     }
 
