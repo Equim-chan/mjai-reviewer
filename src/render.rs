@@ -38,10 +38,10 @@ pub enum Language {
 
 #[derive(Serialize)]
 pub enum Layout {
-    #[serde(rename="horizontal")]
+    #[serde(rename = "horizontal")]
     Horizontal,
-    #[serde(rename="vertical")]
-    Vertical
+    #[serde(rename = "vertical")]
+    Vertical,
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -121,7 +121,7 @@ where
         splitted_logs: Option<L>,
         metadata: &'a Metadata<'a>,
         lang: Language,
-        layout: Layout
+        layout: Layout,
     ) -> Self {
         Self {
             kyokus: kyoku_reviews,
