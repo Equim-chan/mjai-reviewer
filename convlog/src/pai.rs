@@ -103,6 +103,46 @@ impl FromStr for Pai {
     }
 }
 
+pub fn get_pais_from_str(s: &str) -> Result<Vec<Pai>, ParseError> {
+    let mut pais: Vec<Pai> = Vec::new();
+    let zero_digit = '0'.to_digit(10).unwrap();
+    for part in s.split_inclusive(&['m', 's', 'p', 'z'][..]) {
+        let mut chars = part.chars().rev();
+        let base = if let Some(last_char) = chars.next() {
+            match last_char {
+                'm' => 10, // man
+                'p' => 20, // pin
+                's' => 30, // sou
+                'z' => 40, //
+                _ => {
+                    return Err(ParseError::InvalidPaiString(s.to_owned()));
+                }
+            }
+        } else {
+            return Err(ParseError::InvalidPaiString(s.to_owned()));
+        };
+        for p_char in chars.rev() {
+            let off = p_char.to_digit(10).unwrap() - zero_digit;
+            if off == 0 {
+                // 0p, 0s, 0m
+                match base {
+                    10 => pais.push(Pai::AkaMan5),
+                    20 => pais.push(Pai::AkaPin5),
+                    30 => pais.push(Pai::AkaSou5),
+                    _ => unreachable!(),
+                };
+                continue; // handle next p_char
+            }
+            if let Ok(p) = Pai::from_str(MJAI_PAI_STRINGS[(base + off) as usize]) {
+                pais.push(p);
+            } else {
+                return Err(ParseError::InvalidPaiString(s.to_owned()));
+            }
+        }
+    }
+    Ok(pais)
+}
+
 impl fmt::Display for Pai {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -151,5 +191,45 @@ impl Pai {
                 }
             }
         }
+    }
+
+    pub fn as_unify_u8(self) -> u8 {
+        match self {
+            Self::AkaMan5 => 15,
+            Self::AkaPin5 => 25,
+            Self::AkaSou5 => 35,
+            _ => self.as_u8(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pai() {
+        println!("{:?} {:?} {:?}", Pai::AkaMan5, Pai::AkaPin5, Pai::AkaSou5);
+    }
+
+    #[test]
+    fn test_get_pais_from_str() {
+        let case0 = "123456789p123s55m";
+        let res = get_pais_from_str(case0).unwrap();
+        println!("{:?}", res);
+        let case0 = "1234567z19m19s199p";
+        let res = get_pais_from_str(case0).unwrap();
+        println!("{:?}", res);
+        let case0 = "1234567z10m10s110p";
+        let res = get_pais_from_str(case0).unwrap();
+        println!("{:?}", res);
+    }
+
+    #[test]
+    fn test_a() {
+        let x = Pai::try_from_primitive(11u8);
+        println!("{:?}", x);
+        let x = Pai::try_from(11u8);
+        println!("{:?}", x);
     }
 }

@@ -104,4 +104,62 @@ impl Tehai {
     pub fn view(&self) -> &[Pai] {
         &self.inner
     }
+
+    pub fn into_paili_str(&self) -> String {
+        let pais = if self.is_sorted {
+            self.inner.clone()
+        } else {
+            let mut pais = self.inner.clone();
+            pais.sort_unstable_by_key(|pai| pai.as_ord());
+            pais
+        };
+        let get_suffix = |p: &Pai| match p.as_u8() {
+            11..=19 | 51 => 'm',
+            21..=29 | 52 => 'p',
+            31..=39 | 53 => 's',
+            41..=47 => 'z',
+            _ => unreachable!(),
+        };
+        let zero_ord = 48u8;
+        let mut res = String::new();
+        let mut cur_suffix = get_suffix(&pais[0]);
+        for p in pais {
+            let p_as_u8 = p.as_u8();
+            let match_suffix = match p_as_u8 {
+                11..=19 | 51 => cur_suffix == 'm',
+                21..=29 | 52 => cur_suffix == 'p',
+                31..=39 | 53 => cur_suffix == 's',
+                41..=47 => cur_suffix == 'z',
+                _ => unreachable!(),
+            };
+            if !match_suffix {
+                res.push(cur_suffix);
+            }
+            cur_suffix = get_suffix(&p);
+            match p_as_u8 {
+                51 | 52 | 53 => res.push('0'),
+                11..=19 => res.push((zero_ord + p_as_u8 - 10) as char),
+                21..=29 => res.push((zero_ord + p_as_u8 - 20) as char),
+                31..=39 => res.push((zero_ord + p_as_u8 - 30) as char),
+                41..=47 => res.push((zero_ord + p_as_u8 - 40) as char),
+                _ => unreachable!(),
+            }
+        }
+        res.push(cur_suffix);
+        res
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use convlog::pai::get_pais_from_str;
+
+    #[test]
+    fn test_tehai() {
+        let tehai = Tehai::from(get_pais_from_str("123456789p123s55m").unwrap());
+        assert_eq!("55m123456789p123s", tehai.into_paili_str());
+        let tehai = Tehai::from(get_pais_from_str("123406789p406s05m").unwrap());
+        assert_eq!("50m123406789p406s", tehai.into_paili_str());
+    }
 }

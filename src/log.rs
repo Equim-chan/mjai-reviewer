@@ -18,3 +18,12 @@ macro_rules! log {
         )
     };
 }
+
+#[macro_export]
+macro_rules! log_if {
+    ($ok:expr, $($arg:tt)*) => {
+        if ($ok) {
+            log!($($arg)*)
+        }
+    };
+}
