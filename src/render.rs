@@ -21,6 +21,7 @@ static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
         ("pai.svg", include_str!("../assets/pai.svg")),
         ("report.css", include_str!("../templates/report.css")),
         ("report.html", include_str!("../templates/report.html")),
+        ("report.js", include_str!("../templates/report.js")),
     ])
     .expect("failed to parse template");
 
@@ -34,6 +35,14 @@ pub enum Language {
     Japanese,
     #[serde(rename = "en")]
     English,
+}
+
+#[derive(Serialize)]
+pub enum Layout {
+    #[serde(rename = "horizontal")]
+    Horizontal,
+    #[serde(rename = "vertical")]
+    Vertical,
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -99,6 +108,7 @@ where
     splited_logs: Option<L>,
     metadata: &'a Metadata<'a>,
     lang: Language,
+    layout: Layout,
 }
 
 impl<'a, L> View<'a, L>
@@ -109,16 +119,18 @@ where
     pub fn new(
         kyoku_reviews: &'a [KyokuReview],
         target_actor: u8,
-        splited_logs: Option<L>,
+        splitted_logs: Option<L>,
         metadata: &'a Metadata<'a>,
         lang: Language,
+        layout: Layout,
     ) -> Self {
         Self {
             kyokus: kyoku_reviews,
             target_actor,
-            splited_logs,
+            splited_logs: splitted_logs,
             metadata,
             lang,
+            layout,
         }
     }
 
