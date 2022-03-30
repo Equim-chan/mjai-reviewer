@@ -215,6 +215,17 @@ Under MSYS2 bash
 $ export OMP_NUM_THREADS=8
 ```
 
+### `failed to canonicalize` error
+```plain
+15:39:38.155207 src/main.rs:561	converting to mjai events...
+Error: failed to canonicalize akochan_dir path "akochan"
+```
+
+Make sure you have the `akochan` directory under your current working directory where you run `akochan-reviewer`.
+
+### `libai.so` not found on Linux
+Try adding the directory of `libai.so` to env `LD_LIBRARY_PATH`.
+
 ## Acknowledgment
 * [critter](https://twitter.com/critter_Eng): The creater of akochan, who also proposed many advise and gave help to the development of akochan-reviewer.
 * [新篠ゆう](https://github.com/yuarasino): Who helped a lot with the report page template.
