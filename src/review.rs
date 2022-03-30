@@ -333,8 +333,14 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
                 }
             }
         } else {
-            // No expected pt given, not acceptable
-            (1., Acceptance::Disagree)
+            // Ditto for early turn or high shanten, akochan don't
+            // give any recommended action.
+            match actual_action[0] {
+                // naki happen under this situation usually is not recommended
+                Event::Pon { .. } | Event::Chi { .. } => (1., Acceptance::Disagree),
+                // Agree for other actions cause it is very likely a small difference
+                _ => (1., Acceptance::Agree),
+            }
         };
 
         // handle kakan
