@@ -249,13 +249,22 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
         // skip the comparison when
         // 1. it is not our turn and there is no chance to naki
         // 2. our state is reached and only tsumogiri is possible
+        let actual_action = next_action_for_compare(&events[(i + 1)..]);
         if actions.len() == 1 && (is_reached || actions[0].moves[0] == Event::None) {
-            continue;
+            match actual_action[0] {
+                // akochan don't give any recommended action,
+                // but naki happen
+                Event::Pon { actor, .. } | Event::Chi { actor, .. } => {
+                    if actor != target_actor {
+                        continue;
+                    }
+                    // continue to review if the target_actor naki
+                }
+                _ => continue,
+            }
         }
 
         let expected_action = &actions[0].moves; // best move
-        let actual_action = next_action_for_compare(&events[(i + 1)..]);
-
         let is_equal_or_innocent = compare_action(actual_action, expected_action, target_actor)
             .context("invalid state in event")?;
         let actual_action_strict = next_action_strict(actual_action, target_actor);
@@ -324,8 +333,14 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
                 }
             }
         } else {
-            // Ditto.
-            (1., Acceptance::Agree)
+            // Ditto for early turn or high shanten, akochan don't
+            // give any recommended action.
+            match actual_action[0] {
+                // naki happen under this situation usually is not recommended
+                Event::Pon { .. } | Event::Chi { .. } => (1., Acceptance::Disagree),
+                // Agree for other actions cause it is very likely a small difference
+                _ => (1., Acceptance::Agree),
+            }
         };
 
         // handle kakan
