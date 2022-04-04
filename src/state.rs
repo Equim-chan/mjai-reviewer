@@ -431,11 +431,17 @@ impl ShantenHelper {
         let eye_candidates = ShantenHelper::eyes(&self.pais);
         for eye in eye_candidates {
             // try to get the shanten with this eye
-            log_if!(self.verbose, "take {} as eye begin", eye);
+            let eye_array = [eye, eye];
+            log_if!(self.verbose, "take {:?} as eye begin", eye_array);
             self.take_eye(eye);
             self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 1, 0);
-            self.rollback_pais(&[eye, eye]);
-            log_if!(self.verbose, "take {} as eye done, s: {}", eye, shanten);
+            self.rollback_pais(&eye_array);
+            log_if!(
+                self.verbose,
+                "take {:?} as eye done, s: {}",
+                eye_array,
+                shanten
+            );
         }
         // try to get the shanten without eye
         log_if!(self.verbose, "take nothing as eye begin");
@@ -532,25 +538,25 @@ impl ShantenHelper {
     }
 
     fn try_take_2(&mut self, take_idx: usize) -> Option<([Pai; 2], usize)> {
-        // try get pair
-        for (idx, num) in self.pais.iter_mut().enumerate() {
-            if idx < take_idx as usize || *num < 2 {
+        for idx in take_idx..48 {
+            if self.pais[idx] < 1 {
                 continue;
             }
-            if let Ok(pai) = Pai::try_from(idx as u8) {
-                self.pais[idx] -= 2;
-                let res = [pai, pai];
-                self.take(&res);
-                return Some((res, idx));
-            }
-        }
-        // try get RYANMEN/PENCHAN/KANCHAN
-        for idx in 0..38 {
-            if idx < take_idx as usize || self.pais[idx] < 1 {
-                continue;
-            }
-            // 1~8s, 1~8p, 1~8m
-            if (11 <= idx && idx < 18) || (21 <= idx && idx < 28) || (31 <= idx && idx < 38) {
+            // 1~9s, 1~9p, 1~9m
+            if (11 <= idx && idx <= 19) || (21 <= idx && idx <= 29) || (31 <= idx && idx <= 39) {
+                // try get pair
+                if self.pais[idx] > 1 {
+                    if let Ok(pai) = Pai::try_from(idx as u8) {
+                        self.pais[idx] -= 2;
+                        let res = [pai, pai];
+                        self.take(&res);
+                        return Some((res, idx));
+                    }
+                }
+                if idx % 10 > 8 {
+                    continue;
+                }
+                // 1~8s, 1~8p, 1~8m
                 if self.pais[idx + 1] > 0 {
                     // PENCHAN/RYANMEN
                     self.pais[idx] -= 1;
@@ -561,14 +567,23 @@ impl ShantenHelper {
                     ];
                     self.take(&res);
                     return Some((res, idx));
-                } else if self.pais[idx + 2] > 0 {
-                    // KANCHAN
+                } else if idx % 10 < 8 && self.pais[idx + 2] > 0 {
+                    // 1~7s, 1~7p, 1~7m, KANCHAN
                     self.pais[idx] -= 1;
                     self.pais[idx + 2] -= 1;
                     let res = [
                         Pai::try_from(idx as u8).unwrap(),
                         Pai::try_from((idx + 2) as u8).unwrap(),
                     ];
+                    self.take(&res);
+                    return Some((res, idx));
+                }
+            }
+            // try get pair
+            if 41 <= idx && idx <= 47 && self.pais[idx] > 1 {
+                if let Ok(pai) = Pai::try_from(idx as u8) {
+                    self.pais[idx] -= 2;
+                    let res = [pai, pai];
                     self.take(&res);
                     return Some((res, idx));
                 }
@@ -610,7 +625,7 @@ impl ShantenHelper {
             shanten,
             c_max
         );
-        if begin_idx >= PAIS_VEC_LEN || level > self.num_pais_rem / 3 {
+        if begin_idx >= PAIS_VEC_LEN || level > 3 {
             self.search_by_take_2(0, shanten, c_max, k, exist_eye, num_meld, 0);
             return;
         }
@@ -703,9 +718,14 @@ impl ShantenHelper {
             return;
         }
         if self.num_pais_rem == 0 {
-            let penalty = num_meld + num_dazi + exist_eye - 5;
             let num_fuuros = (14 - self.num_tehai) / 3;
-            let cur_s = 9 - 2 * num_meld - num_dazi - 2 * exist_eye - num_fuuros + penalty;
+            let penalty = std::cmp::max(num_meld + num_fuuros + num_dazi + exist_eye - 5, 0);
+            let q = if num_meld + num_dazi + exist_eye <= 4 {
+                1
+            } else {
+                exist_eye
+            };
+            let cur_s = 9 - 2 * (num_meld + num_fuuros) - (num_dazi + exist_eye) - q + penalty;
             *shanten = std::cmp::min(*shanten, cur_s);
             *c_max = std::cmp::max(*c_max, c);
             log_if!(
@@ -816,130 +836,65 @@ mod tests {
         }
     }
 
-    enum Case {
-        Normal { i: &'static str, s: i32 },
-        Chiitoi { i: &'static str, s: i32 },
-        Kokushi { i: &'static str, s: i32 },
-    }
     #[test]
-    fn test_iter_stat_pais() {
-        let case: Vec<Case> = Vec::<Case>::from([
-            Case::Normal {
-                i: "40m12356p4699s222z",
-                s: 1,
-            },
-            // Case::Normal {
-            //     i: "0m12356p4699s4m",
-            //     s: 1,
-            // },
-            // Case::Normal {
-            //     i: "123456789p123s55m",
-            //     s: -1,
-            // },
-            // Case::Normal {
-            //     i: "12345678p123s55m1z",
-            //     s: 0,
-            // },
-            // Case::Normal {
-            //     i: "12345678p12s55m12z",
-            //     s: 1,
-            // },
-            // Case::Normal {
-            //     i: "0m125p1469s24z6p",
-            //     s: 3,
-            // },
-            // Case::Normal {
-            //     i: "0m1256p469s24z9s",
-            //     s: 2,
-            // },
-            // Case::Normal {
-            //     i: "0m1256p4699s4z3p",
-            //     s: 1,
-            // },
-            // Case::Normal {
-            //     i: "245m12356p99s222z4p",
-            //     s: 0,
-            // },
-            // Case::Normal {
-            //     i: "45m123456p99s222z2m",
-            //     s: 0,
-            // },
-            // Case::Normal {
-            //     i: "45m123456p99s222z3m",
-            //     s: -1,
-            // },
-            // Case::Normal {
-            //     i: "45m235678p399s22z6s",
-            //     s: 2,
-            // },
-            // Case::Normal {
-            //     i: "45m23568p3699s22z4m",
-            //     s: 3,
-            // },
-            // Case::Normal {
-            //     i: "445m2358p23469s2z9m",
-            //     s: 4,
-            // },
-            // Case::Normal {
-            //     i: "49m2358p23469s24z1m",
-            //     s: 5,
-            // },
-            // Case::Normal {
-            //     i: "149m258p2369s124z7s",
-            //     s: 6,
-            // },
-            // Case::Kokushi {
-            //     i: "159m19p19s1234677z",
-            //     s: 0,
-            // },
-            // Case::Kokushi {
-            //     i: "159m19p19s1236677z",
-            //     s: 1,
-            // },
-            // Case::Chiitoi {
-            //     i: "458m666p116688s55z",
-            //     s: 1, // normal 2
-            // },
-            // Case::Chiitoi {
-            //     i: "44m6666p116688s55z",
-            //     s: 1, // normal 2
-            // },
-            // Case::Chiitoi {
-            //     i: "4444m6666p1111s55z",
-            //     s: 5,
-            // },
-            // Case::Normal {
-            //     i: "4444m6666p1111s55z",
-            //     s: 1,
-            // },
+    fn test_normal_shanten() {
+        let cases: Vec<(&'static str, i32)> = Vec::from([
+            ("40m12356p4699s222z", 1),
+            ("0m12356p4699s4m", 1),
+            ("123456789p123s55m", -1),
+            ("12345678p123s55m1z", 0),
+            ("12345678p12s55m12z", 1),
+            ("0m125p1469s24z6p", 3),
+            ("0m1256p469s24z9s", 2),
+            ("0m1256p4699s4z3p", 1),
+            ("245m12356p99s222z4p", 0),
+            ("45m123456p99s222z2m", 0),
+            ("45m123456p99s222z3m", -1),
+            ("45m235678p399s22z6s", 2),
+            ("45m23568p3699s22z4m", 3),
+            ("445m2358p23469s2z9m", 4),
+            ("49m2358p23469s24z1m", 5),
+            ("149m258p2369s124z7s", 6),
+            ("4444m6666p1111s55z", 1),
         ]);
-        for c in case {
-            match c {
-                Case::Normal { i: input, .. }
-                | Case::Kokushi { i: input, .. }
-                | Case::Chiitoi { i: input, .. } => {
-                    println!("input: '{}'", input);
-                    let mut helper =
-                        ShantenHelper::new(&Tehai::from(get_pais_from_str(input).unwrap()));
-                    match c {
-                        Case::Normal { i: input, s } => {
-                            let normal = helper.get_normal_shanten();
-                            println!("shanten: {} for '{}'(normal)", s, input);
-                            assert_eq!(s, normal, "for '{}'", input);
-                        }
-                        Case::Kokushi { i: input, s } => {
-                            let kokushi = helper.get_kokushi_shanten();
-                            println!("shanten: {} for '{}'(kokushi)", s, input);
-                            assert_eq!(s, kokushi, "for '{}'", input);
-                        }
-                        Case::Chiitoi { i: input, s } => {
-                            let chiitoi = helper.get_chiitoi_shanten();
-                            println!("shanten: {} for '{}'(chiitoi)", s, input);
-                            assert_eq!(s, chiitoi, "for '{}'", input);
-                        }
-                    }
-                }
-            }
+        for (input, s) in cases {
+            println!("input: '{}'", input);
+            let mut helper = ShantenHelper::new(&Tehai::from(get_pais_from_str(input).unwrap()));
+            let normal = helper.get_normal_shanten();
+            println!("shanten: {} for '{}'(normal)", s, input);
+            assert_eq!(s, normal, "for '{}'", input);
+        }
+    }
+
+    #[test]
+    fn test_chiitoi_shanten() {
+        let cases = Vec::from([
+            ("458m666p116688s55z", 1), // normal 2
+            ("44m6666p116688s55z", 1), // normal 2
+            ("4444m6666p1111s55z", 5),
+        ]);
+        for (input, s) in cases {
+            println!("input: '{}'", input);
+            let helper = ShantenHelper::new(&Tehai::from(get_pais_from_str(input).unwrap()));
+            let normal = helper.get_chiitoi_shanten();
+            println!("shanten: {} for '{}'(normal)", s, input);
+            assert_eq!(s, normal, "for '{}'", input);
+        }
+    }
+
+    #[test]
+    fn test_kokushi_shanten() {
+        let cases = Vec::from([
+            //
+            ("159m19p19s1234677z", 0),
+            ("159m19p19s1236677z", 1),
+        ]);
+        for (input, s) in cases {
+            println!("input: '{}'", input);
+            let helper = ShantenHelper::new(&Tehai::from(get_pais_from_str(input).unwrap()));
+            let normal = helper.get_kokushi_shanten();
+            println!("shanten: {} for '{}'(normal)", s, input);
+            assert_eq!(s, normal, "for '{}'", input);
         }
     }
 }
