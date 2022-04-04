@@ -193,7 +193,7 @@ impl Pai {
         }
     }
 
-    pub fn as_unify_u8(self) -> u8 {
+    pub fn as_unify_u8(&self) -> u8 {
         match self {
             Self::AkaMan5 => 15,
             Self::AkaPin5 => 25,

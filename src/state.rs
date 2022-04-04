@@ -11,7 +11,6 @@ use serde_with::{serde_as, DisplayFromStr};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
-use std::iter::FromIterator;
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct State {
@@ -321,8 +320,10 @@ struct BlockElem {
 }
 type Block = Vec<BlockElem>;
 
+const PAIS_VEC_LEN: usize = 48;
+
 struct ShantenHelper {
-    blocks: Vec<Block>,
+    pais: [i32; PAIS_VEC_LEN],
     num_pais_rem: i32,
     num_tehai: i32,
 
@@ -333,85 +334,19 @@ struct ShantenHelper {
 impl ShantenHelper {
     fn new(tehai: &Tehai) -> Self {
         // collect all pais in tehai and fuuros
-        let (pai_counter, num_pais) = {
-            let mut pai_counter: BTreeMap<u8, u32> = BTreeMap::new();
-            let mut num_pais = 0;
-            for pai in tehai.view().iter() {
-                // Pai.as_unify_u8 has handled 0m 0p 0s => 5m 5p 5s
-                num_pais += 1;
-                *pai_counter.entry(pai.as_unify_u8()).or_insert(0) += 1;
-            }
-            (pai_counter, num_pais)
-        };
-        // assert!(num_pais == 14 || num_pais == 13);
-        let pai_counter_vec = Vec::from_iter(pai_counter.iter());
-
-        let get_pai_type = |pai: u8| {
-            match pai {
-                11..=19 => 1, // m
-                21..=29 => 2, // p
-                31..=39 => 3, // s
-                41..=47 => 4, // z
-                x => unreachable!(format!("with pai: {}", x)),
-            }
-        };
-        let distance: Vec<Distance> = pai_counter_vec
-            .windows(2)
-            .map(|pais| {
-                let (pai, next_pai) = (pais[0].0, pais[1].0);
-                let (pai_type, next_pai_type) = (get_pai_type(*pai), get_pai_type(*next_pai));
-                if pai_type != next_pai_type || pai_type == 4 {
-                    // if the adj pais are from different type, or both of them are "z",
-                    // then the distance between them are ∞
-                    Distance::Inf
-                } else if next_pai - pai > 2 {
-                    Distance::Inf // ∞
-                } else if next_pai - pai == 1 {
-                    Distance::One
-                } else {
-                    Distance::Two
-                }
-            })
-            .collect();
-
-        let mut blocks = Vec::new();
-        let mut cur_block: Block = Vec::new();
-        for pair in pai_counter_vec.iter().zip_longest(distance.iter()) {
-            match pair {
-                Both(p, d) => {
-                    let elem = BlockElem {
-                        pai: Pai::try_from(*p.0).unwrap(),
-                        num: *p.1,
-                        distance: *d,
-                    };
-                    cur_block.push(elem);
-                    match d {
-                        &Distance::Inf => {
-                            blocks.push(cur_block);
-                            cur_block = Vec::new()
-                        }
-                        _ => {}
-                    };
-                }
-                Left((p, num)) => {
-                    // to the end
-                    let elem = BlockElem {
-                        pai: Pai::try_from(**p).unwrap(),
-                        num: **num,
-                        distance: Distance::Inf,
-                    };
-                    cur_block.push(elem);
-                    blocks.push(cur_block);
-                    cur_block = Vec::new()
-                }
-                Right(_) => unreachable!("the size of distance must less than pai_counter"),
-            }
+        let mut pais: [i32; 48] = [0i32; 48];
+        let mut num_pais = 0;
+        for pai in tehai.view().iter() {
+            // Pai.as_unify_u8 has handled 0m 0p 0s => 5m 5p 5s
+            num_pais += 1;
+            pais[pai.as_unify_u8() as usize] += 1;
         }
+        // assert!(num_pais == 14 || num_pais == 13);
         Self {
-            blocks,
+            pais,
             num_pais_rem: num_pais,
             num_tehai: num_pais,
-            verbose: false,
+            verbose: true,
             state: Vec::new(),
         }
     }
@@ -430,9 +365,12 @@ impl ShantenHelper {
         }
         let mut num_kind = 0;
         let mut exist_pair = false;
-        self.blocks.iter().for_each(|block| {
-            for e in block.iter() {
-                num_kind += match e.pai {
+        self.pais.iter().enumerate().for_each(|(idx, num)| {
+            if *num == 0 {
+                return;
+            }
+            if let Ok(pai) = Pai::try_from(idx as u8) {
+                num_kind += match pai {
                     Pai::East
                     | Pai::South
                     | Pai::West
@@ -446,7 +384,7 @@ impl ShantenHelper {
                     | Pai::Pin9
                     | Pai::Sou1
                     | Pai::Sou9 => {
-                        if e.num > 1 {
+                        if *num > 1 {
                             exist_pair = true;
                         }
                         1
@@ -466,12 +404,12 @@ impl ShantenHelper {
             return shanten;
         }
         let mut num_kind = 0;
-        self.blocks.iter().for_each(|block| {
-            for e in block.iter() {
-                if e.num == 0 {
-                    continue;
+        self.pais.iter().enumerate().for_each(|(idx, num)| {
+            if let Ok(pai) = Pai::try_from(idx as u8) {
+                if *num == 0 {
+                    return;
                 }
-                if e.num >= 2 {
+                if *num >= 2 {
                     shanten -= 1;
                 }
                 num_kind += 1;
@@ -486,33 +424,37 @@ impl ShantenHelper {
     //    0 for tenpai
     //   -1 for ron
     fn get_normal_shanten(&mut self) -> i32 {
-        log_if!(self.verbose, "num of blocks: {}", self.blocks.len());
+        log_if!(self.verbose, "num of blocks: {}", self.num_tehai);
         let mut shanten = 8i32;
         let mut c_max = 0i32;
         let k = (self.num_pais_rem - 2) / 3;
-        let eye_candidates = ShantenHelper::eyes(&self.blocks);
+        let eye_candidates = ShantenHelper::eyes(&self.pais);
         for eye in eye_candidates {
             // try to get the shanten with this eye
             log_if!(self.verbose, "take {} as eye begin", eye);
             self.take_eye(eye);
-            self.search_by_take_3(0, &mut shanten, &mut c_max, k, 1, 0);
+            self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 1, 0);
             self.rollback_pais(&[eye, eye]);
             log_if!(self.verbose, "take {} as eye done, s: {}", eye, shanten);
         }
         // try to get the shanten without eye
         log_if!(self.verbose, "take nothing as eye begin");
-        self.search_by_take_3(0, &mut shanten, &mut c_max, k, 0, 0);
+        self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 0, 0);
         log_if!(self.verbose, "take nothing as eye done, s: {}", shanten);
         shanten
     }
 
-    fn eyes(blocks: &Vec<Block>) -> Vec<Pai> {
-        blocks
-            .iter()
-            .flat_map(|block| block.iter())
-            .filter(|elem| elem.num >= 2)
-            .map(|elem| elem.pai)
-            .collect()
+    fn eyes(pais: &[i32; 48]) -> Vec<Pai> {
+        let mut eyes = Vec::new();
+        for (idx, num) in pais.iter().enumerate() {
+            if *num < 2 {
+                continue;
+            }
+            if let Ok(pai) = Pai::try_from(idx as u8) {
+                eyes.push(pai);
+            }
+        }
+        eyes
     }
 
     fn take<const LEN: usize>(&mut self, pais: &[Pai; LEN]) {
@@ -521,158 +463,130 @@ impl ShantenHelper {
     }
 
     fn rollback_pais<const LEN: usize>(&mut self, pais: &[Pai; LEN]) {
-        for block in self.blocks.iter_mut() {
-            for elem in block.iter_mut() {
-                for p in pais {
-                    if *p == elem.pai {
-                        elem.num += 1;
-                    }
-                }
-            }
+        for p in pais {
+            self.pais[p.as_unify_u8() as usize] += 1;
         }
         self.num_pais_rem += pais.len() as i32;
         self.state.pop();
     }
 
-    fn take_eye(&mut self, pai: Pai) {
-        for block in self.blocks.iter_mut() {
-            for elem in block.iter_mut() {
-                if elem.pai == pai {
-                    elem.num -= 2;
-                    let eye = [elem.pai, elem.pai];
-                    self.take(&eye);
-                    return;
-                }
+    fn next_not_zero(&self, take_idx: usize) -> usize {
+        for idx in take_idx..PAIS_VEC_LEN {
+            if self.pais[idx] > 0 {
+                return idx;
             }
         }
+        PAIS_VEC_LEN
     }
 
-    fn try_take_3(&mut self, mut take_idx: i32) -> Option<[Pai; 3]> {
-        // try to get triplet (AAA)
-        for block in self.blocks.iter_mut() {
-            for elem in block {
-                if elem.num >= 3 {
-                    if take_idx > 0 {
-                        take_idx -= 1;
-                    } else {
-                        elem.num -= 3;
-                        let meld = [elem.pai, elem.pai, elem.pai];
-                        self.take(&meld);
-                        return Some(meld);
-                    }
-                }
-            }
-        }
-        // try to get sequence (ABC)
-        for block in self.blocks.iter_mut() {
-            if block.len() < 3 {
+    fn take_eye(&mut self, pai: Pai) {
+        self.pais[pai.as_unify_u8() as usize] -= 2;
+        let eye = [pai, pai];
+        self.take(&eye);
+    }
+
+    fn try_take_3(&mut self, take_idx: usize) -> Option<([Pai; 3], usize)> {
+        for idx in take_idx..48 {
+            let idx = idx;
+            let num = self.pais[idx];
+            if num < 1 {
                 continue;
             }
-            for idx in (0..block.len()).step_by(3) {
-                let p1 = &block[idx];
-                if p1.num == 0 || p1.distance != Distance::One {
-                    continue;
+            // try to get triplet (AAA)
+            if (41 <= idx && idx <= 47) && num >= 3 {
+                if let Ok(pai) = Pai::try_from(idx as u8) {
+                    self.pais[idx] -= 3;
+                    let meld = [pai, pai, pai];
+                    self.take(&meld);
+                    return Some((meld, idx));
                 }
-                let p2 = &block[idx + 1];
-                if p2.num == 0 || p2.distance != Distance::One {
-                    continue;
-                }
-                let p3 = &block[idx + 2];
-                if p3.num == 0 {
-                    continue;
-                } else {
-                    if take_idx > 0 {
-                        take_idx -= 1;
-                    } else {
-                        let meld = [p1.pai, p2.pai, p3.pai];
-                        block[idx].num -= 1;
-                        block[idx + 1].num -= 1;
-                        block[idx + 2].num -= 1;
+            }
+            // 1~7s, 1~7p, 1~7m
+            if (11 <= idx && idx < 18) || (21 <= idx && idx < 28) || (31 <= idx && idx < 38) {
+                // try to get triplet (AAA)
+                if num >= 3 {
+                    if let Ok(pai) = Pai::try_from(idx as u8) {
+                        self.pais[idx] -= 3;
+                        let meld = [pai, pai, pai];
                         self.take(&meld);
-                        return Some(meld);
+                        return Some((meld, idx));
                     }
                 }
+                // try to get sequence (ABC)
+                if self.pais[idx + 1] < 1 || self.pais[idx + 2] < 1 {
+                    continue;
+                }
+                self.pais[idx] -= 1;
+                self.pais[idx + 1] -= 1;
+                self.pais[idx + 2] -= 1;
+                let meld = [
+                    Pai::try_from(idx as u8).unwrap(),
+                    Pai::try_from((idx + 1) as u8).unwrap(),
+                    Pai::try_from((idx + 2) as u8).unwrap(),
+                ];
+                self.take(&meld);
+                return Some((meld, idx));
             }
         }
         None
     }
 
-    fn try_take_2(&mut self, mut take_idx: i32) -> Option<[Pai; 2]> {
+    fn try_take_2(&mut self, take_idx: usize) -> Option<([Pai; 2], usize)> {
         // try get pair
-        for block in self.blocks.iter_mut() {
-            for elem in block.iter_mut() {
-                if elem.num >= 2 {
-                    if take_idx > 0 {
-                        take_idx -= 1;
-                    } else {
-                        elem.num -= 2;
-                        let res = [elem.pai, elem.pai];
-                        self.take(&res);
-                        return Some(res);
-                    }
-                }
+        for (idx, num) in self.pais.iter_mut().enumerate() {
+            if idx < take_idx as usize || *num < 2 {
+                continue;
+            }
+            if let Ok(pai) = Pai::try_from(idx as u8) {
+                self.pais[idx] -= 2;
+                let res = [pai, pai];
+                self.take(&res);
+                return Some((res, idx));
             }
         }
         // try get RYANMEN/PENCHAN/KANCHAN
-        for block in self.blocks.iter_mut() {
-            if block.len() < 2 {
+        for idx in 0..38 {
+            if idx < take_idx as usize || self.pais[idx] < 1 {
                 continue;
             }
-            for idx in 0..block.len() {
-                let p1 = &block[idx];
-                if p1.num == 0 || idx == block.len() - 1 {
-                    continue;
-                }
-                let p2 = &block[idx + 1];
-                if p2.num > 0 {
-                    // RYANMEN/PENCHAN
-                    if take_idx > 0 {
-                        take_idx -= 1;
-                    } else {
-                        let res = [p1.pai, p2.pai];
-                        block[idx].num -= 1;
-                        block[idx + 1].num -= 1;
-                        self.take(&res);
-                        return Some(res);
-                    }
-                }
-                if p1.distance == Distance::Two
-                    || p2.distance == Distance::Two
-                    || idx == block.len() - 2
-                {
-                    continue;
-                }
-                // KANCHAN
-                let p3 = &block[idx + 2];
-                if p3.num > 0 {
-                    if take_idx > 0 {
-                        take_idx -= 1;
-                    } else {
-                        let res = [p1.pai, p3.pai];
-                        block[idx].num -= 1;
-                        block[idx + 2].num -= 1;
-                        self.take(&res);
-                        return Some(res);
-                    }
+            // 1~8s, 1~8p, 1~8m
+            if (11 <= idx && idx < 18) || (21 <= idx && idx < 28) || (31 <= idx && idx < 38) {
+                if self.pais[idx + 1] > 0 {
+                    // PENCHAN/RYANMEN
+                    self.pais[idx] -= 1;
+                    self.pais[idx + 1] -= 1;
+                    let res = [
+                        Pai::try_from(idx as u8).unwrap(),
+                        Pai::try_from((idx + 1) as u8).unwrap(),
+                    ];
+                    self.take(&res);
+                    return Some((res, idx));
+                } else if self.pais[idx + 2] > 0 {
+                    // KANCHAN
+                    self.pais[idx] -= 1;
+                    self.pais[idx + 2] -= 1;
+                    let res = [
+                        Pai::try_from(idx as u8).unwrap(),
+                        Pai::try_from((idx + 2) as u8).unwrap(),
+                    ];
+                    self.take(&res);
+                    return Some((res, idx));
                 }
             }
         }
         None
     }
 
-    fn try_take_1(&mut self, mut take_idx: i32) -> Option<Pai> {
-        for block in self.blocks.iter_mut() {
-            for elem in block.iter_mut() {
-                if elem.num > 0 {
-                    if take_idx > 0 {
-                        take_idx -= 1;
-                    } else {
-                        elem.num -= 1;
-                        let pai = elem.pai;
-                        self.take(&[pai]);
-                        return Some(pai);
-                    }
-                }
+    fn try_take_1(&mut self, take_idx: i32) -> Option<Pai> {
+        for (idx, num) in self.pais.iter_mut().enumerate() {
+            if idx < take_idx as usize || *num < 1 {
+                continue;
+            }
+            if let Ok(pai) = Pai::try_from(idx as u8) {
+                self.pais[idx] -= 2;
+                let res = [pai];
+                self.take(&res);
+                return Some(pai);
             }
         }
         None
@@ -680,7 +594,8 @@ impl ShantenHelper {
 
     fn search_by_take_3(
         &mut self,
-        i: i32,
+        level: i32,
+        begin_idx: usize,
         shanten: &mut i32,
         c_max: &mut i32,
         k: i32,
@@ -690,20 +605,28 @@ impl ShantenHelper {
         log_if!(
             self.verbose,
             "entry search_by meld with i: {}, c_rem: {}, s: {}, c_max: {}",
-            i,
+            begin_idx,
             self.num_pais_rem,
             shanten,
             c_max
         );
-        if i == self.num_pais_rem {
+        if begin_idx >= PAIS_VEC_LEN || level > self.num_pais_rem / 3 {
             self.search_by_take_2(0, shanten, c_max, k, exist_eye, num_meld, 0);
             return;
         }
 
-        // take a meld
-        if let Some(meld) = self.try_take_3(i) {
+        // take a meld TODO: handle AAABC
+        if let Some((meld, next_search_idx)) = self.try_take_3(begin_idx) {
             log_if!(self.verbose, "take {:?} as meld begin", meld);
-            self.search_by_take_3(i, shanten, c_max, k, exist_eye, num_meld + 1);
+            self.search_by_take_3(
+                level + 1,
+                next_search_idx,
+                shanten,
+                c_max,
+                k,
+                exist_eye,
+                num_meld + 1,
+            );
             self.rollback_pais(&meld);
             log_if!(
                 self.verbose,
@@ -712,14 +635,32 @@ impl ShantenHelper {
                 *shanten
             );
         }
-        log_if!(self.verbose, "take nothing as meld begin");
-        self.search_by_take_3(i + 1, shanten, c_max, k, exist_eye, num_meld);
-        log_if!(self.verbose, "take nothing as meld done, s: {}", *shanten);
+        log_if!(
+            self.verbose,
+            "take nothing as meld begin, idx: {}",
+            begin_idx
+        );
+        let next_search_idx = self.next_not_zero(begin_idx + 1);
+        self.search_by_take_3(
+            level,
+            next_search_idx,
+            shanten,
+            c_max,
+            k,
+            exist_eye,
+            num_meld,
+        );
+        log_if!(
+            self.verbose,
+            "take nothing as meld done, idx: {}, s: {}",
+            begin_idx,
+            *shanten
+        );
     }
 
     fn search_by_take_2(
         &mut self,
-        i: i32,
+        begin_idx: usize,
         shanten: &mut i32,
         c_max: &mut i32,
         k: i32,
@@ -730,7 +671,7 @@ impl ShantenHelper {
         log_if!(
             self.verbose,
             "entry search_by 2 with i: {}, c_rem: {}, s: {}, c_max: {}, g: {}, gp: {}",
-            i,
+            begin_idx,
             self.num_pais_rem,
             shanten,
             c_max,
@@ -776,9 +717,17 @@ impl ShantenHelper {
             );
             return;
         }
-        if let Some(dazi) = self.try_take_2(i) {
+        if let Some((dazi, next_search_idx)) = self.try_take_2(begin_idx) {
             log_if!(self.verbose, "take {:?} as dazi begin", dazi);
-            self.search_by_take_2(i, shanten, c_max, k, exist_eye, num_meld, num_dazi + 1);
+            self.search_by_take_2(
+                next_search_idx,
+                shanten,
+                c_max,
+                k,
+                exist_eye,
+                num_meld,
+                num_dazi + 1,
+            );
             self.rollback_pais(&dazi);
             log_if!(
                 self.verbose,
@@ -790,7 +739,15 @@ impl ShantenHelper {
 
         for take_idx in 0..self.num_pais_rem {
             if let Some(pai) = self.try_take_1(take_idx) {
-                self.search_by_take_2(i + 1, shanten, c_max, k, exist_eye, num_meld, num_dazi);
+                self.search_by_take_2(
+                    begin_idx + 1,
+                    shanten,
+                    c_max,
+                    k,
+                    exist_eye,
+                    num_meld,
+                    num_dazi,
+                );
                 self.rollback_pais(&[pai]);
             }
         }
@@ -867,10 +824,10 @@ mod tests {
     #[test]
     fn test_iter_stat_pais() {
         let case: Vec<Case> = Vec::<Case>::from([
-            // Case::Normal {
-            //     i: "0m12356p4699s4m222z",
-            //     s: 1,
-            // },
+            Case::Normal {
+                i: "40m12356p4699s222z",
+                s: 1,
+            },
             // Case::Normal {
             //     i: "0m12356p4699s4m",
             //     s: 1,
@@ -931,30 +888,30 @@ mod tests {
             //     i: "149m258p2369s124z7s",
             //     s: 6,
             // },
-            Case::Kokushi {
-                i: "159m19p19s1234677z",
-                s: 0,
-            },
-            Case::Kokushi {
-                i: "159m19p19s1236677z",
-                s: 1,
-            },
-            Case::Chiitoi {
-                i: "458m666p116688s55z",
-                s: 1, // normal 2
-            },
-            Case::Chiitoi {
-                i: "44m6666p116688s55z",
-                s: 1, // normal 2
-            },
-            Case::Chiitoi {
-                i: "4444m6666p1111s55z",
-                s: 5, 
-            },
-            Case::Normal {
-                i: "4444m6666p1111s55z",
-                s: 1, 
-            },
+            // Case::Kokushi {
+            //     i: "159m19p19s1234677z",
+            //     s: 0,
+            // },
+            // Case::Kokushi {
+            //     i: "159m19p19s1236677z",
+            //     s: 1,
+            // },
+            // Case::Chiitoi {
+            //     i: "458m666p116688s55z",
+            //     s: 1, // normal 2
+            // },
+            // Case::Chiitoi {
+            //     i: "44m6666p116688s55z",
+            //     s: 1, // normal 2
+            // },
+            // Case::Chiitoi {
+            //     i: "4444m6666p1111s55z",
+            //     s: 5,
+            // },
+            // Case::Normal {
+            //     i: "4444m6666p1111s55z",
+            //     s: 1,
+            // },
         ]);
         for c in case {
             match c {
