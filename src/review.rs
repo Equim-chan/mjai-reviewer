@@ -374,12 +374,13 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
             details: actions,
         };
         log!(
-            "review entry created: {:?} ({}/{}/{}, {:.03})",
+            "review entry created: {:?} ({}/{}/{}, {:.03}); shanten: {}",
             acceptance,
             total_problems,
             total_tolerated,
             total_reviewed,
             (raw_score / total_reviewed as f64).powf(2.) * 100.,
+            state.calc_shanten(),
         );
         if verbose {
             log!("{:?}", entry);

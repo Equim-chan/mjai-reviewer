@@ -5,10 +5,8 @@ use anyhow::anyhow;
 use anyhow::{Context, Result};
 use convlog::mjai::{Consumed2, Consumed3, Consumed4, Event};
 use convlog::Pai;
-use itertools::{EitherOrBoth::*, Itertools};
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
-use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
 
@@ -291,35 +289,6 @@ impl Fuuro {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum Distance {
-    One,
-    Two,
-    Inf,
-}
-impl fmt::Display for Distance {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                &Distance::Inf => '∞',
-                &Distance::One => '1',
-                &Distance::Two => '2',
-            }
-        )
-    }
-}
-
-#[derive(Debug)]
-struct BlockElem {
-    pai: Pai,
-    num: u32,
-    // The distance between current Pai and next Pai
-    distance: Distance,
-}
-type Block = Vec<BlockElem>;
-
 const PAIS_VEC_LEN: usize = 48;
 
 struct ShantenHelper {
@@ -398,17 +367,18 @@ impl ShantenHelper {
 
     // Get shanten for (7 * pair)
     fn get_chiitoi_shanten(&self) -> i32 {
-        let mut shanten = 6i32; // 6 at max for chiitoi
-                                // there is any fuuro, then we can not get chiitoi
+        // 6 at max for chiitoi
+        let mut shanten = 6i32;
+        // there is any fuuro, then we can not get chiitoi
         if self.num_tehai < 13 {
             return shanten;
         }
         let mut num_kind = 0;
         self.pais.iter().enumerate().for_each(|(idx, num)| {
-            if let Ok(pai) = Pai::try_from(idx as u8) {
-                if *num == 0 {
-                    return;
-                }
+            if *num == 0 {
+                return;
+            }
+            if let Ok(_pai) = Pai::try_from(idx as u8) {
                 if *num >= 2 {
                     shanten -= 1;
                 }
@@ -424,17 +394,17 @@ impl ShantenHelper {
     //    0 for tenpai
     //   -1 for ron
     fn get_normal_shanten(&mut self) -> i32 {
-        log_if!(self.verbose, "num of blocks: {}", self.num_tehai);
+        let num_fuuros = (14 - self.num_tehai) / 3;
         let mut shanten = 8i32;
         let mut c_max = 0i32;
         let k = (self.num_pais_rem - 2) / 3;
-        let eye_candidates = ShantenHelper::eyes(&self.pais);
-        for eye in eye_candidates {
+        for eye in ShantenHelper::eyes(&self.pais) {
             // try to get the shanten with this eye
             let eye_array = [eye, eye];
             log_if!(self.verbose, "take {:?} as eye begin", eye_array);
-            self.take_eye(eye);
-            self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 1, 0);
+            self.pais[eye.as_unify_u8() as usize] -= 2;
+            self.take(&eye_array);
+            self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 1, num_fuuros);
             self.rollback_pais(&eye_array);
             log_if!(
                 self.verbose,
@@ -445,7 +415,7 @@ impl ShantenHelper {
         }
         // try to get the shanten without eye
         log_if!(self.verbose, "take nothing as eye begin");
-        self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 0, 0);
+        self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 0, num_fuuros);
         log_if!(self.verbose, "take nothing as eye done, s: {}", shanten);
         shanten
     }
@@ -483,12 +453,6 @@ impl ShantenHelper {
             }
         }
         PAIS_VEC_LEN
-    }
-
-    fn take_eye(&mut self, pai: Pai) {
-        self.pais[pai.as_unify_u8() as usize] -= 2;
-        let eye = [pai, pai];
-        self.take(&eye);
     }
 
     fn try_take_3(&mut self, take_idx: usize) -> Option<([Pai; 3], usize)> {
@@ -718,14 +682,13 @@ impl ShantenHelper {
             return;
         }
         if self.num_pais_rem == 0 {
-            let num_fuuros = (14 - self.num_tehai) / 3;
-            let penalty = std::cmp::max(num_meld + num_fuuros + num_dazi + exist_eye - 5, 0);
+            let penalty = std::cmp::max(num_meld + num_dazi + exist_eye - 5, 0);
             let q = if num_meld + num_dazi + exist_eye <= 4 {
                 1
             } else {
                 exist_eye
             };
-            let cur_s = 9 - 2 * (num_meld + num_fuuros) - (num_dazi + exist_eye) - q + penalty;
+            let cur_s = 9 - 2 * num_meld - (num_dazi + exist_eye) - q + penalty;
             *shanten = std::cmp::min(*shanten, cur_s);
             *c_max = std::cmp::max(*c_max, c);
             log_if!(
