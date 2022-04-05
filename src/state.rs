@@ -8,7 +8,6 @@ use convlog::Pai;
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
 use std::convert::TryFrom;
-use std::fmt;
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct State {
@@ -315,7 +314,7 @@ impl ShantenHelper {
             pais,
             num_pais_rem: num_pais,
             num_tehai: num_pais,
-            verbose: true,
+            verbose: false,
             state: Vec::new(),
         }
     }
@@ -402,7 +401,6 @@ impl ShantenHelper {
             // try to get the shanten with this eye
             let eye_array = [eye, eye];
             log_if!(self.verbose, "take {:?} as eye begin", eye_array);
-            self.pais[eye.as_unify_u8() as usize] -= 2;
             self.take(&eye_array);
             self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 1, num_fuuros);
             self.rollback_pais(&eye_array);
@@ -434,6 +432,9 @@ impl ShantenHelper {
     }
 
     fn take<const LEN: usize>(&mut self, pais: &[Pai; LEN]) {
+        for idx in 0..pais.len() {
+            self.pais[pais[idx].as_unify_u8() as usize] -= 1;
+        }
         self.num_pais_rem -= pais.len() as i32;
         self.state.push(pais.to_vec());
     }
@@ -462,40 +463,38 @@ impl ShantenHelper {
             if num < 1 {
                 continue;
             }
-            // try to get triplet (AAA)
-            if (41 <= idx && idx <= 47) && num >= 3 {
-                if let Ok(pai) = Pai::try_from(idx as u8) {
-                    self.pais[idx] -= 3;
-                    let meld = [pai, pai, pai];
-                    self.take(&meld);
-                    return Some((meld, idx));
-                }
-            }
-            // 1~7s, 1~7p, 1~7m
-            if (11 <= idx && idx < 18) || (21 <= idx && idx < 28) || (31 <= idx && idx < 38) {
+            // 1~9s, 1~9p, 1~9m
+            if (11 <= idx && idx <= 19) || (21 <= idx && idx <= 29) || (31 <= idx && idx <= 39) {
                 // try to get triplet (AAA)
                 if num >= 3 {
                     if let Ok(pai) = Pai::try_from(idx as u8) {
-                        self.pais[idx] -= 3;
                         let meld = [pai, pai, pai];
                         self.take(&meld);
                         return Some((meld, idx));
                     }
                 }
-                // try to get sequence (ABC)
-                if self.pais[idx + 1] < 1 || self.pais[idx + 2] < 1 {
-                    continue;
+                // 1~7s, 1~7p, 1~7m
+                if (11 <= idx && idx < 18) || (21 <= idx && idx < 28) || (31 <= idx && idx < 38) {
+                    // try to get sequence (ABC)
+                    if self.pais[idx + 1] < 1 || self.pais[idx + 2] < 1 {
+                        continue;
+                    }
+                    let meld = [
+                        Pai::try_from(idx as u8).unwrap(),
+                        Pai::try_from((idx + 1) as u8).unwrap(),
+                        Pai::try_from((idx + 2) as u8).unwrap(),
+                    ];
+                    self.take(&meld);
+                    return Some((meld, idx));
                 }
-                self.pais[idx] -= 1;
-                self.pais[idx + 1] -= 1;
-                self.pais[idx + 2] -= 1;
-                let meld = [
-                    Pai::try_from(idx as u8).unwrap(),
-                    Pai::try_from((idx + 1) as u8).unwrap(),
-                    Pai::try_from((idx + 2) as u8).unwrap(),
-                ];
-                self.take(&meld);
-                return Some((meld, idx));
+            }
+            // try to get triplet (AAA)
+            if (41 <= idx && idx <= 47) && num >= 3 {
+                if let Ok(pai) = Pai::try_from(idx as u8) {
+                    let meld = [pai, pai, pai];
+                    self.take(&meld);
+                    return Some((meld, idx));
+                }
             }
         }
         None
@@ -511,7 +510,6 @@ impl ShantenHelper {
                 // try get pair
                 if self.pais[idx] > 1 {
                     if let Ok(pai) = Pai::try_from(idx as u8) {
-                        self.pais[idx] -= 2;
                         let res = [pai, pai];
                         self.take(&res);
                         return Some((res, idx));
@@ -523,8 +521,6 @@ impl ShantenHelper {
                 // 1~8s, 1~8p, 1~8m
                 if self.pais[idx + 1] > 0 {
                     // PENCHAN/RYANMEN
-                    self.pais[idx] -= 1;
-                    self.pais[idx + 1] -= 1;
                     let res = [
                         Pai::try_from(idx as u8).unwrap(),
                         Pai::try_from((idx + 1) as u8).unwrap(),
@@ -533,8 +529,6 @@ impl ShantenHelper {
                     return Some((res, idx));
                 } else if idx % 10 < 8 && self.pais[idx + 2] > 0 {
                     // 1~7s, 1~7p, 1~7m, KANCHAN
-                    self.pais[idx] -= 1;
-                    self.pais[idx + 2] -= 1;
                     let res = [
                         Pai::try_from(idx as u8).unwrap(),
                         Pai::try_from((idx + 2) as u8).unwrap(),
@@ -546,7 +540,6 @@ impl ShantenHelper {
             // try get pair
             if 41 <= idx && idx <= 47 && self.pais[idx] > 1 {
                 if let Ok(pai) = Pai::try_from(idx as u8) {
-                    self.pais[idx] -= 2;
                     let res = [pai, pai];
                     self.take(&res);
                     return Some((res, idx));
@@ -556,13 +549,13 @@ impl ShantenHelper {
         None
     }
 
-    fn try_take_1(&mut self, take_idx: i32) -> Option<Pai> {
-        for (idx, num) in self.pais.iter_mut().enumerate() {
-            if idx < take_idx as usize || *num < 1 {
+    fn try_take_1(&mut self, _take_idx: usize) -> Option<Pai> {
+        for idx in 0..PAIS_VEC_LEN {
+            let num = self.pais[idx];
+            if num < 1 {
                 continue;
             }
             if let Ok(pai) = Pai::try_from(idx as u8) {
-                self.pais[idx] -= 2;
                 let res = [pai];
                 self.take(&res);
                 return Some(pai);
@@ -583,14 +576,14 @@ impl ShantenHelper {
     ) {
         log_if!(
             self.verbose,
-            "entry search_by meld with i: {}, c_rem: {}, s: {}, c_max: {}",
+            "enter search_by_3 with i: {}, c_rem: {}, s: {}, c_max: {}",
             begin_idx,
             self.num_pais_rem,
             shanten,
             c_max
         );
         if begin_idx >= PAIS_VEC_LEN || level > 3 {
-            self.search_by_take_2(0, shanten, c_max, k, exist_eye, num_meld, 0);
+            self.search_by_take_2(11, shanten, c_max, k, exist_eye, num_meld, 0);
             return;
         }
 
@@ -649,7 +642,7 @@ impl ShantenHelper {
     ) {
         log_if!(
             self.verbose,
-            "entry search_by 2 with i: {}, c_rem: {}, s: {}, c_max: {}, g: {}, gp: {}",
+            "enter search_by_2 with i: {}, c_rem: {}, s: {}, c_max: {}, g: {}, gp: {}",
             begin_idx,
             self.num_pais_rem,
             shanten,
@@ -720,19 +713,19 @@ impl ShantenHelper {
             );
         }
 
-        for take_idx in 0..self.num_pais_rem {
-            if let Some(pai) = self.try_take_1(take_idx) {
-                self.search_by_take_2(
-                    begin_idx + 1,
-                    shanten,
-                    c_max,
-                    k,
-                    exist_eye,
-                    num_meld,
-                    num_dazi,
-                );
-                self.rollback_pais(&[pai]);
+        let mut stack = Vec::with_capacity(self.num_pais_rem as usize);
+        // take all remaining pai and update the shanten number
+        for _idx in 0..self.num_pais_rem {
+            if let Some(pai) = self.try_take_1(0) {
+                stack.push(pai);
+                log_if!(self.verbose, "take [{:?}] as pai begin", pai);
             }
+        }
+        self.search_by_take_2(0, shanten, c_max, k, exist_eye, num_meld, num_dazi);
+        // rollbacks
+        for pai in stack.iter().rev() {
+            self.rollback_pais(&[*pai]);
+            log_if!(self.verbose, "take [{:?}] as pai end", pai);
         }
     }
 }
@@ -802,6 +795,16 @@ mod tests {
     #[test]
     fn test_normal_shanten() {
         let cases: Vec<(&'static str, i32)> = Vec::from([
+            ("1112234567899s4s", 0),
+            ("11112345678999s", -1),
+            ("11122345678999s", -1),
+            ("11123345678999s", -1),
+            ("11123445678999s", -1),
+            ("11123455678999s", -1),
+            ("11123456678999s", -1),
+            ("11123456778999s", -1),
+            ("11123456788999s", -1),
+            ("11123456789999s", -1),
             ("40m12356p4699s222z", 1),
             ("0m12356p4699s4m", 1),
             ("123456789p123s55m", -1),
