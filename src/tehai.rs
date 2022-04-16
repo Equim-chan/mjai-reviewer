@@ -105,6 +105,8 @@ impl Tehai {
         &self.inner
     }
 
+    // Format into tenhou format
+    // e.g. "123789m789p2355s1s"
     pub fn into_paili_str(&self) -> String {
         let pais = if self.is_sorted {
             self.inner.clone()

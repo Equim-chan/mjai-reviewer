@@ -654,7 +654,6 @@ impl ShantenHelper {
 #[cfg(test)]
 mod tests {
 
-    use convlog::mjai::*;
     use convlog::pai::get_pais_from_str;
 
     use super::*;

@@ -103,9 +103,11 @@ impl FromStr for Pai {
     }
 }
 
+// Parse from tenhou format
+// e.g. "123789m789p2355s1s"
 pub fn get_pais_from_str(s: &str) -> Result<Vec<Pai>, ParseError> {
     let mut pais: Vec<Pai> = Vec::new();
-    let zero_digit = '0'.to_digit(10).unwrap();
+    let zero_digit: u32 = '0'.to_digit(10).unwrap();
     for part in s.split_inclusive(&['m', 's', 'p', 'z'][..]) {
         let mut chars = part.chars().rev();
         let base = if let Some(last_char) = chars.next() {
@@ -193,6 +195,8 @@ impl Pai {
         }
     }
 
+    // ignore the pai is aka or not
+    #[inline]
     pub fn as_unify_u8(&self) -> u8 {
         match self {
             Self::AkaMan5 => 15,
@@ -208,28 +212,74 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_pai() {
-        println!("{:?} {:?} {:?}", Pai::AkaMan5, Pai::AkaPin5, Pai::AkaSou5);
+    fn test_pai_to_unify_num() {
+        assert_eq!(Pai::AkaMan5.as_unify_u8(), Pai::Man5.as_unify_u8());
+        assert_eq!(Pai::AkaPin5.as_unify_u8(), Pai::Pin5.as_unify_u8());
+        assert_eq!(Pai::AkaSou5.as_unify_u8(), Pai::Sou5.as_unify_u8());
     }
 
     #[test]
     fn test_get_pais_from_str() {
-        let case0 = "123456789p123s55m";
-        let res = get_pais_from_str(case0).unwrap();
-        println!("{:?}", res);
-        let case0 = "1234567z19m19s199p";
-        let res = get_pais_from_str(case0).unwrap();
-        println!("{:?}", res);
-        let case0 = "1234567z10m10s110p";
-        let res = get_pais_from_str(case0).unwrap();
-        println!("{:?}", res);
-    }
-
-    #[test]
-    fn test_a() {
-        let x = Pai::try_from_primitive(11u8);
-        println!("{:?}", x);
-        let x = Pai::try_from(11u8);
-        println!("{:?}", x);
+        for (case, res) in vec![
+            (
+                "123456789p123s55m",
+                vec![
+                    Pai::Pin1,
+                    Pai::Pin2,
+                    Pai::Pin3,
+                    Pai::Pin4,
+                    Pai::Pin5,
+                    Pai::Pin6,
+                    Pai::Pin7,
+                    Pai::Pin8,
+                    Pai::Pin9,
+                    Pai::Sou1,
+                    Pai::Sou2,
+                    Pai::Sou3,
+                    Pai::Man5,
+                    Pai::Man5,
+                ],
+            ),
+            (
+                "1234567z19m19s199p",
+                vec![
+                    Pai::East,
+                    Pai::South,
+                    Pai::West,
+                    Pai::North,
+                    Pai::Haku,
+                    Pai::Hatsu,
+                    Pai::Chun,
+                    Pai::Man1,
+                    Pai::Man9,
+                    Pai::Sou1,
+                    Pai::Sou9,
+                    Pai::Pin1,
+                    Pai::Pin9,
+                    Pai::Pin9,
+                ],
+            ),
+            (
+                "1234567z10m10s110p",
+                vec![
+                    Pai::East,
+                    Pai::South,
+                    Pai::West,
+                    Pai::North,
+                    Pai::Haku,
+                    Pai::Hatsu,
+                    Pai::Chun,
+                    Pai::Man1,
+                    Pai::AkaMan5,
+                    Pai::Sou1,
+                    Pai::AkaSou5,
+                    Pai::Pin1,
+                    Pai::Pin1,
+                    Pai::AkaPin5,
+                ],
+            ),
+        ] {
+            assert_eq!(get_pais_from_str(case).unwrap(), res);
+        }
     }
 }
