@@ -43,6 +43,9 @@ pub struct Entry {
     pub expected: Vec<Event>, // at most 2 events
     pub actual: Vec<Event>,   // at most 2 events
 
+    pub last_shanten: i32,
+    pub shanten: i32,
+
     pub details: Vec<DetailedAction>,
 }
 
@@ -141,6 +144,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
     let mut junme = 0;
     let mut entries = vec![];
     let mut is_reached = false;
+    let mut last_shanten = 8i32;
 
     for (i, event) in events.iter().enumerate() {
         let to_write = json::to_string(event).unwrap();
@@ -166,6 +170,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
                 kyoku_review.kyoku = kyoku;
                 kyoku_review.honba = honba;
                 is_reached = false;
+                last_shanten = state.calc_shanten();
 
                 continue;
             }
@@ -362,6 +367,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
         total_reviewed += 1;
         raw_score += move_score;
 
+        let cur_shanten = state.calc_shanten();
         let entry = Entry {
             acceptance,
             junme,
@@ -371,22 +377,26 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
             state: state.clone(),
             expected: expected_action.to_vec(),
             actual: actual_action_strict,
+            last_shanten: last_shanten,
+            shanten: cur_shanten,
             details: actions,
         };
         log!(
-            "review entry created: {:?} ({}/{}/{}, {:.03}); shanten: {}",
+            "review entry created: {:?} ({}/{}/{}, {:.03}); shanten: {}->{}",
             acceptance,
             total_problems,
             total_tolerated,
             total_reviewed,
             (raw_score / total_reviewed as f64).powf(2.) * 100.,
-            state.calc_shanten(),
+            last_shanten,
+            cur_shanten
         );
         if verbose {
             log!("{:?}", entry);
         }
 
         entries.push(entry);
+        last_shanten = cur_shanten;
     }
 
     let ecode = akochan.wait()?;

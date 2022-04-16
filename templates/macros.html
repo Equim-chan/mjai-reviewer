@@ -190,3 +190,21 @@
     {%- endif -%}
   </ul>
 {%- endmacro render_daiminkan -%}
+
+{% macro render_shanten_str(s) %}
+  {%- if s == 0 -%}
+    聴牌
+  {%- elif s == -1 -%}
+    和了
+  {%- else -%}
+    {{ s }}向聴
+  {%- endif -%}
+{%- endmacro render_shanten_str -%}
+
+{%- macro render_shanten(last_shanten, shanten) -%}
+  {%- if last_shanten != shanten -%}
+    {{- self::render_shanten_str(s=last_shanten) -}}&nbsp;=>&nbsp;{{- self::render_shanten_str(s=shanten) -}}
+  {%- else -%}
+    {{- self::render_shanten_str(s=shanten) -}}
+  {%- endif -%}
+{%- endmacro render_shanten -%}
