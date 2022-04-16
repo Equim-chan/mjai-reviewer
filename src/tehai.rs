@@ -107,7 +107,7 @@ impl Tehai {
 
     // Format into tenhou format
     // e.g. "123789m789p2355s1s"
-    pub fn into_paili_str(&self) -> String {
+    pub fn as_tenhou_str(&self) -> String {
         let pais = if self.is_sorted {
             self.inner.clone()
         } else {
@@ -160,8 +160,8 @@ mod tests {
     #[test]
     fn test_tehai() {
         let tehai = Tehai::from(get_pais_from_str("123456789p123s55m").unwrap());
-        assert_eq!("55m123456789p123s", tehai.into_paili_str());
+        assert_eq!("55m123456789p123s", tehai.as_tenhou_str());
         let tehai = Tehai::from(get_pais_from_str("123406789p406s05m").unwrap());
-        assert_eq!("50m123406789p406s", tehai.into_paili_str());
+        assert_eq!("50m123406789p406s", tehai.as_tenhou_str());
     }
 }

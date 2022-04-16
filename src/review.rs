@@ -385,7 +385,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
             state: state.clone(),
             expected: expected_action.to_vec(),
             actual: actual_action_strict,
-            last_shanten: last_shanten,
+            last_shanten,
             shanten: cur_shanten,
             details: actions,
         };

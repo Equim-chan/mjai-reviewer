@@ -353,8 +353,8 @@ impl ShantenHelper {
     }
 
     fn take<const LEN: usize>(&mut self, pais: &[Pai; LEN]) {
-        for idx in 0..pais.len() {
-            self.pais[pais[idx].as_unify_u8() as usize] -= 1;
+        for pai in pais {
+            self.pais[pai.as_unify_u8() as usize] -= 1;
         }
         self.num_pais_rem -= pais.len() as i32;
         self.state.push(pais.to_vec());
@@ -385,7 +385,7 @@ impl ShantenHelper {
                 continue;
             }
             // 1~9s, 1~9p, 1~9m
-            if (11 <= idx && idx <= 19) || (21 <= idx && idx <= 29) || (31 <= idx && idx <= 39) {
+            if (11..=19).contains(&idx) || (21..=29).contains(&idx) || (31..=39).contains(&idx) {
                 // try to get triplet (AAA)
                 if num >= 3 {
                     if let Ok(pai) = Pai::try_from(idx as u8) {
@@ -395,7 +395,7 @@ impl ShantenHelper {
                     }
                 }
                 // 1~7s, 1~7p, 1~7m
-                if (11 <= idx && idx < 18) || (21 <= idx && idx < 28) || (31 <= idx && idx < 38) {
+                if (11..18).contains(&idx) || (21..28).contains(&idx) || (31..38).contains(&idx) {
                     // try to get sequence (ABC)
                     if self.pais[idx + 1] < 1 || self.pais[idx + 2] < 1 {
                         continue;
@@ -410,7 +410,7 @@ impl ShantenHelper {
                 }
             }
             // try to get triplet (AAA)
-            if (41 <= idx && idx <= 47) && num >= 3 {
+            if (41..=47).contains(&idx) && num >= 3 {
                 if let Ok(pai) = Pai::try_from(idx as u8) {
                     let meld = [pai, pai, pai];
                     self.take(&meld);
@@ -427,7 +427,7 @@ impl ShantenHelper {
                 continue;
             }
             // 1~9s, 1~9p, 1~9m
-            if (11 <= idx && idx <= 19) || (21 <= idx && idx <= 29) || (31 <= idx && idx <= 39) {
+            if (11..=19).contains(&idx) || (21..=29).contains(&idx) || (31..=39).contains(&idx) {
                 // try get pair
                 if self.pais[idx] > 1 {
                     if let Ok(pai) = Pai::try_from(idx as u8) {
@@ -459,7 +459,7 @@ impl ShantenHelper {
                 }
             }
             // try get pair
-            if 41 <= idx && idx <= 47 && self.pais[idx] > 1 {
+            if (41..=47).contains(&idx) && self.pais[idx] > 1 {
                 if let Ok(pai) = Pai::try_from(idx as u8) {
                     let res = [pai, pai];
                     self.take(&res);
