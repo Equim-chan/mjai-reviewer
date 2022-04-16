@@ -79,6 +79,7 @@ pub struct ReviewArgs<'a> {
     pub events: &'a [Event],
     pub target_actor: u8,
     pub deviation_threshold: f64,
+    pub show_shanten: bool,
     pub verbose: bool,
 }
 
@@ -90,6 +91,7 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
         events,
         target_actor,
         deviation_threshold,
+        show_shanten,
         verbose,
     } = review_args;
 
@@ -170,7 +172,9 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
                 kyoku_review.kyoku = kyoku;
                 kyoku_review.honba = honba;
                 is_reached = false;
-                last_shanten = state.calc_shanten();
+                if show_shanten {
+                    last_shanten = state.calc_shanten();
+                }
 
                 continue;
             }
@@ -367,7 +371,11 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
         total_reviewed += 1;
         raw_score += move_score;
 
-        let cur_shanten = state.calc_shanten();
+        let cur_shanten = if show_shanten {
+            state.calc_shanten()
+        } else {
+            last_shanten
+        };
         let entry = Entry {
             acceptance,
             junme,
@@ -382,12 +390,13 @@ pub fn review(review_args: &ReviewArgs) -> Result<Review> {
             details: actions,
         };
         log!(
-            "review entry created: {:?} ({}/{}/{}, {:.03}); shanten: {}->{}",
+            "review entry created: {:?} ({}/{}/{}, {:.03}); shanten: ({}) {}->{}",
             acceptance,
             total_problems,
             total_tolerated,
             total_reviewed,
             (raw_score / total_reviewed as f64).powf(2.) * 100.,
+            show_shanten,
             last_shanten,
             cur_shanten
         );

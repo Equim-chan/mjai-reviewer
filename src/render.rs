@@ -109,6 +109,7 @@ where
     metadata: &'a Metadata<'a>,
     lang: Language,
     layout: Layout,
+    show_shanten: bool,
 }
 
 impl<'a, L> View<'a, L>
@@ -123,6 +124,7 @@ where
         metadata: &'a Metadata<'a>,
         lang: Language,
         layout: Layout,
+        show_shanten: bool,
     ) -> Self {
         Self {
             kyokus: kyoku_reviews,
@@ -131,6 +133,7 @@ where
             metadata,
             lang,
             layout,
+            show_shanten,
         }
     }
 

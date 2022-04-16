@@ -141,8 +141,10 @@
             {%- else -%}
               {{ entry.junme }} 巡
             {%- endif -%}
+            {%- if show_shanten -%}
               &nbsp;&nbsp;&nbsp;
               {{- macros::render_shanten(last_shanten=entry.last_shanten, shanten=entry.shanten) -}}
+            {%- endif -%}
             {%- if entry.acceptance == "disagree" -%}
               &nbsp;&nbsp;&nbsp;❌
             {%- elif entry.acceptance == "tolerable" -%}

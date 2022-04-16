@@ -202,6 +202,11 @@ fn main() -> Result<()> {
                 .help("Do not include player names."),
         )
         .arg(
+            Arg::with_name("no-shanten")
+                .long("no-shanten")
+                .help("Do not calculate and show the shanten in the review result."),
+        )
+        .arg(
             Arg::with_name("no-open")
                 .long("no-open")
                 .help("Do not open the output file in browser after finishing."),
@@ -359,6 +364,8 @@ fn main() -> Result<()> {
     let arg_lang = matches.value_of("lang");
     let arg_verbose = matches.is_present("verbose");
     let arg_url = matches.value_of("URL");
+    // show shanten by default
+    let arg_shanten = !matches.is_present("no-shanten");
 
     let layout = match matches.value_of("layout") {
         None => Layout::Vertical,
@@ -665,6 +672,7 @@ fn main() -> Result<()> {
         events: &events,
         target_actor: actor,
         deviation_threshold: arg_deviation_threshold,
+        show_shanten: arg_shanten,
         verbose: arg_verbose,
     };
     let review_result = review(&review_args).context("failed to review log")?;
@@ -735,6 +743,7 @@ fn main() -> Result<()> {
         &meta,
         lang,
         layout,
+        arg_shanten,
     );
     if arg_json {
         log!("writing output...");
