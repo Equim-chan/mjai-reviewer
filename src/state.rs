@@ -216,6 +216,8 @@ struct ShantenHelper {
     num_pais_rem: i32,
     num_tehai: i32,
 
+    normal_shanten: i32,
+
     verbose: bool,
     state: Vec<Vec<Pai>>,
 }
@@ -236,6 +238,7 @@ impl ShantenHelper {
             num_pais_rem: num_pais,
             num_tehai: num_pais,
             verbose: false,
+            normal_shanten: 8,
             state: Vec::new(),
         }
     }
@@ -315,7 +318,6 @@ impl ShantenHelper {
     //   -1 for ron
     fn get_normal_shanten(&mut self) -> i32 {
         let num_fuuros = (14 - self.num_tehai) / 3;
-        let mut shanten = 8i32;
         let mut c_max = 0i32;
         let k = (self.num_pais_rem - 2) / 3;
         for eye in ShantenHelper::eyes(&self.pais) {
@@ -323,20 +325,24 @@ impl ShantenHelper {
             let eye_array = [eye, eye];
             log_if!(self.verbose, "take {:?} as eye begin", eye_array);
             self.take(&eye_array);
-            self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 1, num_fuuros);
+            self.search_by_take_3(0, 11, &mut c_max, k, 1, num_fuuros);
             self.rollback_pais(&eye_array);
             log_if!(
                 self.verbose,
                 "take {:?} as eye done, s: {}",
                 eye_array,
-                shanten
+                self.normal_shanten
             );
         }
         // try to get the shanten without eye
         log_if!(self.verbose, "take nothing as eye begin");
-        self.search_by_take_3(0, 11, &mut shanten, &mut c_max, k, 0, num_fuuros);
-        log_if!(self.verbose, "take nothing as eye done, s: {}", shanten);
-        shanten
+        self.search_by_take_3(0, 11, &mut c_max, k, 0, num_fuuros);
+        log_if!(
+            self.verbose,
+            "take nothing as eye done, s: {}",
+            self.normal_shanten
+        );
+        self.normal_shanten
     }
 
     fn eyes(pais: &[i32; 48]) -> Vec<Pai> {
@@ -489,7 +495,6 @@ impl ShantenHelper {
         &mut self,
         level: i32,
         begin_idx: usize,
-        shanten: &mut i32,
         c_max: &mut i32,
         k: i32,
         exist_eye: i32,
@@ -500,11 +505,11 @@ impl ShantenHelper {
             "enter search_by_3 with i: {}, c_rem: {}, s: {}, c_max: {}",
             begin_idx,
             self.num_pais_rem,
-            shanten,
+            self.normal_shanten,
             c_max
         );
         if begin_idx >= PAIS_VEC_LEN || level > 3 {
-            self.search_by_take_2(11, shanten, c_max, k, exist_eye, num_meld, 0);
+            self.search_by_take_2(11, c_max, k, exist_eye, num_meld, 0);
             return;
         }
 
@@ -514,7 +519,6 @@ impl ShantenHelper {
             self.search_by_take_3(
                 level + 1,
                 next_search_idx,
-                shanten,
                 c_max,
                 k,
                 exist_eye,
@@ -525,7 +529,7 @@ impl ShantenHelper {
                 self.verbose,
                 "take {:?} as meld done, s: {}",
                 meld,
-                *shanten
+                self.normal_shanten,
             );
         }
         log_if!(
@@ -534,27 +538,18 @@ impl ShantenHelper {
             begin_idx
         );
         let next_search_idx = self.next_not_zero(begin_idx + 1);
-        self.search_by_take_3(
-            level,
-            next_search_idx,
-            shanten,
-            c_max,
-            k,
-            exist_eye,
-            num_meld,
-        );
+        self.search_by_take_3(level, next_search_idx, c_max, k, exist_eye, num_meld);
         log_if!(
             self.verbose,
             "take nothing as meld done, idx: {}, s: {}",
             begin_idx,
-            *shanten
+            self.normal_shanten
         );
     }
 
     fn search_by_take_2(
         &mut self,
         begin_idx: usize,
-        shanten: &mut i32,
         c_max: &mut i32,
         k: i32,
         exist_eye: i32,
@@ -566,17 +561,17 @@ impl ShantenHelper {
             "enter search_by_2 with i: {}, c_rem: {}, s: {}, c_max: {}, g: {}, gp: {}",
             begin_idx,
             self.num_pais_rem,
-            shanten,
+            self.normal_shanten,
             c_max,
             num_meld,
             num_dazi
         );
-        if *shanten == -1 || num_meld + num_dazi > self.num_tehai {
+        if self.normal_shanten == -1 || num_meld + num_dazi > self.num_tehai {
             log_if!(
                 self.verbose,
                 "search end. cur state: {:?}. cause: s: {}, {} + {} > {}",
                 self.state,
-                shanten,
+                self.normal_shanten,
                 num_meld,
                 num_dazi,
                 self.num_tehai
@@ -603,34 +598,26 @@ impl ShantenHelper {
                 exist_eye
             };
             let cur_s = 9 - 2 * num_meld - (num_dazi + exist_eye) - q + penalty;
-            *shanten = std::cmp::min(*shanten, cur_s);
+            self.normal_shanten = std::cmp::min(self.normal_shanten, cur_s);
             *c_max = std::cmp::max(*c_max, c);
             log_if!(
                 self.verbose,
                 "search end. cur state: {:?}. cause: c_rem == 0; => s: {}, c_max: {}",
                 self.state,
-                shanten,
+                self.normal_shanten,
                 c_max,
             );
             return;
         }
         if let Some((dazi, next_search_idx)) = self.try_take_2(begin_idx) {
             log_if!(self.verbose, "take {:?} as dazi begin", dazi);
-            self.search_by_take_2(
-                next_search_idx,
-                shanten,
-                c_max,
-                k,
-                exist_eye,
-                num_meld,
-                num_dazi + 1,
-            );
+            self.search_by_take_2(next_search_idx, c_max, k, exist_eye, num_meld, num_dazi + 1);
             self.rollback_pais(&dazi);
             log_if!(
                 self.verbose,
                 "take {:?} as dazi done, s: {}",
                 dazi,
-                *shanten
+                self.normal_shanten
             );
         }
 
@@ -642,7 +629,7 @@ impl ShantenHelper {
                 log_if!(self.verbose, "take [{:?}] as pai begin", pai);
             }
         }
-        self.search_by_take_2(0, shanten, c_max, k, exist_eye, num_meld, num_dazi);
+        self.search_by_take_2(0, c_max, k, exist_eye, num_meld, num_dazi);
         // rollbacks
         for pai in stack.iter().rev() {
             self.rollback_pais(&[*pai]);
