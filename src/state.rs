@@ -18,42 +18,6 @@ pub struct State {
     pub fuuros: Vec<Fuuro>,
 }
 
-struct PaiIterator<'a> {
-    tehai: std::slice::Iter<'a, convlog::Pai>,
-    fuuros: std::slice::Iter<'a, Fuuro>,
-    cur_fuuro: Option<Vec<Pai>>,
-    cur_fuuro_index: usize,
-}
-
-impl<'a> Iterator for PaiIterator<'a> {
-    type Item = Pai;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(pai) = self.tehai.next() {
-            return Some(*pai);
-        }
-
-        // get pai from current fuuro
-        if let Some(curr) = &self.cur_fuuro {
-            if self.cur_fuuro_index < curr.len() {
-                let pai = curr[self.cur_fuuro_index];
-                self.cur_fuuro_index += 1;
-                return Some(pai);
-            }
-        }
-        // get pai from next fuuro
-        if let Some(next_fuuro) = self.fuuros.next() {
-            let pais = next_fuuro.into_pais();
-            let first_pai = pais[0];
-            self.cur_fuuro = Some(pais);
-            self.cur_fuuro_index = 1;
-            return Some(first_pai);
-        }
-        // nothing left
-        None
-    }
-}
-
 impl State {
     #[inline]
     pub fn new(actor: u8) -> Self {
@@ -202,15 +166,6 @@ impl State {
         Ok(())
     }
 
-    fn iter(&self) -> PaiIterator {
-        PaiIterator {
-            tehai: self.tehai.view().iter(),
-            fuuros: self.fuuros.iter(),
-            cur_fuuro: None,
-            cur_fuuro_index: 0,
-        }
-    }
-
     // calculate the shanten
     pub fn calc_shanten(&self) -> i32 {
         let mut s = ShantenHelper::new(&self.tehai);
@@ -252,40 +207,6 @@ pub enum Fuuro {
     Ankan {
         consumed: Consumed4,
     },
-}
-
-impl Fuuro {
-    fn into_pais(&self) -> Vec<Pai> {
-        let mut return_pais: Vec<Pai> = Vec::new();
-        match self {
-            Self::Chi { pai, consumed, .. } => {
-                return_pais.push(*pai);
-                return_pais.extend_from_slice(&consumed.as_array());
-            }
-            Self::Pon { pai, consumed, .. } => {
-                return_pais.push(*pai);
-                return_pais.extend_from_slice(&consumed.as_array());
-            }
-            Self::Daiminkan { pai, consumed, .. } => {
-                return_pais.push(*pai);
-                return_pais.extend_from_slice(&consumed.as_array());
-            }
-            Self::Kakan {
-                pai,
-                previous_pon_pai,
-                consumed,
-                ..
-            } => {
-                return_pais.push(*pai);
-                return_pais.push(*previous_pon_pai);
-                return_pais.extend_from_slice(&consumed.as_array());
-            }
-            Self::Ankan { consumed } => {
-                return_pais.extend_from_slice(&consumed.as_array());
-            }
-        }
-        return_pais
-    }
 }
 
 const PAIS_VEC_LEN: usize = 48;
@@ -737,60 +658,6 @@ mod tests {
     use convlog::pai::get_pais_from_str;
 
     use super::*;
-
-    #[test]
-    fn test_chi_to_pais() {
-        let f = Fuuro::Chi {
-            target: 0,
-            pai: Pai::Man1,
-            consumed: Consumed2::from([Pai::Man2, Pai::Man3]),
-        };
-        let pais = f.into_pais();
-        assert_eq!(pais.len(), 3);
-        assert_eq!(pais[0], Pai::Man1);
-        assert_eq!(pais[1], Pai::Man2);
-        assert_eq!(pais[2], Pai::Man3);
-    }
-    #[test]
-    fn test_pon_to_pais() {
-        let f = Fuuro::Pon {
-            target: 0,
-            pai: Pai::Man1,
-            consumed: Consumed2::from([Pai::Man1, Pai::Man1]),
-        };
-        let pais = f.into_pais();
-        assert_eq!(pais.len(), 3);
-        assert_eq!(pais[0], Pai::Man1);
-        assert_eq!(pais[1], Pai::Man1);
-        assert_eq!(pais[2], Pai::Man1);
-    }
-    #[test]
-    fn test_kan_to_pais() {
-        let cases = [
-            Fuuro::Daiminkan {
-                target: 0,
-                pai: Pai::Man1,
-                consumed: Consumed3::from([Pai::Man1, Pai::Man1, Pai::Man1]),
-            },
-            Fuuro::Kakan {
-                pai: Pai::Man1,
-                previous_pon_target: 0,
-                previous_pon_pai: Pai::Man1,
-                consumed: Consumed2::from([Pai::Man1, Pai::Man1]),
-            },
-            Fuuro::Ankan {
-                consumed: Consumed4::from([Pai::Man1, Pai::Man1, Pai::Man1, Pai::Man1]),
-            },
-        ];
-        for case in cases {
-            let pais = case.into_pais();
-            assert_eq!(pais.len(), 4);
-            assert_eq!(pais[0], Pai::Man1);
-            assert_eq!(pais[1], Pai::Man1);
-            assert_eq!(pais[2], Pai::Man1);
-            assert_eq!(pais[3], Pai::Man1);
-        }
-    }
 
     #[test]
     fn test_normal_shanten() {
