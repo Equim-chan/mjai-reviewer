@@ -1,19 +1,15 @@
 use crate::tehai::Tehai;
 
-use anyhow::anyhow;
 use anyhow::{Context, Result};
-use convlog::mjai::{Consumed2, Consumed3, Consumed4, Event};
-use convlog::Pai;
+use convlog::{tile_set_eq, Event, Tile};
 use serde::Serialize;
-use serde_with::{serde_as, DisplayFromStr};
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct State {
     #[serde(skip)]
     actor: u8,
-
-    pub tehai: Tehai,
-    pub fuuros: Vec<Fuuro>,
+    tehai: Tehai,
+    fuuros: Vec<Fuuro>,
 }
 
 impl State {
@@ -66,7 +62,7 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_multiple(&consumed.as_array());
+                self.tehai.remove_multiple(&consumed);
 
                 let fuuro = Fuuro::Chi {
                     target,
@@ -82,7 +78,7 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_multiple(&consumed.as_array());
+                self.tehai.remove_multiple(&consumed);
 
                 let fuuro = Fuuro::Pon {
                     target,
@@ -98,7 +94,7 @@ impl State {
                 pai,
                 consumed,
             } if actor == self.actor => {
-                self.tehai.remove_multiple(&consumed.as_array());
+                self.tehai.remove_multiple(&consumed);
 
                 let fuuro = Fuuro::Daiminkan {
                     target,
@@ -129,18 +125,18 @@ impl State {
                             target: pon_target,
                             pai: pon_pai,
                             consumed: pon_consumed,
-                        } if Consumed3::from([
-                            pon_pai,
-                            pon_consumed.as_array()[0],
-                            pon_consumed.as_array()[1],
-                        ]) == consumed =>
+                        } if tile_set_eq(
+                            &[pon_pai, pon_consumed[0], pon_consumed[1]],
+                            &consumed,
+                            false,
+                        ) =>
                         {
                             Some((idx, pon_target, pon_pai, pon_consumed))
                         }
 
                         _ => None,
                     })
-                    .context(anyhow!("invalid state: previous Pon not found for Kakan"))?;
+                    .context("invalid state: previous Pon not found for Kakan")?;
 
                 let fuuro = Fuuro::Kakan {
                     pai,
@@ -152,7 +148,7 @@ impl State {
             }
 
             Event::Ankan { actor, consumed } if actor == self.actor => {
-                self.tehai.remove_multiple(&consumed.as_array());
+                self.tehai.remove_multiple(&consumed);
 
                 let fuuro = Fuuro::Ankan { consumed };
                 self.fuuros.push(fuuro);
@@ -163,40 +159,44 @@ impl State {
 
         Ok(())
     }
+
+    #[inline]
+    pub fn has_tile(&self, tile: Tile) -> bool {
+        self.tehai.view().contains(&tile)
+    }
+
+    #[inline]
+    pub const fn player_id(&self) -> u8 {
+        self.actor
+    }
 }
 
-#[serde_as]
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
 pub enum Fuuro {
     Chi {
         target: u8,
-        #[serde_as(as = "DisplayFromStr")]
-        pai: Pai,
-        consumed: Consumed2,
+        pai: Tile,
+        consumed: [Tile; 2],
     },
     Pon {
         target: u8,
-        #[serde_as(as = "DisplayFromStr")]
-        pai: Pai,
-        consumed: Consumed2,
+        pai: Tile,
+        consumed: [Tile; 2],
     },
     Daiminkan {
         target: u8,
-        #[serde_as(as = "DisplayFromStr")]
-        pai: Pai,
-        consumed: Consumed3,
+        pai: Tile,
+        consumed: [Tile; 3],
     },
     Kakan {
-        #[serde_as(as = "DisplayFromStr")]
-        pai: Pai,
+        pai: Tile,
         previous_pon_target: u8,
-        #[serde_as(as = "DisplayFromStr")]
-        previous_pon_pai: Pai,
-        consumed: Consumed2,
+        previous_pon_pai: Tile,
+        consumed: [Tile; 2],
     },
     Ankan {
-        consumed: Consumed4,
+        consumed: [Tile; 4],
     },
 }

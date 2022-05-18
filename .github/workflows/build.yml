@@ -12,19 +12,37 @@ jobs:
 
       - name: Install Rust stable
         run: |
+          set -x
+
           rustup toolchain update --no-self-update stable
           rustup default stable
           rustup component add clippy rustfmt
           rustup show
 
+          rustc --version | awk '{print $2}' | tee RUSTC_VER
+          echo "::set-output name=rustc_ver::$(cat RUSTC_VER)"
+
+      - name: Cache for Rust
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ github.workflow }}|${{ runner.os }}|cargo|00|${{ steps.prep.outputs.rustc_ver }}|${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ github.workflow }}|${{ runner.os }}|cargo|00|${{ steps.prep.outputs.rustc_ver }}|
+
       - name: Run rustfmt
-        run: cargo fmt -- --check --verbose
+        run: cargo fmt --all --check
 
       - name: Run clippy
-        run: cargo clippy --verbose --all --all-features -- -Dwarnings
-
-      - name: Run build
-        run: cargo build --verbose
+        run: cargo clippy --workspace --all-targets --all-features -- -Dwarnings
 
       - name: Run tests
-        run: cargo test --all --verbose
+        run: cargo test --all -- --nocapture
+
+      - name: Run build
+        run: cargo build --all

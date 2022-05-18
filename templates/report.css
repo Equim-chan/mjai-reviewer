@@ -1,39 +1,67 @@
 html {
   scroll-behavior: smooth;
 }
+
 body {
   max-width: 800px;
   margin: auto;
   background: #f2f2f2;
+  font-family: sans-serif;
+  line-height: 1.2;
 }
+
 body[horizontal] {
   max-width: 1600px;
 }
 
-h1 {
-  font-size: 2em;
+.title {
+  font-size: 2.5em;
+  text-align: center;
+  margin-bottom: -0.2em;
 }
-section {
-  background-color: #f2f2f2;
-}
-section h1 {
+
+.subtitle {
+  font-size: smaller;
   text-align: center;
 }
 
-a, a:visited {
+dl {
+  display: grid;
+  grid-template-columns: max-content auto;
+}
+
+dt {
+  grid-column-start: 1;
+  text-align: right;
+}
+
+dd {
+  grid-column-start: 2;
+}
+
+section {
+  background: #f2f2f2;
+}
+
+a,
+a:visited {
   color: inherit;
 }
+
 a.chapter {
   text-decoration: none;
 }
 
-.face, .back {
+.face,
+.back {
   filter: url(#inset-shadow);
   fill: #f2f2f2;
 }
+
 .back {
   fill: #ffba1e;
 }
+
 .tile {
   width: 25px;
   height: 35px;
@@ -43,20 +71,24 @@ a.chapter {
 summary {
   cursor: pointer;
 }
-details.collapse  {
+
+details.collapse {
   border: 1px solid #aaa;
   border-radius: 4px;
   padding: .5em .5em 0;
 }
+
 details.collapse summary {
   font-weight: bold;
   margin: -.5em -.5em 0;
   padding: .5em;
 }
-details[open].collapse  {
+
+details[open].collapse {
   padding: .5em;
   margin-bottom: .5em;
 }
+
 details[open].collapse summary {
   border-bottom: 1px solid #aaa;
   margin-bottom: .5em;
@@ -80,6 +112,10 @@ details[open].collapse summary {
   color: #666;
 }
 
+.kyoku-heading {
+  font-size: 2em;
+}
+
 .kyoku-heading .end-status {
   font-size: 75%;
   font-weight: normal;
@@ -90,35 +126,45 @@ details[open].collapse summary {
   display: flex;
   list-style: none;
   padding-left: 0;
-  margin-top: 25px;
 }
+
 .tsumo {
   margin-left: .5em;
 }
+
 .tsumo::before {
-  content: attr(data-content);
+  content: attr(before);
 }
+
+.tsumo::after {
+  content: attr(after);
+}
+
 .fuuro {
   display: flex;
   list-style: none;
   padding-left: 0;
   margin-left: .5em;
 }
-:not(.fuuro) + .fuuro {
+
+:not(.fuuro)+.fuuro {
   margin-left: 1em;
 }
+
 .consumed {
   display: flex;
   list-style: none;
   padding-left: 0;
 }
+
 .rotated {
-  transform: rotate(90deg) translateX(-25px);
+  transform: rotate(-90deg) translateY(35px);
   transform-origin: bottom left;
   margin-right: 10px;
 }
+
 .rotated.added {
-  transform: rotate(90deg) translateX(-50px);
+  transform: rotate(-90deg) translateY(35px);
   transform-origin: bottom left;
   margin-right: -15px;
 }
@@ -126,8 +172,9 @@ details[open].collapse summary {
 .sticky {
   position: sticky;
   top: 0;
-  background-color: #f2f2f2;
+  background: #f2f2f2;
 }
+
 iframe.tenhou {
   width: 100%;
   height: 480px;
@@ -135,25 +182,60 @@ iframe.tenhou {
   margin: auto;
 }
 
-table.stat {
+.order-loss {
+  color: red;
+}
+
+.role {
+  display: inline-block;
+  font-weight: bold;
+  width: 5.5em;
+}
+
+table.data {
   table-layout: fixed;
   text-align: center;
   width: 100%;
 }
-table.stat th, td {
+
+table.data th,
+table.data td {
   padding: 3px;
 }
-table.stat th {
+
+table.data th {
   font-size: 85%;
+  background: #ddd;
 }
-table.stat td {
+
+table.data tbody tr:hover {
+  background: lightyellow;
+}
+
+table.data td {
   font-size: 90%;
   line-height: 32px;
 }
+
+.int,
+.frac {
+  display: inline-block;
+  width: 50%;
+}
+
+.int {
+  text-align: right;
+}
+
+.frac {
+  text-align: left;
+}
+
 .l-box[horizontal] {
   float: left;
   width: 50%;
 }
+
 .r-box[horizontal] {
   margin-left: 50%;
 }

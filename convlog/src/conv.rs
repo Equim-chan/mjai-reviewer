@@ -1,9 +1,9 @@
-use crate::mjai;
-use crate::tenhou;
-use crate::Pai;
+use crate::mjai::Event;
+use crate::t;
+use crate::tenhou::{ActionItem, EndStatus, Kyoku, Log, TenhouTile};
+use crate::Tile;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use std::convert::TryFrom;
 
 use thiserror::Error;
 
@@ -12,8 +12,8 @@ pub enum ConvertError {
     #[error("invalid naki string: {0:?}")]
     InvalidNaki(String),
 
-    #[error("invalid pai string: {0:?}")]
-    InvalidPai(String),
+    #[error("invalid tile string: {0:?}")]
+    InvalidTile(String),
 
     #[error("insufficient dora indicators: at kyoku {kyoku} honba {honba}")]
     InsufficientDoraIndicators { kyoku: u8, honba: u8 },
@@ -36,12 +36,12 @@ pub enum ConvertError {
     #[error(
         "unexpected naki: \
         at kyoku{kyoku} honba {honba} for actor {actor}: \
-        action {action:?}, expected pai {last_dahai:?} \
+        action {action:?}, expected tile {last_discard} \
         from {last_actor:?}"
     )]
     UnexpectedNaki {
-        action: mjai::Event,
-        last_dahai: Pai,
+        action: Event,
+        last_discard: Tile,
         last_actor: Option<u8>,
         kyoku: u8,
         honba: u8,
@@ -57,8 +57,8 @@ struct BackTrack {
 }
 
 /// Transform a tenhou.net/6 format log into mjai format.
-pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
-    let mut events = vec![mjai::Event::StartGame {
+pub fn tenhou_to_mjai(log: &Log) -> Result<Vec<Event>> {
+    let mut events = vec![Event::StartGame {
         kyoku_first: log.game_length as u8,
         aka_flag: log.has_aka,
         names: log.names.clone(),
@@ -69,11 +69,11 @@ pub fn tenhou_to_mjai(log: &tenhou::Log) -> Result<Vec<mjai::Event>> {
         events.extend(kyoku_events);
     }
 
-    events.push(mjai::Event::EndGame);
+    events.push(Event::EndGame);
     Ok(events)
 }
 
-fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>> {
+fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
     // First of all, transform all takes and discards to events.
     let (take_events, discard_events): (Vec<_>, Vec<_>) = (0..4)
         .map(|a| {
@@ -93,17 +93,17 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
     // Then emit the events in order.
     let oya = kyoku.meta.kyoku_num % 4;
     let bakaze = match kyoku.meta.kyoku_num / 4 {
-        0 => Pai::East,
-        1 => Pai::South,
-        2 => Pai::West,
-        _ => Pai::North,
+        0 => t![E],
+        1 => t![S],
+        2 => t![W],
+        _ => t![N],
     };
 
-    let attempt = |backtracks: &mut HashMap<Pai, BackTrack>| -> Result<Vec<mjai::Event>> {
+    let attempt = |backtracks: &mut HashMap<Tile, BackTrack>| -> Result<Vec<Event>> {
         let mut events = vec![];
 
         let mut dora_feed = kyoku.dora_indicators.clone().into_iter();
-        events.push(mjai::Event::StartKyoku {
+        events.push(Event::StartKyoku {
             bakaze,
             kyoku: kyoku.meta.kyoku_num % 4 + 1,
             honba: kyoku.meta.honba,
@@ -128,7 +128,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
             .map(|a| {
                 let mut m = HashMap::new();
                 for discard in &discard_events[a] {
-                    if let mjai::Event::Dahai { pai, .. } = *discard {
+                    if let Event::Dahai { pai, .. } = *discard {
                         m.entry(pai).and_modify(|v| *v += 1).or_insert(1);
                     }
                 }
@@ -139,7 +139,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
         let mut discard_i = [0; 4];
 
         let mut reach_flag: Option<usize> = None;
-        let mut last_dahai = Pai::Unknown;
+        let mut last_discard = t![?];
         let mut last_actor: Option<u8> = None;
         let mut need_new_dora_at_discard = false;
         // This is for Kakan only because chankan is possible until an actual
@@ -161,14 +161,12 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
             take_i[actor] += 1;
 
             if let Some((target, pai)) = take.naki_info() {
-                if pai != last_dahai
-                    || last_actor
-                        .filter(|&a| a != target || a == actor as u8)
-                        .is_some()
+                if pai != last_discard
+                    || matches!(last_actor, Some(a) if a != target || a == actor as u8)
                 {
                     return Err(ConvertError::UnexpectedNaki {
                         action: take.clone(),
-                        last_dahai,
+                        last_discard,
                         last_actor,
                         kyoku: kyoku.meta.kyoku_num,
                         honba: kyoku.meta.honba,
@@ -179,15 +177,15 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
 
             // If a reach event was emitted before, set it as accepted now.
             if let Some(actor) = reach_flag.take() {
-                events.push(mjai::Event::ReachAccepted { actor: actor as u8 });
+                events.push(Event::ReachAccepted { actor: actor as u8 });
             }
 
             // If the take is daiminkan, immediately consume the next take event
             // from the same actor.
             match *take {
-                mjai::Event::Daiminkan { .. } => {
+                Event::Daiminkan { .. } => {
                     if need_new_dora_at_discard {
-                        events.push(mjai::Event::Dora {
+                        events.push(Event::Dora {
                             dora_marker: dora_feed.next().ok_or(
                                 ConvertError::InsufficientDoraIndicators {
                                     kyoku: kyoku.meta.kyoku_num,
@@ -204,8 +202,8 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
 
                 // This is for Kakan only because chankan is possible until an
                 // actual tsumo.
-                mjai::Event::Tsumo { .. } if need_new_dora_at_tsumo => {
-                    events.push(mjai::Event::Dora {
+                Event::Tsumo { .. } if need_new_dora_at_tsumo => {
+                    events.push(Event::Dora {
                         dora_marker: dora_feed.next().ok_or(
                             ConvertError::InsufficientDoraIndicators {
                                 kyoku: kyoku.meta.kyoku_num,
@@ -241,16 +239,16 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
             discard_i[actor] += 1;
 
             // Record the pai to check if someone naki it.
-            if let mjai::Event::Dahai { pai, .. } = discard {
-                last_dahai = pai;
+            if let Event::Dahai { pai, .. } = discard {
+                last_discard = pai;
                 discard_sets[actor].entry(pai).and_modify(|v| *v -= 1);
             }
 
             // Process previous minkan.
             if need_new_dora_at_discard {
                 match discard {
-                    mjai::Event::Dahai { .. } | mjai::Event::Ankan { .. } => {
-                        events.push(mjai::Event::Dora {
+                    Event::Dahai { .. } | Event::Ankan { .. } => {
+                        events.push(Event::Dora {
                             dora_marker: dora_feed.next().ok_or(
                                 ConvertError::InsufficientDoraIndicators {
                                     kyoku: kyoku.meta.kyoku_num,
@@ -261,7 +259,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                         need_new_dora_at_discard = false;
                     }
 
-                    mjai::Event::Kakan { .. } => {
+                    Event::Kakan { .. } => {
                         need_new_dora_at_tsumo = true;
                     }
                     _ => (),
@@ -275,7 +273,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
             //
             // A reach declare consists of two events (reach
             // + dahai).
-            if let mjai::Event::Reach { .. } = discard {
+            if let Event::Reach { .. } = discard {
                 reach_flag = Some(actor);
 
                 let dahai = discard_events[actor]
@@ -287,8 +285,8 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                     })?
                     .clone();
                 discard_i[actor] += 1;
-                if let mjai::Event::Dahai { pai, .. } = dahai {
-                    last_dahai = pai;
+                if let Event::Dahai { pai, .. } = dahai {
+                    last_discard = pai;
                     discard_sets[actor].entry(pai).and_modify(|v| *v -= 1);
                 }
                 events.push(dahai);
@@ -308,9 +306,9 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
             // For kan, it will immediately consume the next take event from the
             // same actor.
             match discard {
-                mjai::Event::Ankan { .. } => {
+                Event::Ankan { .. } => {
                     // ankan triggers a dora event immediately.
-                    events.push(mjai::Event::Dora {
+                    events.push(Event::Dora {
                         dora_marker: dora_feed.next().ok_or(
                             ConvertError::InsufficientDoraIndicators {
                                 kyoku: kyoku.meta.kyoku_num,
@@ -320,7 +318,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                     });
                     continue;
                 }
-                mjai::Event::Kakan { .. } => {
+                Event::Kakan { .. } => {
                     need_new_dora_at_discard = true;
                     continue;
                 }
@@ -342,7 +340,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                 .filter_map(|a| {
                     if let Some(take) = take_events[a].get(take_i[a]) {
                         if let Some((target, pai)) = take.naki_info() {
-                            if target == (actor as u8) && pai == last_dahai {
+                            if target == (actor as u8) && pai == last_discard {
                                 return Some((a, take.naki_to_ord()));
                             }
                         }
@@ -383,16 +381,14 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
                         return Some(a);
                     }
 
-                    let has_same_dahai_in_future = discard_sets[actor]
-                        .get(&last_dahai)
-                        .filter(|&&v| v > 0)
-                        .is_some();
+                    let has_same_dahai_in_future =
+                        matches!(discard_sets[actor].get(&last_discard), Some(&v) if v > 0);
                     if !has_same_dahai_in_future {
                         // no candidate
                         return Some(a);
                     }
 
-                    match backtracks.entry(last_dahai) {
+                    match backtracks.entry(last_discard) {
                         Entry::Vacant(v) => {
                             // Try taking the first dahai as the real naki.
                             v.insert(BackTrack {
@@ -444,9 +440,9 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &tenhou::Kyoku) -> Result<Vec<mjai::Event>
 
 fn parse_takes_and_discards_to_mjai(
     actor: u8,
-    takes: &[tenhou::ActionItem],
-    discards: &[tenhou::ActionItem],
-) -> Result<(Vec<mjai::Event>, Vec<mjai::Event>)> {
+    takes: &[ActionItem],
+    discards: &[ActionItem],
+) -> Result<(Vec<Event>, Vec<Event>)> {
     let mjai_takes = take_action_to_events(actor, takes)?;
     let mut mjai_discards = discard_action_to_events(actor, discards)?;
     finalize_discards(&mjai_takes, &mut mjai_discards);
@@ -456,32 +452,32 @@ fn parse_takes_and_discards_to_mjai(
 
 /// 1. fill in possible tsumogiri pais
 /// 2. skip discards of daiminkans
-fn finalize_discards(takes: &[mjai::Event], discards: &mut Vec<mjai::Event>) {
+fn finalize_discards(takes: &[Event], discards: &mut Vec<Event>) {
     let mut di = 0;
     for take in takes {
         if di >= discards.len() {
             break;
         }
 
-        if matches!(discards[di], mjai::Event::Reach { .. }) {
+        if matches!(discards[di], Event::Reach { .. }) {
             di += 1;
         }
 
-        if let mjai::Event::Dahai {
+        if let Event::Dahai {
             pai,
             tsumogiri,
             actor,
         } = discards[di]
         {
             if tsumogiri {
-                if let mjai::Event::Tsumo { pai: tsumo, .. } = *take {
-                    discards[di] = mjai::Event::Dahai {
+                if let Event::Tsumo { pai: tsumo, .. } = *take {
+                    discards[di] = Event::Dahai {
                         pai: tsumo,
                         tsumogiri,
                         actor,
                     }
                 }
-            } else if pai == Pai::Unknown {
+            } else if pai == t![?] {
                 // `take` is daiminkan, skip one discard and immediately consume
                 // the next take.
                 discards.remove(di);
@@ -493,15 +489,13 @@ fn finalize_discards(takes: &[mjai::Event], discards: &mut Vec<mjai::Event>) {
     }
 }
 
-fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<mjai::Event>> {
+fn take_action_to_events(actor: u8, takes: &[ActionItem]) -> Result<Vec<Event>> {
     takes
         .iter()
         .map(|take| match take {
-            tenhou::ActionItem::Tsumogiri(_) => Err(ConvertError::UnexpectedTsumogiri),
-
-            &tenhou::ActionItem::Pai(pai) => Ok(mjai::Event::Tsumo { actor, pai }),
-
-            tenhou::ActionItem::Naki(naki_string) => {
+            ActionItem::Tsumogiri(_) => Err(ConvertError::UnexpectedTsumogiri),
+            &ActionItem::Tile(pai) => Ok(Event::Tsumo { actor, pai }),
+            ActionItem::Naki(naki_string) => {
                 let naki = naki_string.as_bytes();
 
                 if naki.contains(&b'c') {
@@ -513,14 +507,14 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                     }
 
                     // e.g. "c275226" => chi 7p with 06p from kamicha
-                    Ok(mjai::Event::Chi {
+                    Ok(Event::Chi {
                         actor,
                         target: (actor + 3) % 4,
-                        pai: pai_from_bytes(&naki[1..3])?,
-                        consumed: mjai::Consumed2::from([
-                            pai_from_bytes(&naki[3..5])?,
-                            pai_from_bytes(&naki[5..7])?,
-                        ]),
+                        pai: tiles_from_tenhou_bytes(&naki[1..3])?,
+                        consumed: [
+                            tiles_from_tenhou_bytes(&naki[3..5])?,
+                            tiles_from_tenhou_bytes(&naki[5..7])?,
+                        ],
                     })
                 } else if let Some(idx) = naki_string.find('p') {
                     // pon
@@ -532,38 +526,38 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                     match idx {
                         // from kamicha
                         // e.g. "p252525" => pon 5p from kamicha
-                        0 => Ok(mjai::Event::Pon {
+                        0 => Ok(Event::Pon {
                             actor,
                             target: (actor + 3) % 4,
-                            pai: pai_from_bytes(&naki[1..3])?,
-                            consumed: mjai::Consumed2::from([
-                                pai_from_bytes(&naki[3..5])?,
-                                pai_from_bytes(&naki[5..7])?,
-                            ]),
+                            pai: tiles_from_tenhou_bytes(&naki[1..3])?,
+                            consumed: [
+                                tiles_from_tenhou_bytes(&naki[3..5])?,
+                                tiles_from_tenhou_bytes(&naki[5..7])?,
+                            ],
                         }),
 
                         // from toimen
                         // e.g. "12p1212" => pon 2m from toimen
-                        2 => Ok(mjai::Event::Pon {
+                        2 => Ok(Event::Pon {
                             actor,
                             target: (actor + 2) % 4,
-                            pai: pai_from_bytes(&naki[3..5])?,
-                            consumed: mjai::Consumed2::from([
-                                pai_from_bytes(&naki[0..2])?,
-                                pai_from_bytes(&naki[5..7])?,
-                            ]),
+                            pai: tiles_from_tenhou_bytes(&naki[3..5])?,
+                            consumed: [
+                                tiles_from_tenhou_bytes(&naki[0..2])?,
+                                tiles_from_tenhou_bytes(&naki[5..7])?,
+                            ],
                         }),
 
                         // from shimocha
                         // e.g. "3737p37" => pon 7s from shimocha
-                        4 => Ok(mjai::Event::Pon {
+                        4 => Ok(Event::Pon {
                             actor,
                             target: (actor + 1) % 4,
-                            pai: pai_from_bytes(&naki[5..7])?,
-                            consumed: mjai::Consumed2::from([
-                                pai_from_bytes(&naki[0..2])?,
-                                pai_from_bytes(&naki[2..4])?,
-                            ]),
+                            pai: tiles_from_tenhou_bytes(&naki[5..7])?,
+                            consumed: [
+                                tiles_from_tenhou_bytes(&naki[0..2])?,
+                                tiles_from_tenhou_bytes(&naki[2..4])?,
+                            ],
                         }),
 
                         // ???
@@ -579,41 +573,41 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
                     match idx {
                         // from kamicha
                         // e.g. "m39393939" => kan 9s from kamicha
-                        0 => Ok(mjai::Event::Daiminkan {
+                        0 => Ok(Event::Daiminkan {
                             actor,
                             target: (actor + 3) % 4,
-                            pai: pai_from_bytes(&naki[1..3])?,
-                            consumed: mjai::Consumed3::from([
-                                pai_from_bytes(&naki[3..5])?,
-                                pai_from_bytes(&naki[5..7])?,
-                                pai_from_bytes(&naki[7..9])?,
-                            ]),
+                            pai: tiles_from_tenhou_bytes(&naki[1..3])?,
+                            consumed: [
+                                tiles_from_tenhou_bytes(&naki[3..5])?,
+                                tiles_from_tenhou_bytes(&naki[5..7])?,
+                                tiles_from_tenhou_bytes(&naki[7..9])?,
+                            ],
                         }),
 
                         // from toimen
                         // e.g. "26m262626" => kan 6p from toimen
-                        2 => Ok(mjai::Event::Daiminkan {
+                        2 => Ok(Event::Daiminkan {
                             actor,
                             target: (actor + 2) % 4,
-                            pai: pai_from_bytes(&naki[3..5])?,
-                            consumed: mjai::Consumed3::from([
-                                pai_from_bytes(&naki[0..2])?,
-                                pai_from_bytes(&naki[5..7])?,
-                                pai_from_bytes(&naki[7..9])?,
-                            ]),
+                            pai: tiles_from_tenhou_bytes(&naki[3..5])?,
+                            consumed: [
+                                tiles_from_tenhou_bytes(&naki[0..2])?,
+                                tiles_from_tenhou_bytes(&naki[5..7])?,
+                                tiles_from_tenhou_bytes(&naki[7..9])?,
+                            ],
                         }),
 
                         // from shimocha
                         // e.g. "131313m13" => kan 3m from shimocha
-                        6 => Ok(mjai::Event::Daiminkan {
+                        6 => Ok(Event::Daiminkan {
                             actor,
                             target: (actor + 1) % 4,
-                            pai: pai_from_bytes(&naki[7..9])?,
-                            consumed: mjai::Consumed3::from([
-                                pai_from_bytes(&naki[0..2])?,
-                                pai_from_bytes(&naki[2..4])?,
-                                pai_from_bytes(&naki[4..6])?,
-                            ]),
+                            pai: tiles_from_tenhou_bytes(&naki[7..9])?,
+                            consumed: [
+                                tiles_from_tenhou_bytes(&naki[0..2])?,
+                                tiles_from_tenhou_bytes(&naki[2..4])?,
+                                tiles_from_tenhou_bytes(&naki[4..6])?,
+                            ],
                         }),
 
                         // ???
@@ -627,16 +621,13 @@ fn take_action_to_events(actor: u8, takes: &[tenhou::ActionItem]) -> Result<Vec<
         .collect()
 }
 
-fn discard_action_to_events(
-    actor: u8,
-    discards: &[tenhou::ActionItem],
-) -> Result<Vec<mjai::Event>> {
+fn discard_action_to_events(actor: u8, discards: &[ActionItem]) -> Result<Vec<Event>> {
     let mut ret = vec![];
 
     for discard in discards {
         match discard {
-            &tenhou::ActionItem::Pai(pai) => {
-                let ev = mjai::Event::Dahai {
+            &ActionItem::Tile(pai) => {
+                let ev = Event::Dahai {
                     actor,
                     pai,
                     tsumogiri: false,
@@ -645,17 +636,17 @@ fn discard_action_to_events(
                 ret.push(ev);
             }
 
-            tenhou::ActionItem::Tsumogiri(_) => {
-                let ev = mjai::Event::Dahai {
+            ActionItem::Tsumogiri(_) => {
+                let ev = Event::Dahai {
                     actor,
-                    pai: Pai::Unknown, // must be filled later
+                    pai: t![?], // must be filled later
                     tsumogiri: true,
                 };
 
                 ret.push(ev);
             }
 
-            tenhou::ActionItem::Naki(naki_string) => {
+            ActionItem::Naki(naki_string) => {
                 let naki = naki_string.as_bytes();
 
                 // only ankan, kakan and reach are possible
@@ -669,38 +660,38 @@ fn discard_action_to_events(
                     let ev = match idx {
                         // previously pon from toimen
                         // e.g. "k16161616" => pon 6m from kamicha then kan
-                        0 => mjai::Event::Kakan {
+                        0 => Event::Kakan {
                             actor,
-                            pai: pai_from_bytes(&naki[1..3])?,
-                            consumed: mjai::Consumed3::from([
-                                pai_from_bytes(&naki[3..5])?,
-                                pai_from_bytes(&naki[5..7])?,
-                                pai_from_bytes(&naki[7..9])?,
-                            ]),
+                            pai: tiles_from_tenhou_bytes(&naki[1..3])?,
+                            consumed: [
+                                tiles_from_tenhou_bytes(&naki[3..5])?,
+                                tiles_from_tenhou_bytes(&naki[5..7])?,
+                                tiles_from_tenhou_bytes(&naki[7..9])?,
+                            ],
                         },
 
                         // previously pon from toimen
                         // e.g. "41k414141" => pon 1z from toimen then kan
-                        2 => mjai::Event::Kakan {
+                        2 => Event::Kakan {
                             actor,
-                            pai: pai_from_bytes(&naki[3..5])?,
-                            consumed: mjai::Consumed3::from([
-                                pai_from_bytes(&naki[0..2])?,
-                                pai_from_bytes(&naki[5..7])?,
-                                pai_from_bytes(&naki[7..9])?,
-                            ]),
+                            pai: tiles_from_tenhou_bytes(&naki[3..5])?,
+                            consumed: [
+                                tiles_from_tenhou_bytes(&naki[0..2])?,
+                                tiles_from_tenhou_bytes(&naki[5..7])?,
+                                tiles_from_tenhou_bytes(&naki[7..9])?,
+                            ],
                         },
 
                         // previously pon from shimocha
                         // e.g. "4646k4646" => pon 6z from shimocha then kan
-                        4 => mjai::Event::Kakan {
+                        4 => Event::Kakan {
                             actor,
-                            pai: pai_from_bytes(&naki[5..7])?,
-                            consumed: mjai::Consumed3::from([
-                                pai_from_bytes(&naki[0..2])?,
-                                pai_from_bytes(&naki[2..4])?,
-                                pai_from_bytes(&naki[7..9])?,
-                            ]),
+                            pai: tiles_from_tenhou_bytes(&naki[5..7])?,
+                            consumed: [
+                                tiles_from_tenhou_bytes(&naki[0..2])?,
+                                tiles_from_tenhou_bytes(&naki[2..4])?,
+                                tiles_from_tenhou_bytes(&naki[7..9])?,
+                            ],
                         },
 
                         // ???
@@ -719,15 +710,15 @@ fn discard_action_to_events(
                         return Err(ConvertError::InvalidNaki(naki_string.clone()));
                     }
 
-                    let pai = pai_from_bytes(&naki[7..9])?;
-                    let ev = mjai::Event::Ankan {
+                    let pai = tiles_from_tenhou_bytes(&naki[7..9])?;
+                    let ev = Event::Ankan {
                         actor,
-                        consumed: mjai::Consumed4::from([
-                            pai_from_bytes(&naki[0..2])?,
-                            pai_from_bytes(&naki[2..4])?,
-                            pai_from_bytes(&naki[4..6])?,
+                        consumed: [
+                            tiles_from_tenhou_bytes(&naki[0..2])?,
+                            tiles_from_tenhou_bytes(&naki[2..4])?,
+                            tiles_from_tenhou_bytes(&naki[4..6])?,
                             pai,
-                        ]),
+                        ],
                     };
 
                     ret.push(ev);
@@ -740,16 +731,16 @@ fn discard_action_to_events(
                     }
 
                     let pai = if &naki[1..3] == b"60" {
-                        Pai::Unknown
+                        t![?]
                     } else {
-                        pai_from_bytes(&naki[1..3])?
+                        tiles_from_tenhou_bytes(&naki[1..3])?
                     };
 
-                    ret.push(mjai::Event::Reach { actor });
-                    ret.push(mjai::Event::Dahai {
+                    ret.push(Event::Reach { actor });
+                    ret.push(Event::Dahai {
                         actor,
                         pai, // must be filled later if it is tsumogiri
-                        tsumogiri: pai == Pai::Unknown,
+                        tsumogiri: pai == t![?],
                     });
                 }
             }
@@ -759,10 +750,10 @@ fn discard_action_to_events(
     Ok(ret)
 }
 
-fn end_kyoku(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) {
+fn end_kyoku(events: &mut Vec<Event>, kyoku: &Kyoku) {
     match &kyoku.end_status {
-        tenhou::kyoku::EndStatus::Hora { details } => {
-            events.extend(details.iter().map(|detail| mjai::Event::Hora {
+        EndStatus::Hora { details } => {
+            events.extend(details.iter().map(|detail| Event::Hora {
                 actor: detail.who,
                 target: detail.target,
                 deltas: Some(detail.score_deltas),
@@ -770,21 +761,24 @@ fn end_kyoku(events: &mut Vec<mjai::Event>, kyoku: &tenhou::Kyoku) {
             }));
         }
 
-        tenhou::kyoku::EndStatus::Ryukyoku { score_deltas } => {
-            events.push(mjai::Event::Ryukyoku {
+        EndStatus::Ryukyoku { score_deltas } => {
+            events.push(Event::Ryukyoku {
                 deltas: Some(*score_deltas),
             });
         }
     };
 
-    events.push(mjai::Event::EndKyoku);
+    events.push(Event::EndKyoku);
 }
 
-fn pai_from_bytes(b: &[u8]) -> Result<Pai> {
+pub fn tiles_from_tenhou_bytes(b: &[u8]) -> Result<Tile> {
     let s = String::from_utf8_lossy(b);
     let id: u8 = s
         .parse()
-        .map_err(|_| ConvertError::InvalidPai(s.clone().into_owned()))?;
+        .map_err(|_| ConvertError::InvalidTile(s.clone().into_owned()))?;
 
-    Pai::try_from(id).map_err(|_| ConvertError::InvalidPai(s.clone().into_owned()))
+    let tenhou_tile =
+        TenhouTile::try_from(id).map_err(|_| ConvertError::InvalidTile(s.clone().into_owned()))?;
+    let tile = Tile::from(tenhou_tile);
+    Ok(tile)
 }
