@@ -1,4 +1,4 @@
-# There is a brand new stronger mahjong AI engine almost ready for use. Check [this post](https://gist.github.com/Equim-chan/cf3f01735d5d98f1e7be02e94b288c56) for details.
+# There is a brand new stronger mahjong AI engine almost ready for use. Check [this repo](https://github.com/Equim-chan/Mortal) for details.
 
 # akochan-reviewer
 
