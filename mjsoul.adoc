@@ -11,14 +11,14 @@ However, the heroku instance where tensoul is deployed (`\https://tensoul.heroku
 As a result, the public service (`\https://akochan.ekyu.moe`) will no longer support mjsoul logs. You will need a akochan-reviewer running locally to review mjsoul logs. Downloads for pre-built Windows binary can be found https://github.com/Equim-chan/akochan-reviewer/releases[here].
 
 == Instructions (Browser)
-=== Install tempermonkey extenstion on your browser
+=== Install tampermonkey extension on your browser
 https://www.tampermonkey.net/[Here]
 
 === Install `downloadlogs` script
-Add https://gist.githubusercontent.com/Equim-chan/875a232a2c1d31181df8b3a8704c3112/raw/a0533ae7a0ab0158ca9ad9771663e94b82b61572/downloadlogs.js[this script] to tempermonkey.
+Add https://gist.githubusercontent.com/Equim-chan/875a232a2c1d31181df8b3a8704c3112/raw/a0533ae7a0ab0158ca9ad9771663e94b82b61572/downloadlogs.js[this script] to tampermonkey.
 
 === Download the log
-Login mjsoul, open the log you want to review, then press kbd:[S] after the log is loaded.
+Login to mjsoul, open the log you want to review, then press kbd:[S] after the log is loaded.
 
 === Review
 [source,shell]
