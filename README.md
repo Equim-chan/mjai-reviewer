@@ -13,7 +13,7 @@ Review your Tenhou or Mahjong Soul (Jantama) log with mjai-compatible mahjong AI
 
 It is recommended to just use the [online version](https://mjai.ekyu.moe), which works for Mahjong Soul games out-of-the-box, no download, no install, no extension, and it is free to use.
 
-mjai-reviewer 1.x.x is incompatible with 0.x.x versions. If you prefer the old version, check out [v0 branch](https://github.com/Equim-chan/mjai-reviewer/tree/v0).
+mjai-reviewer 1.x.x is incompatible with 0.x.x versions, previously known as akochan-reviewer. If you prefer the old version, check out [v0 branch](https://github.com/Equim-chan/mjai-reviewer/tree/v0).
 
 ### [How to Review Mahjong Soul Logs (updated 2021-09-26)](https://github.com/Equim-chan/mjai-reviewer/blob/master/mjsoul.adoc)
 
