@@ -63,6 +63,8 @@ impl View<'_> {
 
         let cfg = Cfg {
             keep_comments: true,
+            minify_css: true,
+            minify_js: true,
             ..Cfg::spec_compliant()
         };
         let out = minify(original.as_bytes(), &cfg);

@@ -1,30 +1,26 @@
-use anyhow::{ensure, Context, Result};
+use std::time::Duration;
+
+use anyhow::{ensure, Result};
+use ureq::AgentBuilder;
 
 pub fn tenhou_log(log_id: &str) -> Result<String> {
     let url = format!("https://tenhou.net/5/mjlog2json.cgi?{}", log_id);
 
-    let mut req = ureq::get(&url);
-    req.set("Referer", "https://tenhou.net/");
-    req.timeout_connect(10_000);
-    proxy_from_env(&mut req, &url)?;
+    let agent = AgentBuilder::new()
+        .timeout_connect(Duration::from_secs(10))
+        .build();
 
-    let res = req.call();
+    let res = agent
+        .get(&url)
+        .set("Referer", "https://tenhou.net/")
+        .call()?;
+    let status = res.status();
     ensure!(
-        res.ok(),
-        "get tenhou log: {} {}",
-        res.status(),
+        status == 200,
+        "get tenhou log: {status} {}",
         res.status_text(),
     );
 
     let body = res.into_string()?;
     Ok(body)
-}
-
-fn proxy_from_env(req: &mut ureq::Request, url: &str) -> Result<()> {
-    if let Some(proxy_url) = env_proxy::for_url_str(&url).raw_value() {
-        let proxy_str: String = proxy_url.chars().skip("http://".len()).collect();
-        let proxy = ureq::Proxy::new(proxy_str).context("failed to parse proxy")?;
-        req.set_proxy(proxy);
-    }
-    Ok(())
 }
