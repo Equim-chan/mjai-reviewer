@@ -1,0 +1,236 @@
+{%- macro seat_rel(target) -%}
+  {%- if target == 0 -%}
+    Self👇
+  {%- elif target == 1 -%}
+    Shimocha👉
+  {%- elif target == 2 -%}
+    Toimen👆
+  {%- else -%}
+    Kamicha👈
+  {%- endif -%}
+{%- endmacro seat_rel -%}
+
+{%- macro seat(target) -%}
+  {%- set rel = (target + 4 - player_id) % 4 -%}
+  {{- self::seat_rel(target=rel) -}}
+{%- endmacro seat -%}
+
+{%- macro render_tile(tile) -%}
+  {%- if tile == "back" -%}
+    <svg class="tile">
+      <use class="back" href="#tile"></use>
+    </svg>
+  {%- else -%}
+    <svg class="tile">
+      <use class="face" href="#pai-{{ tile | lower }}"></use>
+    </svg>
+  {%- endif -%}
+{%- endmacro render_tile -%}
+
+{%- macro render_decimal(num, prec=5) -%}
+  {%- set val = pretty_round(num=num, prec=prec, split=true) -%}
+  <span class="int">{{ val[0] }}.</span><span class="frac">{{ val[1] }}</span>
+{%- endmacro render_decimal -%}
+
+{%- macro render_action(action) -%}
+  {%- if action.type == "none" -%}
+    Pass
+  {%- elif action.type == "dahai" -%}
+    Discard
+    {{ self::render_tile(tile=action.pai) }}
+  {%- elif action.type == "reach" -%}
+    Riichi
+  {%- elif action.type == "hora" -%}
+    {%- if action.target == action.actor -%}
+      Tsumo
+    {%- else -%}
+      Ron
+    {%- endif -%}
+  {%- elif action.type == "chi" -%}
+    {%- for tile in action.consumed -%}
+      {{- self::render_tile(tile=tile) -}}
+    {% endfor %}
+    Chii
+  {%- elif action.type == "pon" -%}
+    {%- for tile in action.consumed -%}
+      {{- self::render_tile(tile=tile) -}}
+    {% endfor %}
+    Pon
+  {%- elif action.type == "kakan" or action.type == "daiminkan" -%}
+    Kan
+    {{ self::render_tile(tile=action.pai) }}
+  {%- elif action.type == "ankan" -%}
+    Kan
+    {{ self::render_tile(tile=action.consumed[0]) }}
+  {%- elif action.type == "ryukyoku" -%}
+    Ryuukyoku
+  {%- endif -%}
+{%- endmacro render_action -%}
+
+{%- macro render_action_tuple(actions) -%}
+  {%- if actions[0].type == "reach" -%}
+    Discard
+    {{ self::render_tile(tile=actions[1].pai) }}
+    Riichi
+  {%- elif actions[0].type == "chi" -%}
+    {%- for tile in actions[0].consumed -%}
+      {{- self::render_tile(tile=tile) -}}
+    {% endfor %}
+    Chii, cut
+    {{ self::render_tile(tile=actions[1].pai) }}
+  {%- elif actions[0].type == "pon" -%}
+    {%- for tile in actions[0].consumed -%}
+      {{- self::render_tile(tile=tile) -}}
+    {% endfor %}
+    Pon, cut
+    {{ self::render_tile(tile=actions[1].pai) }}
+  {%- else -%}
+    {{- self::render_action(action=actions[0]) -}}
+  {%- endif -%}
+{%- endmacro render_action_tuple -%}
+
+{%- macro render_end_status(end_status) -%}
+  {%- for s in end_status -%}
+    {%- if loop.index0 > 0 -%}
+      {#- multiple rons, use a space to separate them -#}
+      ,&nbsp;
+    {%- endif -%}
+
+    {%- if s.type == "hora" -%}
+      {%- if s.target == s.actor -%}
+        Tsumo by
+      {%- else -%}
+        Ron by
+      {%- endif -%}
+      &nbsp;
+      {{- self::seat(target=s.actor) -}}
+      {{- s.deltas[s.actor] -}}
+    {%- else -%}
+      Ryuukyoku
+    {%- endif -%}
+  {%- endfor -%}
+{%- endmacro render_end_status -%}
+
+{%- macro render_tehai_state(entry) -%}
+  <ul class="tehai-state">
+    {%- for tile in entry.state.tehai -%}
+      {%- if loop.index < entry.state.tehai|length -%}
+        {#- all tiles but the last -#}
+        <li>{{ self::render_tile(tile=tile) }}</li>
+      {%- elif entry.at_self_chi_pon -%}
+        {#- right after a chi or pon -#}
+        <li>{{ self::render_tile(tile=tile) }}</li>
+      {%- elif entry.at_self_riichi -%}
+        {#- right after a riichi declare -#}
+        <li class="tsumo" before="Draw " after=" and declares riichi">{{ self::render_tile(tile=tile) }}</li>
+      {%- elif entry.last_actor == player_id -%}
+        {#- nothing special, just a self tsumo -#}
+        <li class="tsumo" before="Draw ">{{ self::render_tile(tile=tile) }}</li>
+      {%- else -%}
+        {#- fuuro review in which the last active player is not self -#}
+        <li>{{ self::render_tile(tile=tile) }}</li>
+        {%- set content = self::seat(target=entry.last_actor) -%}
+        {%- if entry.at_opponent_kakan -%}
+          {%- set content = content ~ " kans " -%}
+        {%- else -%}
+          {%- set content = content ~ " cuts " -%}
+        {%- endif -%}
+        <li class="tsumo" before="{{ content }}">{{ self::render_tile(tile=entry.tile) }}</li>
+      {%- endif -%}
+    {%- endfor -%}
+
+    {%- for fuuro in entry.state.fuuros|reverse -%}
+      <li class="fuuro">{{ self::render_fuuro(fuuro=fuuro) }}</li>
+    {%- endfor -%}
+  </ul>
+{%- endmacro render_tehai_state -%}
+
+{%- macro render_fuuro(fuuro) -%}
+  {%- if fuuro.type in ["pon", "chi"] -%}
+    {{- self::render_pon_or_chi(fuuro=fuuro) -}}
+  {%- elif fuuro.type == "ankan" -%}
+    {{- self::render_ankan(fuuro=fuuro) -}}
+  {%- elif fuuro.type == "kakan" -%}
+    {{- self::render_kakan(fuuro=fuuro) -}}
+  {%- elif fuuro.type == "daiminkan" -%}
+    {{- self::render_daiminkan(fuuro=fuuro) -}}
+  {%- endif -%}
+{%- endmacro render_fuuro -%}
+
+{%- macro render_pon_or_chi(fuuro) -%}
+  {%- set rel = (fuuro.target + 4 - player_id) % 4 -%}
+  <ul class="consumed">
+    {%- if rel == 1 -%}
+      {#- shimocha -#}
+      <li>{{ self::render_tile(tile=fuuro.consumed[0]) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+      <li class="rotated">{{ self::render_tile(tile=fuuro.pai) }}</li>
+    {%- elif rel == 2 -%}
+      {#- toimen -#}
+      <li>{{ self::render_tile(tile=fuuro.consumed[0]) }}</li>
+      <li class="rotated">{{ self::render_tile(tile=fuuro.pai) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+    {%- elif rel == 3 -%}
+      {#- kamicha -#}
+      <li class="rotated">{{ self::render_tile(tile=fuuro.pai) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[0]) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+    {%- endif -%}
+  </ul>
+{%- endmacro render_pon_or_chi -%}
+
+{%- macro render_ankan(fuuro) -%}
+  <ul class="consumed">
+    <li>{{ self::render_tile(tile="back") }}</li>
+    <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+    <li>{{ self::render_tile(tile=fuuro.consumed[2]) }}</li>
+    <li>{{ self::render_tile(tile="back") }}</li>
+  </ul>
+{%- endmacro render_ankan -%}
+
+{%- macro render_kakan(fuuro) -%}
+  {%- set rel = (fuuro.previous_pon_target + 4 - player_id) % 4 -%}
+  <ul class="consumed">
+    {%- if rel == 1 -%}
+      {#- shimocha -#}
+      <li>{{ self::render_tile(tile=fuuro.consumed[0]) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+      <li class="rotated added">{{ self::render_tile(tile=fuuro.pai) -}}{{- self::render_tile(tile=fuuro.previous_pon_pai) }}</li>
+    {%- elif rel == 2 -%}
+      {#- toimen -#}
+      <li>{{ self::render_tile(tile=fuuro.consumed[0]) }}</li>
+      <li class="rotated added">{{ self::render_tile(tile=fuuro.pai) -}}{{- self::render_tile(tile=fuuro.previous_pon_pai) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+    {%- elif rel == 3 -%}
+      {#- kamicha -#}
+      <li class="rotated added">{{ self::render_tile(tile=fuuro.pai) -}}{{- self::render_tile(tile=fuuro.previous_pon_pai) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[0]) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+    {%- endif -%}
+  </ul>
+{%- endmacro render_kakan -%}
+
+{%- macro render_daiminkan(fuuro) -%}
+  {%- set rel = (fuuro.target + 4 - player_id) % 4 -%}
+  <ul class="consumed">
+    {%- if rel == 1 -%}
+      {#- shimocha -#}
+      <li>{{ self::render_tile(tile=fuuro.consumed[0]) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[2]) }}</li>
+      <li class="rotated">{{ self::render_tile(tile=fuuro.pai) }}</li>
+    {%- elif rel == 2 -%}
+      {#- toimen -#}
+      <li>{{ self::render_tile(tile=fuuro.consumed[0]) }}</li>
+      <li class="rotated">{{ self::render_tile(tile=fuuro.pai) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[2]) }}</li>
+    {%- elif rel == 3 -%}
+      {#- kamicha -#}
+      <li class="rotated">{{ self::render_tile(tile=fuuro.pai) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[0]) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[1]) }}</li>
+      <li>{{ self::render_tile(tile=fuuro.consumed[2]) }}</li>
+    {%- endif -%}
+  </ul>
+{%- endmacro render_daiminkan -%}

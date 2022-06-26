@@ -1,5 +1,6 @@
 {
   "tactics": {
+    "jun_pt": [90, 45, 0, -135],
     "agari_prob_est": "ako",
     "base": "default",
     "do_kan_ordinary": false,
@@ -23,12 +24,6 @@
     "houjuu_est": "ako",
     "inclusive_fold_est": "ako",
     "jun_est": "ako",
-    "jun_pt": [
-      90,
-      45,
-      0,
-      -135
-    ],
     "katachi_est": "ako",
     "mc_init": "ako",
     "my_keiten_prob_est": "ako",

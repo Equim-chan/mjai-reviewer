@@ -1,35 +1,30 @@
 [package]
-name = "akochan-reviewer"
-version = "0.6.0"
-authors = ["Equim <sayaka@ekyu.moe>"]
-edition = "2018"
-repository = "https://github.com/Equim-chan/akochan-reviewer"
+name = "mjai-reviewer"
+version = "1.0.0"
+authors = ["Equim"]
+edition = "2021"
+repository = "https://github.com/Equim-chan/mjai-reviewer"
 license = "Apache-2.0"
-description = "🀄️ Review your Tenhou log with mahjong AI akochan."
-build = "build.rs"
+description = "🔍🀄️ Review your Tenhou or Mahjong Soul (Jantama) log with mjai-compatible mahjong AIs."
 
 [dependencies]
 convlog = { path = "./convlog" }
-anyhow = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+
+anyhow = "1"
+serde_json = "1"
 tera = "1"
-once_cell = "1.3.1"
+once_cell = "1"
 chrono = "0.4"
-clap = "2.33"
 ureq = "0.12"
-opener = "0.4.1"
+opener = "0.4"
 dunce = "1"
 humantime-serde = "1"
-tempfile = "3.1.0"
 env_proxy = "0.3"
-url = "2.1.1"
-serde_with = "1.9.0"
-
-[build-dependencies]
-anyhow = "1.0"
-tera = "1"
-chrono = "0.4"
+url = "2"
+serde_with = "1"
+minify-html = "0.8"
+clap = { version = "3", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
 
 [workspace]
 members = [
@@ -38,6 +33,6 @@ members = [
 ]
 
 [profile.release]
-debug = false
-# lto = true
-# codegen-units = 1
+debug = 1
+lto = true
+codegen-units = 1

@@ -1,8 +1,4 @@
-use anyhow::anyhow;
-use anyhow::{Context, Result};
-use url::form_urlencoded::Serializer;
-
-const TENSOUL_ENDPOINT: &str = "https://tensoul.herokuapp.com/convert";
+use anyhow::{ensure, Context, Result};
 
 pub fn tenhou_log(log_id: &str) -> Result<String> {
     let url = format!("https://tenhou.net/5/mjlog2json.cgi?{}", log_id);
@@ -13,37 +9,15 @@ pub fn tenhou_log(log_id: &str) -> Result<String> {
     proxy_from_env(&mut req, &url)?;
 
     let res = req.call();
-    if res.ok() {
-        Ok(res.into_string()?)
-    } else {
-        Err(anyhow!(
-            "get tenhou log: {} {}",
-            res.status(),
-            res.status_text()
-        ))
-    }
-}
+    ensure!(
+        res.ok(),
+        "get tenhou log: {} {}",
+        res.status(),
+        res.status_text(),
+    );
 
-pub fn mahjong_soul_log(log_id: &str) -> Result<String> {
-    let mut ser = Serializer::new(String::new());
-    ser.append_pair("id", log_id);
-    let query = ser.finish();
-    let url = format!("{}?{}", TENSOUL_ENDPOINT, query);
-
-    let mut req = ureq::get(&url);
-    req.timeout_connect(20_000);
-    proxy_from_env(&mut req, &url)?;
-
-    let res = req.call();
-    if res.ok() {
-        Ok(res.into_string()?)
-    } else {
-        Err(anyhow!(
-            "get mahjong soul log: {} {}",
-            res.status(),
-            res.status_text()
-        ))
-    }
+    let body = res.into_string()?;
+    Ok(body)
 }
 
 fn proxy_from_env(req: &mut ureq::Request, url: &str) -> Result<()> {
@@ -52,6 +26,5 @@ fn proxy_from_env(req: &mut ureq::Request, url: &str) -> Result<()> {
         let proxy = ureq::Proxy::new(proxy_str).context("failed to parse proxy")?;
         req.set_proxy(proxy);
     }
-
     Ok(())
 }

@@ -1,16 +1,16 @@
-use convlog::Pai;
+use convlog::Tile;
 
-use serde::ser::{Serialize, SerializeSeq, Serializer};
+use serde::{Serialize, Serializer};
 
 #[derive(Debug, Clone, Default)]
 pub struct Tehai {
-    inner: Vec<Pai>,
+    inner: Vec<Tile>,
     is_sorted: bool,
 }
 
-impl From<Vec<Pai>> for Tehai {
+impl From<Vec<Tile>> for Tehai {
     #[inline]
-    fn from(tehai: Vec<Pai>) -> Self {
+    fn from(tehai: Vec<Tile>) -> Self {
         let mut ret = Self {
             inner: tehai,
             is_sorted: false,
@@ -20,7 +20,7 @@ impl From<Vec<Pai>> for Tehai {
     }
 }
 
-impl From<Tehai> for Vec<Pai> {
+impl From<Tehai> for Vec<Tile> {
     #[inline]
     fn from(tehai: Tehai) -> Self {
         tehai.inner
@@ -32,76 +32,67 @@ impl Serialize for Tehai {
     where
         S: Serializer,
     {
-        let mut seq = serializer.serialize_seq(Some(self.inner.len()))?;
-        for el in &self.inner {
-            seq.serialize_element(&el.to_string())?;
-        }
-        seq.end()
+        self.inner.serialize(serializer)
     }
 }
 
 impl Tehai {
     /// Resets current tehai.
     #[inline]
-    pub fn haipai(&mut self, pais: &[Pai]) {
-        self.inner = pais.to_vec();
+    pub fn haipai(&mut self, tiles: &[Tile]) {
+        self.inner = tiles.to_vec();
         self.sort();
     }
 
-    /// Tsumo a pai.
+    /// Tsumo a tile.
     #[inline]
-    pub fn tsumo(&mut self, pai: Pai) {
-        self.inner.push(pai);
+    pub fn tsumo(&mut self, tile: Tile) {
+        self.inner.push(tile);
         self.is_sorted = false;
     }
 
-    /// Tsumogiri a pai.
+    /// Tsumogiri a tile.
     #[inline]
     pub fn tsumogiri(&mut self) {
         self.inner.pop();
         self.is_sorted = true;
     }
 
-    /// Tedashi a pai.
-    pub fn tedashi(&mut self, pai: Pai) {
+    /// Tedashi a tile.
+    pub fn tedashi(&mut self, tile: Tile) {
         if !self.is_sorted {
             self.sort();
         }
 
-        if let Ok(idx) = self
-            .inner
-            .binary_search_by_key(&pai.as_ord(), |pai| pai.as_ord())
-        {
+        if let Ok(idx) = self.inner.binary_search(&tile) {
             self.inner.remove(idx);
         }
     }
 
-    /// Remove several pais for fuuro.
-    pub fn remove_multiple(&mut self, pais: &[Pai]) {
+    /// Remove several tiles for fuuro.
+    pub fn remove_multiple(&mut self, tiles: &[Tile]) {
         // usually, it is already sorted, except for kakan and ankan.
         if !self.is_sorted {
             self.sort();
         }
 
-        for &pai in pais {
-            if let Ok(idx) = self
-                .inner
-                .binary_search_by_key(&pai.as_ord(), |pai| pai.as_ord())
-            {
+        for &tile in tiles {
+            if let Ok(idx) = self.inner.binary_search(&tile) {
                 self.inner.remove(idx);
             }
         }
     }
 
-    /// Sort the pai. Aka pai will be before normal pai of the same sequence.
+    /// Sort the tiles. Aka tile will be before normal tile of the same
+    /// sequence.
     #[inline]
     fn sort(&mut self) {
-        self.inner.sort_unstable_by_key(|pai| pai.as_ord());
+        self.inner.sort_unstable();
         self.is_sorted = true;
     }
 
     /// Returns a view of current tehai.
-    pub fn view(&self) -> &[Pai] {
+    pub fn view(&self) -> &[Tile] {
         &self.inner
     }
 }

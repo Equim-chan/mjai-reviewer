@@ -4,18 +4,18 @@
 == Background (skippable)
 Downloading logs from mjsoul is more difficult than from tenhou because it requires a login and the log formats are different.
 
-For a long time, the reviewer had been able to retrieve mjsoul logs via https://github.com/Equim-chan/tensoul[tensoul], a tool I wrote to automate the process of login to mjsoul with an account, download of the logs and convertions to tenhou format. I created a dummy account and deployed a tensoul on heroku to provide a more accessible service, then the reviewer could retrieve logs in tenhou format directly by accessing the tensoul instance's API. This was https://github.com/Equim-chan/akochan-reviewer/blob/b815e32e58414361de5b4af5748cabeb6085e9cb/src/download.rs#L5[hard coded] in akochan-reviewer.
+For a long time, the reviewer had been able to retrieve mjsoul logs via https://github.com/Equim-chan/tensoul[tensoul,window=_blank], a tool I wrote to automate the process of login to mjsoul with an account, download of the logs and convertions to tenhou format. I created a dummy account and deployed a tensoul on heroku to provide a more accessible service, then the reviewer could retrieve logs in tenhou format directly by accessing the tensoul instance's API. This was https://github.com/Equim-chan/akochan-reviewer/blob/b815e32e58414361de5b4af5748cabeb6085e9cb/src/download.rs#L5[hard coded,window=_blank] in akochan-reviewer.
 
 However, the heroku instance where tensoul is deployed (`\https://tensoul.herokuapp.com`) seems to be banned by mjsoul recently as the login command keeps getting error code 151. Migrating the instance to another region could mitigate the problem, but I have already done it once. Currently both of the two regions heroku provides are banned and I have no choice.
 
-As a result, the public service (`\https://akochan.ekyu.moe`) will no longer support mjsoul logs. You will need a akochan-reviewer running locally to review mjsoul logs. Downloads for pre-built Windows binary can be found https://github.com/Equim-chan/akochan-reviewer/releases[here].
+As a result, the public service (`\https://akochan.ekyu.moe`) will no longer support mjsoul logs. You will need a akochan-reviewer running locally to review mjsoul logs. Downloads for pre-built Windows binary can be found https://github.com/Equim-chan/akochan-reviewer/releases[here,window=_blank].
 
 == Instructions (Browser)
 === Install tampermonkey extension on your browser
-https://www.tampermonkey.net/[Here]
+https://www.tampermonkey.net/[Here,window=_blank]
 
 === Install `downloadlogs` script
-Add https://gist.githubusercontent.com/Equim-chan/875a232a2c1d31181df8b3a8704c3112/raw/a0533ae7a0ab0158ca9ad9771663e94b82b61572/downloadlogs.js[this script] to tampermonkey.
+Add https://gist.githubusercontent.com/Equim-chan/875a232a2c1d31181df8b3a8704c3112/raw/a0533ae7a0ab0158ca9ad9771663e94b82b61572/downloadlogs.js[this script,window=_blank] to tampermonkey.
 
 === Download the log
 Login to mjsoul, open the log you want to review, then press kbd:[S] after the log is loaded.
@@ -30,7 +30,7 @@ $ akochan-reviewer -i log.json -a 2
 
 == Instructions (Majsoul+)
 === Install mod
-Heads https://repo.riichi.moe/library.html#resources-majplus[here] and search for "Save logs".
+Heads https://repo.riichi.moe/library.html#resources-majplus[here,window=_blank] and search for "Save logs".
 
 === Review
 Same as above.

@@ -1,5 +1,6 @@
-FROM rust:1.59.0
+# This Dockerfile only has akochan engine embedded.
 
+FROM rust:1.59.0
 
 # install akochan deps
 RUN set -ex \
@@ -10,28 +11,28 @@ RUN set -ex \
 
 # build akochan ai and system
 # ref: https://github.com/Equim-chan/akochan#systemexe%E3%82%B3%E3%83%B3%E3%83%91%E3%82%A4%E3%83%AB%E6%89%8B%E9%A0%86linux
-WORKDIR /akochan-reviewer
+WORKDIR /mjai-reviewer
 
 COPY akochan akochan
 
-WORKDIR /akochan-reviewer/akochan/ai_src
+WORKDIR /mjai-reviewer/akochan/ai_src
 
 RUN set -ex \
   && make -f Makefile_Linux libai.so \
   && cp libai.so ../
 
-WORKDIR /akochan-reviewer/akochan
+WORKDIR /mjai-reviewer/akochan
 
 RUN set -ex \
   && make -f Makefile_Linux system.exe
 
 # set path for system.exe to find libai.so
-ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/akochan-reviewer/akochan
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/mjai-reviewer/akochan
 
 
-# build akochan-reviewer
-# ref: https://github.com/Equim-chan/akochan-reviewer#build
-WORKDIR /akochan-reviewer
+# build mjai-reviewer
+# ref: https://github.com/Equim-chan/mjai-reviewer#build
+WORKDIR /mjai-reviewer
 
 COPY . .
 
@@ -39,4 +40,4 @@ RUN set -ex \
   && cargo build --release
 
 
-ENTRYPOINT ["./target/release/akochan-reviewer"]
+ENTRYPOINT ["./target/release/mjai-reviewer"]
