@@ -1,7 +1,7 @@
 # mjai-reviewer
 
 [![GitHub Workflow Status](https://github.com/Equim-chan/mjai-reviewer/workflows/build/badge.svg)](https://github.com/Equim-chan/mjai-reviewer/actions)
-[![dependency status](https://deps.rs/repo/github/Equim-chan/akochan-reviewer/status.svg)](https://deps.rs/repo/github/Equim-chan/akochan-reviewer)
+[![dependency status](https://deps.rs/repo/github/Equim-chan/mjai-reviewer/status.svg)](https://deps.rs/repo/github/Equim-chan/mjai-reviewer)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Equim-chan/mjai-reviewer)
 [![License](https://img.shields.io/github/license/Equim-chan/mjai-reviewer)](https://github.com/Equim-chan/mjai-reviewer/blob/master/LICENSE)
 
