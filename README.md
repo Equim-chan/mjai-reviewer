@@ -1,10 +1,11 @@
 # mjai-reviewer
 
 [![GitHub Workflow Status](https://github.com/Equim-chan/mjai-reviewer/workflows/build/badge.svg)](https://github.com/Equim-chan/mjai-reviewer/actions)
-<!-- [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Equim-chan/mjai-reviewer?include_prereleases)](https://github.com/Equim-chan/mjai-reviewer/releases) -->
 [![dependency status](https://deps.rs/repo/github/Equim-chan/akochan-reviewer/status.svg)](https://deps.rs/repo/github/Equim-chan/akochan-reviewer)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Equim-chan/mjai-reviewer)
 [![License](https://img.shields.io/github/license/Equim-chan/mjai-reviewer)](https://github.com/Equim-chan/mjai-reviewer/blob/master/LICENSE)
+
+<!-- [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Equim-chan/mjai-reviewer?include_prereleases)](https://github.com/Equim-chan/mjai-reviewer/releases) -->
 
 Review your Tenhou or Mahjong Soul (Jantama) log with mjai-compatible mahjong AI, supported engines are [Mortal](https://github.com/Equim-chan/Mortal) and [akochan](https://github.com/critter-mj/akochan).
 
