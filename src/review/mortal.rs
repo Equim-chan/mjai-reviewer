@@ -291,12 +291,9 @@ impl Reviewer<'_> {
                         matches!(d.action, Event::Ankan { .. }).then(|| (i, d.q_value))
                     })
                     .context("in kan_select but no kan found in root")?;
-                if num_kans > 1 {
-                    details.remove(orig_kan_idx);
-                }
+                details.remove(orig_kan_idx);
 
                 let masks = mask_from_bits(mask_bits);
-
                 let mut q_values = kan_select.q_values.context("missing q_values")?;
                 for (label, m) in masks.into_iter().enumerate().rev() {
                     if !m {
@@ -592,14 +589,11 @@ fn next_action(events: &[Event], player_id: u8) -> Option<Event> {
         Event::Tsumo { .. } => Some(Event::None),
 
         // filter the player's hora from multiple horas
-        Event::Hora { .. } => Some(
-            events
-                .iter()
-                .take(3)
-                .find(|&a| matches!(*a, Event::Hora { actor, .. } if actor == player_id))
-                .cloned()
-                .unwrap_or(Event::None),
-        ),
+        Event::Hora { .. } => events
+            .iter()
+            .take(3)
+            .find(|&a| matches!(*a, Event::Hora { actor, .. } if actor == player_id))
+            .cloned(),
 
         _ => match ev.actor() {
             // not the target player, who did nothing (passed a possible naki)
