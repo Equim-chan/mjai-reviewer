@@ -1,6 +1,6 @@
 # This Dockerfile only has akochan engine embedded.
 
-FROM rust:1.59.0
+FROM rust:1.62.0
 
 # install akochan deps
 RUN set -ex \

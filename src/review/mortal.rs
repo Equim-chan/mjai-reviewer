@@ -1,7 +1,6 @@
 use crate::log;
 use crate::state::State;
 use convlog::{must_tile, t, tile_set_eq, tu8, Event, Tile};
-use std::cmp::Ordering;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::mem;
@@ -299,7 +298,7 @@ impl Reviewer<'_> {
                     .iter()
                     .enumerate()
                     .find_map(|(i, d)| {
-                        matches!(d.action, Event::Ankan { .. }).then(|| (i, d.q_value))
+                        matches!(d.action, Event::Ankan { .. }).then_some((i, d.q_value))
                     })
                     .context("in kan_select but no kan found in root")?;
                 details.remove(orig_kan_idx);
@@ -333,7 +332,7 @@ impl Reviewer<'_> {
             }
 
             // this sort is better to be stable
-            details.sort_by(|l, r| r.q_value.partial_cmp(&l.q_value).unwrap_or(Ordering::Less));
+            details.sort_by(|l, r| r.q_value.total_cmp(&l.q_value));
             let order = details
                 .iter()
                 .enumerate()
