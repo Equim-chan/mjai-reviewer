@@ -343,13 +343,13 @@ impl Reviewer<'_> {
                 .iter()
                 .enumerate()
                 .find(|(_, d)| match (d.label, actual_kan_label) {
-                    (Label::General(l), _) => l == actual_label,
+                    (Label::General(l), None) => l == actual_label,
                     (Label::KanSelect(l), Some(kan_label)) => l == kan_label,
                     _ => false,
                 })
                 .map(|(i, _)| i)
                 .with_context(|| {
-                    format!("failed to find label {actual_label} in details {details:?}")
+                    format!("failed to find action ({actual_label}, {actual_kan_label:?}) in details {details:?}")
                 })?;
 
             let actual_q_value = actual_q_value_opt
