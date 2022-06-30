@@ -270,8 +270,8 @@ fn main() -> Result<()> {
         };
 
         for event in &events {
-            let to_write = json::to_vec(event).context("failed to serialize")?;
-            w.write_all(&to_write).with_context(|| {
+            let to_write = json::to_string(event).context("failed to serialize")?;
+            writeln!(w, "{to_write}").with_context(|| {
                 format!("failed to write to mjai out file {}", mjai_out.display())
             })?;
         }

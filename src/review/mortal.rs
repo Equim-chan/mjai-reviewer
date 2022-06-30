@@ -62,7 +62,15 @@ pub struct Entry {
 struct Detail {
     action: Event,
     q_value: f32,
-    label: usize,
+
+    // not displayed
+    label: Label,
+}
+
+#[derive(Debug, Clone, Copy, Serialize)]
+enum Label {
+    General(usize),
+    KanSelect(usize),
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -249,7 +257,7 @@ impl Reviewer<'_> {
                 // interrupted
                 continue;
             };
-            let actual_label = to_label(&actual);
+            let actual_label = to_label(&actual, false)?;
             ensure!(masks[actual_label], "{actual:?} is not a valid reaction");
             let mut actual_q_value_opt = None;
 
@@ -265,18 +273,22 @@ impl Reviewer<'_> {
                 let q_value = q_values.pop().context("q_values vec underflow")? * scale;
                 min = min.min(q_value as f64);
                 max = max.max(q_value as f64);
+
                 let action = to_event(&state, label, last_actor, last_tsumo_or_discard, false)?;
                 if label == actual_label {
                     actual_q_value_opt = Some(q_value as f64);
                 }
+
                 details.push(Detail {
                     action,
                     q_value,
-                    label,
+                    label: Label::General(label),
                 });
             }
 
-            if let Some(kan_select) = meta.kan_select {
+            let actual_kan_label = if let Some(kan_select) = meta.kan_select {
+                let actual_kan_label = to_label(&actual, true)?;
+
                 let mask_bits = kan_select.mask_bits.context("missing mask_bits")?;
                 let num_kans = mask_bits.count_ones();
                 ensure!(
@@ -295,7 +307,7 @@ impl Reviewer<'_> {
 
                 let masks = mask_from_bits(mask_bits);
                 let mut q_values = kan_select.q_values.context("missing q_values")?;
-                for (label, m) in masks.into_iter().enumerate().rev() {
+                for (kan_label, m) in masks.into_iter().enumerate().rev() {
                     if !m {
                         continue;
                     }
@@ -304,22 +316,41 @@ impl Reviewer<'_> {
                     } else {
                         q_values.pop().context("q_values vec underflow")? * scale
                     };
-                    let action = to_event(&state, label, last_actor, last_tsumo_or_discard, true)?;
+                    min = min.min(q_value as f64);
+                    max = max.max(q_value as f64);
+
+                    let action =
+                        to_event(&state, kan_label, last_actor, last_tsumo_or_discard, true)?;
+                    if num_kans > 1 && kan_label == actual_kan_label {
+                        actual_q_value_opt = Some(q_value as f64);
+                    }
+
                     details.push(Detail {
                         action,
                         q_value,
-                        label,
+                        label: Label::KanSelect(kan_label),
                     });
                 }
-            }
+
+                Some(actual_kan_label)
+            } else {
+                None
+            };
 
             // this sort is better to be stable
             details.sort_by(|l, r| r.q_value.partial_cmp(&l.q_value).unwrap_or(Ordering::Less));
             let order = details
                 .iter()
                 .enumerate()
-                .find_map(|(i, d)| (d.label == actual_label).then(|| i))
-                .context("failed to find action in details")?;
+                .find(|(_, d)| match (d.label, actual_kan_label) {
+                    (Label::General(l), _) => l == actual_label,
+                    (Label::KanSelect(l), Some(kan_label)) => l == kan_label,
+                    _ => false,
+                })
+                .map(|(i, _)| i)
+                .with_context(|| {
+                    format!("failed to find label {actual_label} in details {details:?}")
+                })?;
 
             let actual_q_value = actual_q_value_opt
                 .with_context(|| format!("failed to find q value of actual action {actual:?}"))?;
@@ -427,9 +458,17 @@ fn equal_ignore_aka_consumed(a: &Event, b: &Event) -> bool {
     }
 }
 
-/// It assumes at_kan_select == false.
-fn to_label(ev: &Event) -> usize {
-    match ev {
+fn to_label(ev: &Event, at_kan_select: bool) -> Result<usize> {
+    if at_kan_select {
+        let label = match ev {
+            Event::Ankan { consumed, .. } => consumed[0].deaka().as_usize(),
+            Event::Kakan { pai, .. } => pai.deaka().as_usize(),
+            _ => bail!("{ev:?} is not a kan action"),
+        };
+        return Ok(label);
+    }
+
+    let label = match ev {
         Event::Dahai { pai, .. } => pai.as_usize(),
         Event::Reach { .. } => 37,
         Event::Chi { pai, consumed, .. } => {
@@ -451,7 +490,8 @@ fn to_label(ev: &Event) -> usize {
         Event::Hora { .. } => 43,
         Event::Ryukyoku { .. } => 44,
         _ => 45,
-    }
+    };
+    Ok(label)
 }
 
 /// Important note:
