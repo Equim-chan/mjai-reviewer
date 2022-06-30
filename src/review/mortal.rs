@@ -257,7 +257,7 @@ impl Reviewer<'_> {
                 // interrupted
                 continue;
             };
-            let actual_label = to_label(&actual, false)?;
+            let actual_label = to_label(&actual);
             ensure!(masks[actual_label], "{actual:?} is not a valid reaction");
             let mut actual_q_value_opt = None;
 
@@ -286,9 +286,8 @@ impl Reviewer<'_> {
                 });
             }
 
-            let actual_kan_label = if let Some(kan_select) = meta.kan_select {
-                let actual_kan_label = to_label(&actual, true)?;
-
+            let actual_kan_label = to_kan_label(&actual);
+            if let Some(kan_select) = meta.kan_select {
                 let mask_bits = kan_select.mask_bits.context("missing mask_bits")?;
                 let num_kans = mask_bits.count_ones();
                 ensure!(
@@ -321,7 +320,7 @@ impl Reviewer<'_> {
 
                     let action =
                         to_event(&state, kan_label, last_actor, last_tsumo_or_discard, true)?;
-                    if num_kans > 1 && kan_label == actual_kan_label {
+                    if num_kans > 1 && matches!(actual_kan_label, Some(l) if l == kan_label) {
                         actual_q_value_opt = Some(q_value as f64);
                     }
 
@@ -331,11 +330,7 @@ impl Reviewer<'_> {
                         label: Label::KanSelect(kan_label),
                     });
                 }
-
-                Some(actual_kan_label)
-            } else {
-                None
-            };
+            }
 
             // this sort is better to be stable
             details.sort_by(|l, r| r.q_value.partial_cmp(&l.q_value).unwrap_or(Ordering::Less));
@@ -458,17 +453,8 @@ fn equal_ignore_aka_consumed(a: &Event, b: &Event) -> bool {
     }
 }
 
-fn to_label(ev: &Event, at_kan_select: bool) -> Result<usize> {
-    if at_kan_select {
-        let label = match ev {
-            Event::Ankan { consumed, .. } => consumed[0].deaka().as_usize(),
-            Event::Kakan { pai, .. } => pai.deaka().as_usize(),
-            _ => bail!("{ev:?} is not a kan action"),
-        };
-        return Ok(label);
-    }
-
-    let label = match ev {
+fn to_label(ev: &Event) -> usize {
+    match ev {
         Event::Dahai { pai, .. } => pai.as_usize(),
         Event::Reach { .. } => 37,
         Event::Chi { pai, consumed, .. } => {
@@ -490,8 +476,15 @@ fn to_label(ev: &Event, at_kan_select: bool) -> Result<usize> {
         Event::Hora { .. } => 43,
         Event::Ryukyoku { .. } => 44,
         _ => 45,
-    };
-    Ok(label)
+    }
+}
+
+fn to_kan_label(ev: &Event) -> Option<usize> {
+    match ev {
+        Event::Ankan { consumed, .. } => Some(consumed[0].deaka().as_usize()),
+        Event::Kakan { pai, .. } => Some(pai.deaka().as_usize()),
+        _ => None,
+    }
 }
 
 /// Important note:
