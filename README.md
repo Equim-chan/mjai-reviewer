@@ -167,4 +167,4 @@ $ open report.html  # or just open in browser
 [Apache-2.0](https://github.com/Equim-chan/mjai-reviewer/blob/master/LICENSE)
 
 ## Contributors
-[![](https://contrib.rocks/image?repo=Equim-chan/mjai-reviewer)](https://github.com/Equim-chan/mjai-reviewer)
+[![Contributors](https://contrib.rocks/image?repo=Equim-chan/mjai-reviewer)](https://github.com/Equim-chan/mjai-reviewer/graphs/contributors)
