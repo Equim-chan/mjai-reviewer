@@ -178,14 +178,24 @@
             <details class="collapse" open>
               <summary>
                 Turn {{ entry.junme }}
-                &nbsp;&nbsp;&nbsp;
-                {{- entry.shanten }} shanten
-                &nbsp;&nbsp;&nbsp;
-                {%- if entry.order > 0 -%}
-                  <span {% if mark_red %} class="order-loss" {% endif %}>
-                    #{{- entry.order + 1 -}}
-                  </span>/{{- entry.details | length -}}
-                {%- endif -%}
+                <span class="turn-info">
+                  &nbsp;&nbsp;&nbsp;
+                  {%- if entry.shanten == 0 -%}
+                    tenpai
+                  {%- else -%}
+                    {{- entry.shanten }} shanten
+                  {%- endif -%}
+                  &nbsp;&nbsp;&nbsp;
+                  {%- if entry.at_furiten -%}
+                    &nbsp;&nbsp;&nbsp;
+                    (furiten)
+                  {%- endif -%}
+                  {%- if entry.order > 0 -%}
+                    <span {% if mark_red %} class="order-loss" {% endif %}>
+                      #{{- entry.order + 1 -}}
+                    </span>/{{- entry.details | length -}}
+                  {%- endif -%}
+                </span>
               </summary>
           {%- elif engine == "Akochan" -%}
             {%- set mark_red = entry.acceptance == "disagree" -%}

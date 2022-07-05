@@ -94,6 +94,10 @@ details[open].collapse summary {
   margin-bottom: .5em;
 }
 
+.turn-info {
+  font-weight: normal;
+}
+
 .kyoku-toc,
 .kyoku-heading {
   display: flex;

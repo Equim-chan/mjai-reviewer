@@ -54,6 +54,7 @@ pub struct Entry {
     details: Vec<Detail>,
 
     shanten: i8,
+    at_furiten: bool,
     order: usize,
 }
 
@@ -89,6 +90,7 @@ struct Metadata {
     batch_size: Option<usize>,
     eval_time_ns: Option<u64>,
     shanten: Option<i8>,
+    at_furiten: Option<bool>,
     kan_select: Option<Box<Metadata>>,
 }
 
@@ -261,6 +263,7 @@ impl Reviewer<'_> {
             let mut actual_q_value_opt = None;
 
             let shanten = meta.shanten.context("missing shanten")?;
+            let at_furiten = meta.at_furiten.context("missing at_furiten")?;
             let mut q_values = meta.q_values.context("missing q_values")?;
             let mut details = Vec::with_capacity(q_values.len());
             let mut min = f64::INFINITY;
@@ -371,6 +374,7 @@ impl Reviewer<'_> {
                 actual,
                 details,
                 shanten,
+                at_furiten,
                 order,
             };
             entries.push(entry);
