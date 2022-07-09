@@ -2,16 +2,18 @@
 ## Can it review three-player mahjong log?
 No, it can't. Three-player mahjong is a completely different game.
 
-## How good are the engines in mahjong?
-We don't know, because we don't have a good, solid, efficient, legit, and reliable means to evaluate its strength in human criteria.
-
 ## What is pt?
 pt refers to the same concept of Tenhou ranking pt. Simply put, they are the weighted version of final placements at the end of the game. `90,45,0,-135` is the pt distribution for a 7 dan player in Tenhou houou hanchan.
 
-## How good are they compared against each other?
+## How good are the engines in mahjong?
+I have **absolutely no idea** on how strong Mortal or akochan is in general human criteria such as "xxx dan on Tenhou". The reason is obvious and simple: Tenhou (and Mahjong Soul too) probably won't allow an AI that is developed by an individual, to play on their platforms in ranked lobbies.
+
+If you really want to know the answer, you could ask Tenhou or Mahjong Soul officials to let them permit individual developed AIs (preferably Mortal) to legitimately play on their ranked lobbies.
+
+## How good are the engines compared against each other?
 In duplicate mahjong, 1 akochan vs 3 Mortal setting and `90,45,0,-135` pt scale for measure, Mortal outplays `90,45,0,-135`-akochan with average rank 2.479 and average pt 1.677, and outplays `90,30,-30,-90`-akochan with average rank 2.482 and average pt 1.961.
 
-Details about this will be noted in Mortal's documentation in the future.
+Details about this can be found in [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#3-mortal-vs-1-akochan).
 
 ## (Mortal) What do the notations mean?
 $P_k^p$ is a vector that consists of 4 possibility values for player $p$ to achieve the 4 corresponding placements, estimated at the start of kyoku $k$ in this game.
