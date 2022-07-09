@@ -13,7 +13,7 @@ If you really want to know the answer, you could ask Tenhou or Mahjong Soul offi
 ## How good are the engines compared against each other?
 In duplicate mahjong, 1 akochan vs 3 Mortal setting and `90,45,0,-135` pt scale for measure, Mortal outplays `90,45,0,-135`-akochan with average rank 2.479 and average pt 1.677, and outplays `90,30,-30,-90`-akochan with average rank 2.482 and average pt 1.961.
 
-Details about this can be found in [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#3-mortal-vs-1-akochan).
+Details about this can be found in [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#mortal-vs-akochan).
 
 ## (Mortal) What do the notations mean?
 $P_k^p$ is a vector that consists of 4 possibility values for player $p$ to achieve the 4 corresponding placements, estimated at the start of kyoku $k$ in this game.
