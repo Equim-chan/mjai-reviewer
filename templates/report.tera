@@ -187,8 +187,8 @@
                   {%- endif -%}
                   &nbsp;&nbsp;&nbsp;
                   {%- if entry.at_furiten -%}
-                    &nbsp;&nbsp;&nbsp;
                     (furiten)
+                    &nbsp;&nbsp;&nbsp;
                   {%- endif -%}
                   {%- if entry.order > 0 -%}
                     <span {% if mark_red %} class="order-loss" {% endif %}>
