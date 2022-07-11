@@ -15,7 +15,7 @@ In duplicate mahjong, 1 akochan vs 3 Mortal setting and `90,45,0,-135` pt scale 
 
 Details about this can be found in [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#mortal-vs-akochan).
 
-## (Mortal) Why is the deal-in rate column removed?
+## (Mortal) Where is the deal-in rate column?
 If you're referring to the deal-in rate column in akochan, Mortal does not have it; in fact, it was never explicitly calculated by Mortal in the first place. Mortal and akochan are two entirely different mahjong AI engines, created by different developers with different designs. So you probably shouldn't expect them to share any features. 
 
 ## (Mortal) What do the notations mean?
