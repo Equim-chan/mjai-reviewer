@@ -15,6 +15,9 @@ In duplicate mahjong, 1 akochan vs 3 Mortal setting and `90,45,0,-135` pt scale 
 
 Details about this can be found in [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#mortal-vs-akochan).
 
+## (Mortal) Why is the deal-in rate column removed?
+If you're referring to the deal-in rate column in akochan, Mortal does not have it; in fact, it was never explicitly calculated by Mortal in the first place. Mortal and akochan are two entirely different mahjong AI engines, created by different developers with different designs. So you probably shouldn't expect them to share any features. 
+
 ## (Mortal) What do the notations mean?
 $P_k^p$ is a vector that consists of 4 possibility values for player $p$ to achieve the 4 corresponding placements, estimated at the start of kyoku $k$ in this game.
 
@@ -32,6 +35,8 @@ As mentioned above, $\hat Q^\pi(s_k^i, a_k^i) + \Phi_k$ is an estimation to the 
 
 This is an exploitation vs exploration dilemma. To begin with, Mortal is [model-free](https://en.wikipedia.org/wiki/Model-free_(reinforcement_learning)), which means it cannot obtain the optimize target, the actual Q values $Q^\pi(s_k^i, a_k^i)$, without actually evaluate the action $a$.
 Therefore, if we intend to make actions' Q values more accurate, the model will have to explore those less likely actions more, which may lead to overestimation on some bad actions, making it performs worse. In a game with so much randomness like mahjong, such overestimation is very likely to happen since the variance is very high. To avoid such performance regression, the model needs to exploit more, leading to less accurate predicted Q values $\hat Q^\pi(s_k^i, a_k^i)$.
+
+ELI5: **<ins>Mortal is optimized for playing, not reviewing or reasoning.</ins>**
 
 ## (akochan) How to configure the pt distribution?
 In `tactics.json`, change `jun_pt` value. Note that there is a hard-coded bound of $[-200, 200]$ for every element.
