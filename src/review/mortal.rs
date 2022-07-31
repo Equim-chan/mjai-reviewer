@@ -1,4 +1,5 @@
 use crate::log;
+use crate::softmax::softmax;
 use crate::state::State;
 use convlog::{must_tile, t, tile_set_eq, tu8, Event, Tile};
 use std::io::prelude::*;
@@ -18,6 +19,7 @@ const PTS: [f64; 4] = [3., 1.5, 0., -4.5];
 pub struct Review {
     pub total_reviewed: usize,
     pub rating: f64,
+    pub temperature: f32,
     pub kyokus: Vec<KyokuReview>,
 
     pub relative_phi_matrix: Vec<[[f64; 4]; 4]>,
@@ -62,6 +64,7 @@ pub struct Entry {
 struct Detail {
     action: Event,
     q_value: f32,
+    prob: f32,
 
     // not displayed
     label: Label,
@@ -99,7 +102,7 @@ pub struct Reviewer<'a> {
     pub mortal_cfg: &'a Path,
     pub events: &'a [Event],
     pub player_id: u8,
-    pub scale: f32,
+    pub temperature: f32,
     pub verbose: bool,
 }
 
@@ -110,7 +113,7 @@ impl Reviewer<'_> {
             mortal_cfg,
             events,
             player_id,
-            scale,
+            temperature,
             verbose,
         } = self;
 
@@ -272,7 +275,7 @@ impl Reviewer<'_> {
                 if !m {
                     continue;
                 }
-                let q_value = q_values.pop().context("q_values vec underflow")? * scale;
+                let q_value = q_values.pop().context("q_values vec underflow")?;
                 min = min.min(q_value as f64);
                 max = max.max(q_value as f64);
 
@@ -284,6 +287,7 @@ impl Reviewer<'_> {
                 details.push(Detail {
                     action,
                     q_value,
+                    prob: 0.,
                     label: Label::General(label),
                 });
             }
@@ -315,7 +319,7 @@ impl Reviewer<'_> {
                     let q_value = if num_kans == 1 {
                         orig_kan_q_value
                     } else {
-                        q_values.pop().context("q_values vec underflow")? * scale
+                        q_values.pop().context("q_values vec underflow")?
                     };
                     min = min.min(q_value as f64);
                     max = max.max(q_value as f64);
@@ -329,10 +333,15 @@ impl Reviewer<'_> {
                     details.push(Detail {
                         action,
                         q_value,
+                        prob: 0.,
                         label: Label::KanSelect(kan_label),
                     });
                 }
             }
+
+            let mut probs: Vec<_> = details.iter().map(|d| d.q_value).collect();
+            softmax(&mut probs, temperature);
+            details.iter_mut().zip(probs).for_each(|(d, v)| d.prob = v);
 
             // this sort is better to be stable
             details.sort_by(|l, r| r.q_value.total_cmp(&l.q_value));
@@ -354,7 +363,7 @@ impl Reviewer<'_> {
             let rating = if equal_ignore_aka_consumed(&output.event, &actual) {
                 1.
             } else {
-                (actual_q_value - min + 1e-6) / (max - min + 1e-6)
+                (actual_q_value - min) / (max - min).max(1e-6)
             };
             raw_rating += rating;
             total_reviewed += 1;
@@ -402,7 +411,7 @@ impl Reviewer<'_> {
                     player_row[1],
                     PTS[2].mul_add(player_row[2], PTS[3] * player_row[3]),
                 ),
-            ) * scale as f64;
+            ) as f64;
             phis.push(phi);
         }
 
@@ -418,6 +427,7 @@ impl Reviewer<'_> {
         Ok(Review {
             total_reviewed,
             rating,
+            temperature,
             kyokus: kyoku_reviews,
             relative_phi_matrix: matrix,
             phis,

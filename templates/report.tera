@@ -123,7 +123,7 @@
               <th>Final placement EV at {{ kyoku_str }} start</th>
             </summary>
             <div class="latex">
-              \( \Phi_{ {{ k_id }} } = (90, 45, 0, -135) \cdot \mathbb{E}[P_{ {{ k_id }} }^{self}] = {{ pretty_round(num=review.phis[k_id]) }} \)
+              \( \Phi_{ {{ k_id }} } = (3, 1.5, 0, -4.5) \cdot \mathbb{E}[P_{ {{ k_id }} }^{self}] = {{ pretty_round(num=review.phis[k_id]) }} \)
             </div>
             <details open>
               <table border="1" cellspacing="0" cellpadding="0" class="data">
@@ -242,7 +242,7 @@
                       </th>
                       <th>
                         <span class="latex">
-                          \( \hat Q^\pi(s_{ {{ k_id }} }^{ {{ e_id }} }, a_{ {{ k_id }} }^{ {{ e_id }} }) + \Phi_{ {{ k_id }} } \)
+                          Boltzmann prob% \((\tau = {{ pretty_round(num=review.temperature, prec=2) }})\)
                         </span>
                       </th>
                     {%- elif engine == "Akochan" -%}
@@ -266,8 +266,8 @@
                           </span>
                         </td>
                         <td>
-                          <span title="{{ detail.q_value + review.phis[k_id] }}">
-                            {{- macros::render_decimal(num=detail.q_value + review.phis[k_id]) -}}
+                          <span title="{{ detail.prob * 100 }}">
+                            {{- macros::render_decimal(num=detail.prob * 100) -}}
                           </span>
                         </td>
                       {%- elif engine == "Akochan" -%}

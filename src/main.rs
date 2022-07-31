@@ -50,6 +50,7 @@ mod opts;
 mod raw_log_ext;
 mod render;
 mod review;
+mod softmax;
 mod state;
 mod tactics;
 mod tehai;
@@ -86,7 +87,7 @@ macro_rules! canonicalize {
     }};
 }
 
-const MORTAL_PT_SCALE: f32 = 30.;
+const MORTAL_TEMP: f32 = 0.2;
 const AKOCHAN_DEVIATION_THRESHOLD: f64 = 0.05;
 
 enum ReportOutput {
@@ -303,7 +304,7 @@ fn main() -> Result<()> {
                 mortal_cfg: &mortal_cfg,
                 events: &events,
                 player_id,
-                scale: MORTAL_PT_SCALE,
+                temperature: MORTAL_TEMP,
                 verbose,
             };
             let result = reviewer.review().context("failed to review")?;
