@@ -20,7 +20,7 @@ opener = "0.5"
 dunce = "1"
 humantime-serde = "1"
 url = "2"
-serde_with = "1"
+serde_with = "2"
 minify-html = "0.9"
 clap = { version = "3", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }

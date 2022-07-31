@@ -12,5 +12,5 @@ thiserror = "1"
 once_cell = "1"
 num_enum = "0.5"
 boomphf = "0.5"
-serde_with = "1"
+serde_with = "2"
 serde = { version = "1", features = ["derive"] }

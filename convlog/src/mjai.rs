@@ -82,10 +82,7 @@ pub enum Event {
         actor: u8,
         target: u8,
 
-        #[serde(default)]
         deltas: Option<[i32; 4]>,
-
-        #[serde(default)]
         ura_markers: Option<Vec<Tile>>,
     },
     Ryukyoku {
@@ -132,5 +129,16 @@ impl Event {
             Self::Pon { .. } => 1,
             _ => -1,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn optional_field_deser() {
+        let a = r#"{"type":"hora","actor":0,"target":0}"#;
+        serde_json::from_str::<Event>(a).unwrap();
     }
 }
