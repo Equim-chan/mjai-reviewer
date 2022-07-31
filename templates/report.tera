@@ -131,10 +131,10 @@
                   <tr>
                     <th>Player</th>
                     <th>score</th>
-                    <th>1st prob (%)</th>
-                    <th>2nd prob (%)</th>
-                    <th>3rd prob (%)</th>
-                    <th>4th prob (%)</th>
+                    <th>1st prob%</th>
+                    <th>2nd prob%</th>
+                    <th>3rd prob%</th>
+                    <th>4th prob%</th>
                   </tr>
                 </thead>
                 <tbody>
