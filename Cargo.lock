@@ -674,7 +674,7 @@ dependencies = [
 
 [[package]]
 name = "mjai-reviewer"
-version = "1.0.3"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "chrono",
