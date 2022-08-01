@@ -58,12 +58,14 @@ Akochan is very aggressive about its sole goal - the "final" pt EV, instead of j
 ## How is the rating calculated?
 $$
 100 \times (
-    \frac{1}{k} \displaystyle \sum_{k=1}^k
-    \frac{1}{i} \displaystyle \sum_{i=1}^n
+    \frac{1}{K} \displaystyle \sum_{i=1}^K
+    \frac{1}{N_i} \displaystyle \sum_{j=1}^{N_i}
     \frac
-    {\hat Q^\pi(s_k^i, a_k^i) - \displaystyle \min_a \hat Q^\pi(s_k^i, a_k^i)}
-    {\displaystyle \max_a \hat Q^\pi(s_k^i, a_k^i) - \displaystyle \min_a \hat Q^\pi(s_k^i, a_k^i)}
+    {\hat Q^\pi(s_i^j, a_i^j) - \displaystyle \min_a \hat Q^\pi(s_i^j, a_i^j)}
+    {\displaystyle \max_a \hat Q^\pi(s_i^j, a_i^j) - \displaystyle \min_a \hat Q^\pi(s_i^j, a_i^j)}
 ) ^ 2
 $$
+
+where $K$ is the number of rounds and $N_i$ is the number of player's actions in $i$-th round.
 
 The calculation is very basic and it is not a reliable measure.
