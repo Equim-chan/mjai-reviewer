@@ -8,10 +8,15 @@ pt refers to the same concept of Tenhou ranking pt. Simply put, they are the wei
 ## How good are the engines in mahjong?
 I have **absolutely no idea** on how strong Mortal or akochan is in general human criteria such as "xxx dan on Tenhou". The reason is obvious and simple: Tenhou (and Mahjong Soul too) probably won't allow an AI that is developed by an individual, to play on their platforms in ranked lobbies.
 
-If you really want to know the answer, you could ask Tenhou or Mahjong Soul officials to let them permit individual developed AIs (preferably Mortal) to legitimately play on their ranked lobbies.
+If you really want to know the answer, you could ask Tenhou or Mahjong Soul officials to let them permit individual developed AIs (preferably Mortal) to legitimately play in their ranked lobbies.
+
+### But I have seen some accounts claim to be Mortal/akochan on some online platforms?
+I have no affiliation to them. I am not running any AI in ranked lobbies and will not do so until an official permission is granted.
 
 ## How good are the engines compared against each other?
-In duplicate mahjong, 1 akochan vs 3 Mortal setting and `90,45,0,-135` pt scale for measure, Mortal outplays `90,45,0,-135`-akochan with average rank 2.479 and average pt 1.677, and outplays `90,30,-30,-90`-akochan with average rank 2.482 and average pt 1.961.
+In duplicate mahjong, 1 akochan vs 3 Mortal setting and `90,45,0,-135` pt scale for measure, Mortal outplays `90,45,0,-135`-akochan with average rank 2.479 and average pt 1.677, and outplays `90,30,-30,-90`-akochan with average rank 2.484 and average pt 1.827.
+
+Although it may not appear to be too much at first glance, it should be noted that there are three Mortal instances in each game, not just one, so the best average rank Mortal can achieve is 2, not 1.
 
 Details about this can be found in [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#mortal-vs-akochan).
 
