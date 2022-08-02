@@ -65,6 +65,10 @@
     <dl>
       <dt>engine</dt>
       <dd>{{ engine }}</dd>
+      {%- if engine == "Mortal" -%}
+        <dt class="latex">softmax temperature (\(\tau\))</dt>
+        <dd>pretty_round(num=review.temperature, prec=2)</dd>
+      {%- endif -%}
       <dt>game length</dt>
       <dd>{{ game_length }}</dd>
       <dt>player id</dt>
@@ -123,44 +127,42 @@
               <th>Final placement EV at {{ kyoku_str }} start</th>
             </summary>
             <div class="latex">
-              \( \Phi_{ {{ k_id }} } = (3, 1.5, 0, -4.5) \cdot \mathbb{E}[P_{ {{ k_id }} }^{self}] = {{ pretty_round(num=review.phis[k_id]) }} \)
+              \( \Phi_{ {{ k_id }} } = (3, 1.5, 0, -4.5) \cdot \mathbb{E}[P_{ {{ k_id }} }^{\mathrm{self} }] = {{ pretty_round(num=review.phis[k_id]) }} \)
             </div>
-            <details open>
-              <table border="1" cellspacing="0" cellpadding="0" class="data">
-                <thead>
+            <table border="1" cellspacing="0" cellpadding="0" class="data">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>score</th>
+                  <th>1st prob%</th>
+                  <th>2nd prob%</th>
+                  <th>3rd prob%</th>
+                  <th>4th prob%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {%- for player_probs in review.relative_phi_matrix[k_id] -%}
+                  {%- set player = loop.index0 -%}
                   <tr>
-                    <th>Player</th>
-                    <th>score</th>
-                    <th>1st prob%</th>
-                    <th>2nd prob%</th>
-                    <th>3rd prob%</th>
-                    <th>4th prob%</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {%- for player_probs in review.relative_phi_matrix[k_id] -%}
-                    {%- set player = loop.index0 -%}
-                    <tr>
+                    <td>
+                      {{- macros::seat_rel(target=player) -}}
+                    </td>
+                    <td>
+                      <span class="int">
+                        {{- item.relative_scores[player] -}}
+                      </span>
+                    </td>
+                    {%- for prob in player_probs -%}
                       <td>
-                        {{- macros::seat_rel(target=player) -}}
-                      </td>
-                      <td>
-                        <span class="int">
-                          {{- item.relative_scores[player] -}}
+                        <span title="{{ prob * 100 }}">
+                          {{- macros::render_decimal(num=prob * 100) -}}
                         </span>
                       </td>
-                      {%- for prob in player_probs -%}
-                        <td>
-                          <span title="{{ prob * 100 }}">
-                            {{- macros::render_decimal(num=prob * 100) -}}
-                          </span>
-                        </td>
-                      {%- endfor -%}
-                    </tr>
-                  {%- endfor -%}
-                </tbody>
-              </table>
-            </details>
+                    {%- endfor -%}
+                  </tr>
+                {%- endfor -%}
+              </tbody>
+            </table>
           </details>
         {%- endif -%}
 
@@ -233,18 +235,10 @@
               <table border="1" cellspacing="0" cellpadding="0" class="data">
                 <thead>
                   <tr>
-                    <th>Action</th>
+                    <th class="latex">Action (\(a\))</th>
                     {%- if engine == "Mortal" -%}
-                      <th>
-                        <span class="latex">
-                          \( \hat Q^\pi(s_{ {{ k_id }} }^{ {{ e_id }} }, a_{ {{ k_id }} }^{ {{ e_id }} }) \)
-                        </span>
-                      </th>
-                      <th>
-                        <span class="latex">
-                          Boltzmann prob% \((\tau = {{ pretty_round(num=review.temperature, prec=2) }})\)
-                        </span>
-                      </th>
+                      <th class="latex">\( \hat Q^\pi(s, a) \)</th>
+                      <th class="latex">\( 100 \times \pi_\tau(a|s) \)</th>
                     {%- elif engine == "Akochan" -%}
                       <th>pt EV</th>
                       <th>Deal-in (%)</th>
