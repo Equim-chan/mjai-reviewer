@@ -127,7 +127,7 @@
               <th>Final placement EV at {{ kyoku_str }} start</th>
             </summary>
             <div class="latex">
-              \( \Phi_{ {{ k_id }} } = (3, 1.5, 0, -4.5) \cdot \mathbb{E}[P_{ {{ k_id }} }^{\mathrm{self} }] = {{ pretty_round(num=review.phis[k_id]) }} \)
+              \( \Phi_{ {{ k_id }} } = [3, 1.5, 0, -4.5] \cdot \mathbb{E}[P_{ {{ k_id }} }^{\mathrm{self} }] = {{ pretty_round(num=review.phis[k_id]) }} \)
             </div>
             <table border="1" cellspacing="0" cellpadding="0" class="data">
               <thead>
@@ -238,7 +238,7 @@
                     <th class="latex">Action (\(a\))</th>
                     {%- if engine == "Mortal" -%}
                       <th class="latex">\( \hat Q^\pi(s, a) \)</th>
-                      <th class="latex">\( 100 \times \pi_\tau(a|s) \)</th>
+                      <th class="latex">\( \pi_\tau(a|s) \times 100 \)</th>
                     {%- elif engine == "Akochan" -%}
                       <th>pt EV</th>
                       <th>Deal-in (%)</th>
