@@ -66,7 +66,7 @@
       <dt>engine</dt>
       <dd>{{ engine }}</dd>
       {%- if engine == "Mortal" -%}
-        <dt class="latex">softmax temperature (\(\tau\))</dt>
+        <dt>softmax temperature (τ)</dt>
         <dd>{{ pretty_round(num=review.temperature, prec=2) }}</dd>
       {%- endif -%}
       <dt>game length</dt>
