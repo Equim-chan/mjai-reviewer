@@ -593,7 +593,17 @@ fn to_event(
         }
         41 => {
             let pai = last_tsumo_or_discard.context("missing last discard for Pon")?;
-            let consumed = [pai; 2];
+            let can_akaize_consumed = match pai.as_u8() {
+                tu8!(5m) => state.has_tile(t!(5mr)),
+                tu8!(5p) => state.has_tile(t!(5pr)),
+                tu8!(5s) => state.has_tile(t!(5sr)),
+                _ => false,
+            };
+            let consumed = if can_akaize_consumed {
+                [pai.akaize(), pai.deaka()]
+            } else {
+                [pai.deaka(); 2]
+            };
             Event::Pon {
                 actor,
                 target,
