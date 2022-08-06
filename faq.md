@@ -20,6 +20,9 @@ Although Mortal's win against akochan may not appear to be too much at first gla
 
 Details about this can be found in [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#mortal-vs-akochan).
 
+## What information do the engines base their decisions on?
+Technically, all visible information on the board is considered, including discard sequences with tedashi info, current points, round number and so on, but information such as each player's level and the room type are not.
+
 ## (Mortal) Where is the deal-in rate column?
 If you're referring to the deal-in rate column in akochan, Mortal does not have it; in fact, it was never explicitly calculated by Mortal in the first place. Mortal and akochan are two entirely different mahjong AI engines, created by different developers with different designs. So you probably shouldn't expect them to share any features.
 
