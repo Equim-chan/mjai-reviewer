@@ -59,6 +59,7 @@ use crate::log_source::LogSource;
 use crate::opts::{AkochanOptions, Engine, InputOptions, MortalOptions, Options, OutputOptions};
 use crate::render::View;
 use crate::review::{akochan, mortal, Review};
+use chrono::SubsecRound;
 use convlog::tenhou::{GameLength, Log, RawLog};
 use convlog::tenhou_to_mjai;
 use std::fs::File;
@@ -359,8 +360,9 @@ fn main() -> Result<()> {
     };
 
     let now = chrono::Local::now();
-    let loading_time = (begin_review - begin_convert_log).to_std()?;
-    let review_time = (now - begin_review).to_std()?;
+    let loading_time =
+        (begin_review.trunc_subsecs(3) - begin_convert_log.trunc_subsecs(3)).to_std()?;
+    let review_time = (now.trunc_subsecs(3) - begin_review.trunc_subsecs(3)).to_std()?;
 
     // render the HTML report page or JSON
     let view = View {
