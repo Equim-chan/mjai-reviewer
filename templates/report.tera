@@ -98,6 +98,11 @@
     <a href="https://github.com/Equim-chan/mjai-reviewer/blob/master/faq.md" target="_blank" rel="noreferrer noopener">Online FAQ</a>
   </details>
 
+  <details class="collapse">
+    <summary>Donate❤️</summary>
+    <a href="https://mortal.ekyu.moe/donate.html" target="_blank" rel="noreferrer noopener">https://mortal.ekyu.moe/donate.html</a>
+  </details>
+
   {%- for item in review.kyokus -%}
     {%- set k_id = loop.index0 -%}
     {%- set kyoku_str = kyoku_to_string(kyoku=item.kyoku, honba=item.honba) -%}
