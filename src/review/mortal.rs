@@ -18,6 +18,7 @@ const PTS: [f64; 4] = [3., 1.5, 0., -4.5];
 #[derive(Debug, Serialize)]
 pub struct Review {
     pub total_reviewed: usize,
+    pub total_matches: usize,
     pub rating: f64,
     pub temperature: f32,
     pub kyokus: Vec<KyokuReview>,
@@ -33,10 +34,9 @@ pub struct KyokuReview {
     pub honba: u8,
     /// Must be either (multiple) Hora(s) or one Ryukyoku
     pub end_status: Vec<Event>,
+    pub relative_scores: [i32; 4],
 
     pub entries: Vec<Entry>,
-
-    pub relative_scores: [i32; 4],
 }
 
 #[skip_serializing_none]
@@ -145,6 +145,7 @@ impl Reviewer<'_> {
 
         let events_len = events.len();
         let mut total_reviewed = 0;
+        let mut total_matches = 0;
         let mut raw_rating = 0.;
 
         let mut kyoku_review = KyokuReview::default();
@@ -366,6 +367,7 @@ impl Reviewer<'_> {
                 (actual_q_value - min) / (max - min).max(1e-6)
             };
             raw_rating += rating;
+            total_matches += (order == 0) as usize;
             total_reviewed += 1;
 
             let tile = last_tsumo_or_discard.context("missing last tsumo or discard")?;
@@ -426,6 +428,7 @@ impl Reviewer<'_> {
         let rating = (raw_rating / total_reviewed as f64).powi(2);
         Ok(Review {
             total_reviewed,
+            total_matches,
             rating,
             temperature,
             kyokus: kyoku_reviews,
