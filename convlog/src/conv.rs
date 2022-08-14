@@ -151,7 +151,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
         loop {
             // Start to process a take event.
             let take =
-                &*take_events[actor]
+                take_events[actor]
                     .get(take_i[actor])
                     .ok_or(ConvertError::InsufficientTakes {
                         kyoku: kyoku.meta.kyoku_num,
