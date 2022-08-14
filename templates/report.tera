@@ -65,7 +65,7 @@
     <dl>
       <dt>engine</dt>
       <dd>{{ engine }}</dd>
-      {%- if engine == "Mortal" -%}
+      {%- if engine == "Mortal v1" -%}
         <dt>softmax temperature (τ)</dt>
         <dd>{{ pretty_round(num=review.temperature, prec=2) }}</dd>
       {%- endif -%}
@@ -121,7 +121,7 @@
       {%- endif -%}
 
       <div class="r-box">
-        {%- if engine == "Mortal" -%}
+        {%- if engine == "Mortal v1" -%}
           <details class="collapse" open>
             <summary>
               <th>Final placement EV at {{ kyoku_str }} start</th>
@@ -175,7 +175,7 @@
         {%- for entry in item.entries -%}
           {%- set e_id = loop.index0 -%}
 
-          {%- if engine == "Mortal" -%}
+          {%- if engine == "Mortal v1" -%}
             {%- set mark_red = entry.order > 0 -%}
             <details class="collapse" open>
               <summary>
@@ -216,7 +216,7 @@
 
           <span {% if mark_red %} style="background: #ffb9b9" {% endif %}>
             <span class="role">Player: </span>
-            {%- if engine == "Mortal" -%}
+            {%- if engine == "Mortal v1" -%}
               {{- macros::render_action(action=entry.actual) -}}
             {%- elif engine == "Akochan" -%}
               {{- macros::render_action_tuple(actions=entry.actual) -}}
@@ -224,7 +224,7 @@
           </span>
           <br>
           <span class="role">{{ engine }}: </span>
-          {%- if engine == "Mortal" -%}
+          {%- if engine == "Mortal v1" -%}
             {{- macros::render_action(action=entry.expected) -}}
           {%- elif engine == "Akochan" -%}
             {{- macros::render_action_tuple(actions=entry.expected) -}}
@@ -236,7 +236,7 @@
                 <thead>
                   <tr>
                     <th class="latex">Action (\(a\))</th>
-                    {%- if engine == "Mortal" -%}
+                    {%- if engine == "Mortal v1" -%}
                       <th class="latex">\( \hat Q^\pi(s, a) \)</th>
                       <th class="latex">\( \pi_\tau(a|s) \times 100 \)</th>
                     {%- elif engine == "Akochan" -%}
@@ -250,7 +250,7 @@
                 <tbody>
                   {%- for detail in entry.details -%}
                     <tr>
-                      {%- if engine == "Mortal" -%}
+                      {%- if engine == "Mortal v1" -%}
                         <td>
                           {{- macros::render_action(action=detail.action) -}}
                         </td>
