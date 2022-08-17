@@ -255,8 +255,12 @@ impl Reviewer<'_> {
                 continue;
             }
             let masks = mask_from_bits(mask_bits);
+            let can_pon_or_daiminkan = masks[41] || masks[42];
+            let can_agari = masks[43];
 
-            let actual = if let Some(ev) = next_action(&events[i + 1..], player_id) {
+            let actual = if let Some(ev) =
+                next_action(&events[i + 1..], player_id, can_pon_or_daiminkan, can_agari)
+            {
                 ev
             } else {
                 // interrupted
@@ -639,10 +643,17 @@ fn to_event(
 ///
 /// `None` is returned if the player actually cannot act because of some
 /// interruption.
-fn next_action(events: &[Event], player_id: u8) -> Option<Event> {
+fn next_action(
+    events: &[Event],
+    player_id: u8,
+    can_pon_or_daiminkan: bool,
+    can_agari: bool,
+) -> Option<Event> {
     let ev = &events[0];
     match ev {
-        Event::Dora { .. } | Event::ReachAccepted { .. } => next_action(&events[1..], player_id),
+        Event::Dora { .. } | Event::ReachAccepted { .. } => {
+            next_action(&events[1..], player_id, can_pon_or_daiminkan, can_agari)
+        }
 
         // passed when it's supposed to naki
         Event::Tsumo { .. } => Some(Event::None),
@@ -652,11 +663,23 @@ fn next_action(events: &[Event], player_id: u8) -> Option<Event> {
             .iter()
             .take(3)
             .find(|&a| matches!(*a, Event::Hora { actor, .. } if actor == player_id))
-            .cloned(),
+            .cloned()
+            .or(if can_agari {
+                // actively denied to ron
+                Some(Event::None)
+            } else {
+                None
+            }),
 
         _ => match ev.actor() {
-            // not the target player, who did nothing (passed a possible naki)
-            Some(actual_actor) if actual_actor != player_id => None,
+            Some(actual_actor) if actual_actor != player_id => {
+                if can_pon_or_daiminkan {
+                    // actively denied to pon or daiminkan
+                    Some(Event::None)
+                } else {
+                    None
+                }
+            }
 
             // anything else the player did
             _ => Some(ev.clone()),
