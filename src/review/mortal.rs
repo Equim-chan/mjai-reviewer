@@ -673,8 +673,8 @@ fn next_action(
 
         _ => match ev.actor() {
             Some(actual_actor) if actual_actor != player_id => {
-                if can_pon_or_daiminkan {
-                    // actively denied to pon or daiminkan
+                if can_agari || can_pon_or_daiminkan {
+                    // actively denied to ron, pon or daiminkan
                     Some(Event::None)
                 } else {
                     None
