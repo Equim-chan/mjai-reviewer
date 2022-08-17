@@ -158,7 +158,6 @@ pub struct AkochanOptions {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ArgEnum)]
 pub enum Engine {
-    #[serde(rename = "Mortal v1")]
     Mortal,
     Akochan,
 }
