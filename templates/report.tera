@@ -214,8 +214,8 @@
                     (furiten)
                     &nbsp;&nbsp;&nbsp;
                   {%- endif -%}
-                  {%- if entry.order > 0 -%}
-                    <span {% if mark_red %} class="order-loss" {% endif %}>
+                  {%- if mark_red and entry.order > 0 -%}
+                    <span class="order-loss">
                       #{{- entry.order + 1 -}}
                     </span>/{{- entry.details | length -}}
                   {%- endif -%}
