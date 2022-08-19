@@ -7,7 +7,7 @@
 
 <!-- [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Equim-chan/mjai-reviewer?include_prereleases)](https://github.com/Equim-chan/mjai-reviewer/releases) -->
 
-Review your Tenhou or Mahjong Soul (Jantama) log with mjai-compatible mahjong AI, supported engines are [Mortal](https://github.com/Equim-chan/Mortal) and [akochan](https://github.com/critter-mj/akochan).
+Review mahjong game log with mjai-compatible mahjong AI, supported engines are [Mortal](https://github.com/Equim-chan/Mortal) and [akochan](https://github.com/critter-mj/akochan).
 
 **[Try it online](https://mjai.ekyu.moe)** | [Demo result page](https://gh.ekyu.moe/mjai-reviewer-demo.html)
 
