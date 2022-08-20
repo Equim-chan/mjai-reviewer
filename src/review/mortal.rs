@@ -53,6 +53,7 @@ pub struct Entry {
 
     expected: Event,
     actual: Event,
+    is_equal: bool,
     details: Vec<Detail>,
 
     shanten: i8,
@@ -363,9 +364,10 @@ impl Reviewer<'_> {
                     format!("failed to find action ({actual_label}, {actual_kan_label:?}) in details {details:?}")
                 })?;
 
+            let is_equal = equal_ignore_aka_consumed(&output.event, &actual);
             let actual_q_value = actual_q_value_opt
                 .with_context(|| format!("failed to find q value of actual action {actual:?}"))?;
-            let rating = if equal_ignore_aka_consumed(&output.event, &actual) {
+            let rating = if is_equal {
                 1.
             } else {
                 (actual_q_value - min) / (max - min).max(1e-6)
@@ -387,6 +389,7 @@ impl Reviewer<'_> {
                 at_opponent_kakan,
                 expected: output.event,
                 actual,
+                is_equal,
                 details,
                 shanten,
                 at_furiten,
@@ -417,7 +420,7 @@ impl Reviewer<'_> {
                     player_row[1],
                     PTS[2].mul_add(player_row[2], PTS[3] * player_row[3]),
                 ),
-            ) as f64;
+            );
             phis.push(phi);
         }
 
@@ -500,6 +503,7 @@ fn to_label(ev: &Event) -> usize {
 }
 
 fn to_kan_label(ev: &Event) -> Option<usize> {
+    // Kan label is not needed for Daiminkan
     match ev {
         Event::Ankan { consumed, .. } => Some(consumed[0].deaka().as_usize()),
         Event::Kakan { pai, .. } => Some(pai.deaka().as_usize()),

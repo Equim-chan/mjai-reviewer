@@ -198,7 +198,7 @@
           {%- set e_id = loop.index0 -%}
 
           {%- if engine == "Mortal" -%}
-            {%- set mark_red = entry.order > 0 -%}
+            {%- set mark_red = not entry.is_equal -%}
             <details class="collapse" open>
               <summary>
                 Turn {{ entry.junme }}
