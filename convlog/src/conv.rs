@@ -20,13 +20,13 @@ pub enum ConvertError {
 
     #[error(
         "insufficient take sequence size: \
-        at kyoku{kyoku} honba {honba} for actor {actor}"
+        at kyoku {kyoku} honba {honba} for actor {actor}"
     )]
     InsufficientTakes { kyoku: u8, honba: u8, actor: u8 },
 
     #[error(
         "insufficient discard sequence size: \
-        at kyoku{kyoku} honba {honba} for actor {actor}"
+        at kyoku {kyoku} honba {honba} for actor {actor}"
     )]
     InsufficientDiscards { kyoku: u8, honba: u8, actor: u8 },
 
@@ -35,7 +35,7 @@ pub enum ConvertError {
 
     #[error(
         "unexpected naki: \
-        at kyoku{kyoku} honba {honba} for actor {actor}: \
+        at kyoku {kyoku} honba {honba} for actor {actor}: \
         action {action:?}, expected tile {last_discard} \
         from {last_actor:?}"
     )]
