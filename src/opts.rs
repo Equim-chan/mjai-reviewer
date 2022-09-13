@@ -9,7 +9,7 @@ use url::Url;
 const ABOUT: &str = r#"🔍🀄️ Review your Tenhou or Mahjong Soul (Jantama) log with mjai-compatible mahjong AIs.
 
 Basic usage:
-  $ mjai-reviewer -b mortal -u "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
+  $ mjai-reviewer -e mortal -u "https://tenhou.net/0/?log=2019050417gm-0029-0000-4f2a8622&tw=2"
 
 For more details, please visit the repo at <https://github.com/Equim-chan/mjai-reviewer>."#;
 
