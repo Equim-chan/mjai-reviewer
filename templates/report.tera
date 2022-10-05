@@ -66,10 +66,10 @@
       <dt>engine</dt>
       <dd>{{- engine -}}</dd>
       {%- if engine == "Mortal" -%}
-        <dt>softmax temperature (τ)</dt>
-        <dd>{{ pretty_round(num=review.temperature, prec=2) }}</dd>
         <dt>model tag</dt>
         <dd>{{ review.model_tag }}</dd>
+        <dt>softmax temperature (τ)</dt>
+        <dd>{{ pretty_round(num=review.temperature, prec=2) }}</dd>
       {%- endif -%}
       <dt>game length</dt>
       <dd>{{ game_length }}</dd>
@@ -98,7 +98,7 @@
   <details class="collapse">
     <summary>Help</summary>
     <p>
-      Please check out the
+      Please refer to the
       <a href="https://github.com/Equim-chan/mjai-reviewer/blob/master/faq.md" target="_blank" rel="noreferrer noopener">online FAQ</a>.
     </p>
   </details>
