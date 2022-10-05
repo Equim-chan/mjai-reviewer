@@ -21,8 +21,8 @@ dunce = "1"
 humantime-serde = "1"
 url = "2"
 serde_with = "2"
-minify-html = "0.9"
-clap = { version = "3", features = ["derive"] }
+minify-html = "0.10"
+clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 
 [workspace]
