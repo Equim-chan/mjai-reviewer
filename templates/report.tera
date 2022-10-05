@@ -64,16 +64,12 @@
     <summary>Metadata</summary>
     <dl>
       <dt>engine</dt>
-      <dd>
-        {%- if engine == "Mortal" -%}
-          Mortal v1
-        {%- else -%}
-          {{- engine -}}
-        {%- endif -%}
-      </dd>
+      <dd>{{- engine -}}</dd>
       {%- if engine == "Mortal" -%}
         <dt>softmax temperature (τ)</dt>
         <dd>{{ pretty_round(num=review.temperature, prec=2) }}</dd>
+        <dt>model tag</dt>
+        <dd>{{ review.model_tag }}</dd>
       {%- endif -%}
       <dt>game length</dt>
       <dd>{{ game_length }}</dd>
@@ -148,9 +144,6 @@
             <summary>
               <th>Final placement EV at {{ kyoku_str }} start</th>
             </summary>
-            <div class="latex">
-              \( \Phi_{ {{ k_id }} } = [3, 1.5, 0, -4.5] \cdot \mathbb{E}[P_{ {{ k_id }} }^{\mathrm{self} }] = {{ pretty_round(num=review.phis[k_id]) }} \)
-            </div>
             <table border="1" cellspacing="0" cellpadding="0" class="data">
               <thead>
                 <tr>

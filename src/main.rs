@@ -367,9 +367,6 @@ fn main() -> Result<()> {
     // render the HTML report page or JSON
     let view = View {
         engine,
-        // for mortal it is fixed
-        // pt: [90, 40, 0, -135],
-        // pt: [3., 1.5, 0., -4.5],
         game_length: log.game_length,
         log_id: if anonymous { None } else { log_source.log_id() },
         loading_time,

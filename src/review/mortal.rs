@@ -13,8 +13,6 @@ use serde::{Deserialize, Serialize};
 use serde_json as json;
 use serde_with::skip_serializing_none;
 
-const PTS: [f64; 4] = [3., 1.5, 0., -4.5];
-
 #[derive(Debug, Serialize)]
 pub struct Review {
     pub total_reviewed: usize,
@@ -24,7 +22,7 @@ pub struct Review {
     pub kyokus: Vec<KyokuReview>,
 
     pub relative_phi_matrix: Vec<[[f64; 4]; 4]>,
-    pub phis: Vec<f64>,
+    pub model_tag: String,
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
@@ -96,6 +94,12 @@ struct Metadata {
     shanten: Option<i8>,
     at_furiten: Option<bool>,
     kan_select: Option<Box<Metadata>>,
+}
+
+#[derive(Deserialize)]
+struct ExtraData {
+    model_tag: String,
+    phi_matrix: Vec<[[f64; 4]; 4]>,
 }
 
 pub struct Reviewer<'a> {
@@ -255,7 +259,7 @@ impl Reviewer<'_> {
                 // cannot act, or there is only one candidate
                 continue;
             }
-            let masks = mask_from_bits(mask_bits);
+            let masks = masks_from_bits(mask_bits);
             let can_pon_or_daiminkan = masks[41] || masks[42];
             let can_agari = masks[43];
 
@@ -316,7 +320,7 @@ impl Reviewer<'_> {
                     .context("in kan_select but no kan found in root")?;
                 details.remove(orig_kan_idx);
 
-                let masks = mask_from_bits(mask_bits);
+                let masks = masks_from_bits(mask_bits);
                 let mut q_values = kan_select.q_values.context("missing q_values")?;
                 for (kan_label, m) in masks.into_iter().enumerate().rev() {
                     if !m {
@@ -406,22 +410,15 @@ impl Reviewer<'_> {
         if verbose {
             log!("< {line}");
         }
-        let mut matrix: Vec<[[f64; 4]; 4]> =
-            json::from_str(&line).context("failed to parse JSON output of engine")?;
-        ensure!(matrix.len() == kyoku_reviews.len());
 
-        let mut phis = Vec::with_capacity(matrix.len());
-        for k in &mut matrix {
+        let ExtraData {
+            model_tag,
+            mut phi_matrix,
+        } = json::from_str(&line).context("failed to parse JSON output of engine")?;
+        ensure!(phi_matrix.len() == kyoku_reviews.len());
+
+        for k in &mut phi_matrix {
             k.rotate_left(player_id as usize);
-            let player_row = k[0];
-            let phi = PTS[0].mul_add(
-                player_row[0],
-                PTS[1].mul_add(
-                    player_row[1],
-                    PTS[2].mul_add(player_row[2], PTS[3] * player_row[3]),
-                ),
-            );
-            phis.push(phi);
         }
 
         let status = mortal.wait()?;
@@ -439,13 +436,13 @@ impl Reviewer<'_> {
             rating,
             temperature,
             kyokus: kyoku_reviews,
-            relative_phi_matrix: matrix,
-            phis,
+            relative_phi_matrix: phi_matrix,
+            model_tag,
         })
     }
 }
 
-fn mask_from_bits(bits: u64) -> [bool; 46] {
+fn masks_from_bits(bits: u64) -> [bool; 46] {
     let mut ret = [false; 46];
     for (i, v) in ret.iter_mut().enumerate() {
         *v = (bits >> i) & 0b1 == 0b1;
