@@ -88,9 +88,6 @@ macro_rules! canonicalize {
     }};
 }
 
-const MORTAL_TEMP: f32 = 0.2;
-const AKOCHAN_DEVIATION_THRESHOLD: f64 = 0.05;
-
 enum ReportOutput {
     File(PathBuf),
     Stdout,
@@ -120,14 +117,17 @@ fn main() -> Result<()> {
                 anonymous,
                 no_open,
             },
-        mortal_opts: MortalOptions {
-            mortal_exe,
-            mortal_cfg,
-        },
+        mortal_opts:
+            MortalOptions {
+                mortal_exe,
+                mortal_cfg,
+                temperature,
+            },
         akochan_opts:
             AkochanOptions {
                 akochan_dir,
                 akochan_tactics,
+                deviation_threshold,
             },
     } = Options::parse();
 
@@ -305,7 +305,7 @@ fn main() -> Result<()> {
                 mortal_cfg: &mortal_cfg,
                 events: &events,
                 player_id,
-                temperature: MORTAL_TEMP,
+                temperature,
                 verbose,
             };
             let result = reviewer.review().context("failed to review")?;
@@ -324,7 +324,7 @@ fn main() -> Result<()> {
                 tactics_config: &akochan_tactics,
                 events: &events,
                 player_id,
-                deviation_threshold: AKOCHAN_DEVIATION_THRESHOLD,
+                deviation_threshold,
                 verbose,
             };
             let result = reviewer.review().context("failed to review")?;

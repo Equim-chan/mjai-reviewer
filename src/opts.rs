@@ -137,6 +137,9 @@ pub struct MortalOptions {
         default_value_os = OsStr::new("./mortal/config.toml")
     )]
     pub mortal_cfg: PathBuf,
+
+    #[clap(long, value_name = "TEMP", default_value = "0.1")]
+    pub temperature: f32,
 }
 
 #[derive(Debug, Args)]
@@ -154,6 +157,9 @@ pub struct AkochanOptions {
         default_value_os = OsStr::new("./akochan/tactics.json")
     )]
     pub akochan_tactics: PathBuf,
+
+    #[clap(long, value_name = "DEV", default_value = "0.05")]
+    pub deviation_threshold: f64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ValueEnum)]
