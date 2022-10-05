@@ -14,7 +14,7 @@ If you really want to know the answer, you could ask Tenhou or Mahjong Soul offi
 I have no affiliation to them. I am not running any AI in ranked lobbies and will not do so until an official permission is granted.
 
 ## How good are the engines compared against each other?
-In duplicate mahjong, 1 akochan vs 3 Mortal setting and $[90,45,0,-135]$ pt scale for measure, Mortal outplays $[90,45,0,-135]$-akochan with average rank 2.479 and average pt 1.677, and outplays $[90,30,-30,-90]$-akochan with average rank 2.484 and average pt 1.827.
+In duplicate mahjong, 1 akochan vs 3 Mortal (v1) setting and $[90,45,0,-135]$ pt scale for measure, Mortal outplays $[90,45,0,-135]$-akochan with average rank 2.479 (vs 2.563) and average pt 1.677 (vs -5.032), and outplays $[90,30,-30,-90]$-akochan with average rank 2.484 (vs 2.549) and average pt 1.827 (vs -5.482).
 
 Although Mortal's win against akochan may not appear to be too much at first glance, it should be noted that there are three Mortal instances in each game, not just one, so the theoretical best average rank Mortal can achieve is 2, not 1.
 
