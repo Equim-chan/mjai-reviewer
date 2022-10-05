@@ -2,7 +2,7 @@ use std::ffi::OsStr;
 use std::fmt;
 use std::path::PathBuf;
 
-use clap::{ArgEnum, ArgGroup, Args, Parser};
+use clap::{ArgGroup, Args, Parser, ValueEnum};
 use serde::Serialize;
 use url::Url;
 
@@ -25,7 +25,7 @@ pub struct Options {
     /// the East at E1 is 0, and his shimocha (right) will be 1, toimen (across)
     /// will be 2, kamicha (left) will be 3. This option has higher priority
     /// over the "&tw=" in --url if specified.
-    #[clap(short = 'a', long, value_name = "ID", parse(try_from_str = parse_player_id))]
+    #[clap(short = 'a', long, value_name = "ID", value_parser = parse_player_id)]
     pub player_id: Option<u8>,
 
     /// The display name of the player to review. This option has higher
@@ -33,10 +33,10 @@ pub struct Options {
     #[clap(short = 'n', long, value_name = "NAME", conflicts_with = "player-id")]
     pub player_name: Option<String>,
 
-    #[clap(flatten, next_help_heading = "INPUT OPTIONS")]
+    #[clap(flatten, next_help_heading = "Input Options")]
     pub input_opts: InputOptions,
 
-    #[clap(flatten, next_help_heading = "OUTPUT OPTIONS")]
+    #[clap(flatten, next_help_heading = "Output Options")]
     pub output_opts: OutputOptions,
 
     /// Kyokus to review. If LIST is empty, review all kyokus. Example:
@@ -56,16 +56,16 @@ pub struct Options {
     #[clap(
         short,
         long,
-        arg_enum,
+        value_enum,
         required_unless_present = "no-review",
         requires = "input-methods"
     )]
     pub engine: Option<Engine>,
 
-    #[clap(flatten, next_help_heading = "MORTAL OPTIONS")]
+    #[clap(flatten, next_help_heading = "Mortal Options")]
     pub mortal_opts: MortalOptions,
 
-    #[clap(flatten, next_help_heading = "AKOCHAN OPTIONS")]
+    #[clap(flatten, next_help_heading = "Akochan Options")]
     pub akochan_opts: AkochanOptions,
 }
 
@@ -82,7 +82,7 @@ pub struct InputOptions {
     pub tenhou_id: Option<String>,
 
     /// Tenhou log URL, as an alternative to --tenhou-id.
-    #[clap(short, long, value_name = "URL", parse(try_from_str))]
+    #[clap(short, long, value_name = "URL", value_parser)]
     pub url: Option<Url>,
 }
 
@@ -156,7 +156,7 @@ pub struct AkochanOptions {
     pub akochan_tactics: PathBuf,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ArgEnum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, ValueEnum)]
 pub enum Engine {
     Mortal,
     Akochan,
