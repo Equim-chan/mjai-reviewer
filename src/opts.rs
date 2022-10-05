@@ -17,7 +17,7 @@ For more details, please visit the repo at <https://github.com/Equim-chan/mjai-r
 #[clap(version, about = ABOUT)]
 #[clap(group(
     ArgGroup::new("input-methods")
-        .args(&["in-file", "tenhou-id", "url"]),
+        .args(&["in_file", "tenhou_id", "url"]),
 ))]
 pub struct Options {
     /// The ID of the player to review, which is a number within 0-3. It is the
@@ -30,7 +30,7 @@ pub struct Options {
 
     /// The display name of the player to review. This option has higher
     /// priority over the "&tw=" in --url if specified.
-    #[clap(short = 'n', long, value_name = "NAME", conflicts_with = "player-id")]
+    #[clap(short = 'n', long, value_name = "NAME", conflicts_with = "player_id")]
     pub player_name: Option<String>,
 
     #[clap(flatten, next_help_heading = "Input Options")]
@@ -57,7 +57,7 @@ pub struct Options {
         short,
         long,
         value_enum,
-        required_unless_present = "no-review",
+        required_unless_present = "no_review",
         requires = "input-methods"
     )]
     pub engine: Option<Engine>,
