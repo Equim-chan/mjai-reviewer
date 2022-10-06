@@ -227,7 +227,7 @@
 
           {{- macros::render_tehai_state(entry=entry) -}}
 
-          <span {% if mark_red %} style="background: #ffb9b9" {% endif %}>
+          <span {% if mark_red %} style="background: #ffd5d5" {% endif %}>
             <span class="role">Player: </span>
             {%- if engine == "Mortal" -%}
               {{- macros::render_action(action=entry.actual) -}}

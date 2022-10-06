@@ -138,6 +138,8 @@ pub struct MortalOptions {
     )]
     pub mortal_cfg: PathBuf,
 
+    /// The tau value used in softmax. It only affects displayed values and does
+    /// not change action orders or ratings.
     #[clap(long, value_name = "TEMP", default_value = "0.1", value_parser = parse_temperature)]
     pub temperature: f32,
 }
