@@ -138,7 +138,7 @@ pub struct MortalOptions {
     )]
     pub mortal_cfg: PathBuf,
 
-    #[clap(long, value_name = "TEMP", default_value = "0.1")]
+    #[clap(long, value_name = "TEMP", default_value = "0.1", value_parser = parse_temperature)]
     pub temperature: f32,
 }
 
@@ -179,11 +179,20 @@ impl fmt::Display for Engine {
 }
 
 fn parse_player_id(s: &str) -> Result<u8, String> {
-    let id = s.parse().map_err(|_| format!("{s} is not a number"))?;
+    let id = s.parse::<u8>().map_err(|e| e.to_string())?;
     if id >= 4 {
         Err(format!("{s} is not within 0-3"))
     } else {
         Ok(id)
+    }
+}
+
+fn parse_temperature(s: &str) -> Result<f32, String> {
+    let v = s.parse::<f32>().map_err(|e| e.to_string())?;
+    if v <= 0. {
+        Err(format!("{s} is not greater than zero"))
+    } else {
+        Ok(v)
     }
 }
 
