@@ -113,6 +113,7 @@ fn main() -> Result<()> {
                 tenhou_out,
                 mjai_out,
                 json,
+                show_rating,
                 without_log_viewer,
                 anonymous,
                 no_open,
@@ -371,6 +372,7 @@ fn main() -> Result<()> {
         log_id: if anonymous { None } else { log_source.log_id() },
         loading_time,
         review_time,
+        show_rating,
         version: env!("CARGO_PKG_VERSION"),
 
         review,

@@ -44,6 +44,7 @@ pub struct View<'a> {
     pub loading_time: Duration,
     #[serde(with = "humantime_serde")]
     pub review_time: Duration,
+    pub show_rating: bool,
     pub version: &'a str,
 
     // review

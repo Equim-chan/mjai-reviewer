@@ -81,8 +81,10 @@
       <dd>{{ loading_time }}</dd>
       <dt>review time</dt>
       <dd>{{ review_time }}</dd>
-      <dt>rating</dt>
-      <dd>{{ pretty_round(num=(review.rating*100), prec=3) }}</dd>
+      {%- if show_rating -%}
+        <dt>rating</dt>
+        <dd>{{ pretty_round(num=(review.rating*100), prec=3) }}</dd>
+      {%- endif -%}
       {%- if engine == "Mortal" -%}
         <dt>matches/total</dt>
         {%- set v = review.total_matches / review.total_reviewed * 100 -%}

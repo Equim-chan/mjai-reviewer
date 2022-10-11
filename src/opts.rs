@@ -109,6 +109,10 @@ pub struct OutputOptions {
     #[clap(long)]
     pub json: bool,
 
+    /// Whether or not to include rating.
+    #[clap(long)]
+    pub show_rating: bool,
+
     /// Do not include log viewer in the generated HTML report.
     #[clap(long)]
     pub without_log_viewer: bool,
