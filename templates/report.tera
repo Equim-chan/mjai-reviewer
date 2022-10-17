@@ -131,6 +131,7 @@
       </h1>
 
       {%- if splited_logs is defined -%}
+        <h3><a href="https://tenhou.net/6/#json={{ splited_logs[k_id] | json_encode() }}" target="_blank" rel="noreferrer noopener">Open in game editor</a></h3>
         <div class="sticky l-box" {{ "style" }}="z-index: {{ 10 * k_id + 5 }}">
           <details class="collapse">
             <summary>Replay viewer</summary>

@@ -43,8 +43,7 @@ section {
   background: #f2f2f2;
 }
 
-a,
-a:visited {
+.kyoku-item a {
   color: inherit;
 }
 
