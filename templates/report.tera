@@ -138,6 +138,15 @@
               class="tenhou" loading="lazy" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>
           </details>
         </div>
+        <div class="r-box">
+          <details class="collapse">
+            <summary>tenhou.net/6 JSON log</summary>
+            {# apparently links to the /6 editor do not work like /5 viewer as it breaks from time to time,
+               so we simply let the users to copy and paste themselves. #}
+            <p>Paste it in <a href="https://tenhou.net/6" target="_blank" rel="noreferrer noopener">tenhou.net/6</a> - EDIT AS TEXT.</p>
+            <textarea style="width: 100%" rows="5" onclick="this.select()" readonly>{{ splited_logs[k_id] | json_encode() }}</textarea>
+          </details>
+        </div>
       {%- endif -%}
 
       <div class="r-box">
