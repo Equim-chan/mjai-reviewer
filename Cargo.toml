@@ -1,6 +1,6 @@
 [package]
 name = "mjai-reviewer"
-version = "1.4.0"
+version = "1.4.1"
 authors = ["Equim"]
 edition = "2021"
 repository = "https://github.com/Equim-chan/mjai-reviewer"
