@@ -262,10 +262,15 @@ impl Reviewer<'_> {
             let masks = masks_from_bits(mask_bits);
             let can_pon_or_daiminkan = masks[41] || masks[42];
             let can_agari = masks[43];
+            let can_ryukyoku = masks[44];
 
-            let actual = if let Some(ev) =
-                next_action(&events[i + 1..], player_id, can_pon_or_daiminkan, can_agari)
-            {
+            let actual = if let Some(ev) = next_action(
+                &events[i + 1..],
+                player_id,
+                can_pon_or_daiminkan,
+                can_agari,
+                can_ryukyoku,
+            ) {
                 ev
             } else {
                 // interrupted
@@ -649,12 +654,17 @@ fn next_action(
     player_id: u8,
     can_pon_or_daiminkan: bool,
     can_agari: bool,
+    can_ryukyoku: bool,
 ) -> Option<Event> {
     let ev = &events[0];
     match ev {
-        Event::Dora { .. } | Event::ReachAccepted { .. } => {
-            next_action(&events[1..], player_id, can_pon_or_daiminkan, can_agari)
-        }
+        Event::Dora { .. } | Event::ReachAccepted { .. } => next_action(
+            &events[1..],
+            player_id,
+            can_pon_or_daiminkan,
+            can_agari,
+            can_ryukyoku,
+        ),
 
         // passed when it's supposed to naki
         Event::Tsumo { .. } => Some(Event::None),
@@ -671,6 +681,8 @@ fn next_action(
             } else {
                 None
             }),
+
+        Event::Ryukyoku { .. } => can_ryukyoku.then(|| ev.clone()),
 
         _ => match ev.actor() {
             Some(actual_actor) if actual_actor != player_id => {

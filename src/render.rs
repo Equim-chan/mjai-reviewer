@@ -59,7 +59,7 @@ impl View<'_> {
     where
         W: Write,
     {
-        let ctx = tera::Context::from_serialize(&self)?;
+        let ctx = tera::Context::from_serialize(self)?;
         let original = TEMPLATES.render("report.tera", &ctx)?;
 
         let cfg = Cfg {

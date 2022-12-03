@@ -1,5 +1,6 @@
 #![deny(
     rust_2018_idioms,
+    let_underscore_drop,
     clippy::must_use_candidate,
     clippy::redundant_else,
     clippy::manual_assert,
@@ -14,7 +15,6 @@
     clippy::suboptimal_flops,
     clippy::inefficient_to_string,
     clippy::let_unit_value,
-    clippy::let_underscore_drop,
     clippy::cloned_instead_of_copied,
     clippy::debug_assert_with_mut_call,
     clippy::equatable_if_let,
@@ -205,7 +205,7 @@ fn main() -> Result<()> {
             json::from_str(&body).context("failed to parse tenhou.net/6 log")?
         }
         LogSource::File(filename) => {
-            let mut file = File::open(&filename)
+            let mut file = File::open(filename)
                 .with_context(|| format!("failed to open tenhou.net/6 log file {:?}", filename))?;
             let mut body = String::new();
             file.read_to_string(&mut body)?;
@@ -352,7 +352,7 @@ fn main() -> Result<()> {
     // prepare output, can be a file or stdout
     let mut out_write: Box<dyn Write> = match &out {
         ReportOutput::File(filename) => {
-            let file = File::create(&filename).with_context(|| {
+            let file = File::create(filename).with_context(|| {
                 format!("failed to create output report file {}", filename.display())
             })?;
             Box::new(file)
