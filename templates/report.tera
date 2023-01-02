@@ -201,7 +201,7 @@
         {%- for entry in item.entries -%}
           {%- if engine == "Mortal" -%}
             {%- set mark_red = not entry.is_equal -%}
-            <details class="collapse" open>
+            <details class="collapse" {% if mark_red %} open {% endif %}>
               <summary>
                 Turn {{ entry.junme }}
                 <span class="turn-info">
@@ -225,7 +225,7 @@
               </summary>
           {%- elif engine == "Akochan" -%}
             {%- set mark_red = entry.acceptance == "disagree" -%}
-            <details class="collapse" open>
+            <details class="collapse" {% if mark_red %} open {% endif %}>
               <summary>
                 Turn {{ entry.junme }}
                 {%- if entry.acceptance == "disagree" -%}
