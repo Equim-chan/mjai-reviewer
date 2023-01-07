@@ -11,21 +11,13 @@ I have **absolutely no idea** on how strong Mortal or akochan is in general huma
 If you really want to know the answer, you could ask Tenhou or Mahjong Soul officials to let them permit individual developed AIs (preferably Mortal) to legitimately play in their ranked lobbies.
 
 ### But I have seen some accounts claim to be Mortal/akochan on some online platforms?
-I have no affiliation to them. I am not running any AI in ranked lobbies and will not do so until an official permission is granted.
+I (Equim) have no affiliation to them. I am not running any AI in ranked lobbies and will not do so until an official permission is granted.
 
 ## How good are the engines compared against each other?
-### Mortal1 vs akochan
-In duplicate mahjong, 1 akochan vs 3 Mortal (v1) setting and $[90,45,0,-135]$ pt scale for measure, Mortal outplays $[90,45,0,-135]$-akochan with average rank 2.479 (vs 2.563) and average pt 1.677 (vs -5.032), and outplays $[90,30,-30,-90]$-akochan with average rank 2.484 (vs 2.549) and average pt 1.827 (vs -5.482).
-
-Although Mortal's win against akochan may not appear to be too much at first glance, it should be noted that there are three Mortal instances in each game, not just one, so the theoretical best average rank Mortal can achieve is 2, not 1.
-
-Details about this can be found in [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#mortal-vs-akochan).
-
-### Mortal1 vs Mortal2
-Check out [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#mortal-vs-mortal).
+Check [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#mortal-vs-akochan) for details.
 
 ## What information do the engines base their decisions on?
-Technically, all visible information on the board is considered, including discard sequences with tedashi info, current points, round number and so on, but information such as each player's level and the room type are not.
+Technically, all visible information on the board is taken into account, including discard sequences with tedashi info, current points, round number and so on, but information such as each player's level and the room type are not.
 
 ## (Mortal) Where is the deal-in rate column?
 If you're referring to the deal-in rate column in akochan, Mortal does not have it; in fact, it was never explicitly calculated by Mortal in the first place. Mortal and akochan are two entirely different mahjong AI engines, created by different developers with different designs. So you probably shouldn't expect them to share any features.
@@ -53,7 +45,10 @@ As mentioned above, $\hat Q^\pi(s, a) + \Phi_k$ is an estimation to the pt EV. H
 This is an exploitation vs exploration dilemma. To begin with, Mortal is [model-free](https://en.wikipedia.org/wiki/Model-free_(reinforcement_learning)), which means it cannot obtain the optimize target, the actual Q values $Q^\pi(s, a)$, without actually evaluate the action $a$.
 Therefore, if we intend to make actions' Q values more accurate, the model will have to explore those less likely actions more, which may lead to overestimation on some bad actions, making it performs worse. In a game with so much randomness like mahjong, such overestimation is very likely to happen since the variance is very high. To avoid such performance regression, the model needs to exploit more, leading to less accurate predicted Q values $\hat Q^\pi(s, a)$.
 
-ELI5: <ins>Mortal is optimized for playing, not reviewing or reasoning.</ins>
+ELI5: <ins>Mortal is optimized for playing, not reviewing or attribution.</ins>
+
+## (Mortal) Can Mortal's decisions be attributed?
+Mortal is an end-to-end deep learning model that deploys model-free reinforcement learning, therefore we are unlikely to be able to do any significant attribution work on it. If you insist on wanting a reason for a decision made by Mortal, I would say that in contrast to how humans play, Mortal is not based on so-called "precise calculations", but rather just "intuition".
 
 ## (akochan) How to configure the pt distribution?
 Edit `jun_pt` in `tactics.json`. Note that there is a hard-coded bound of $[-200, 200]$ for every element.
@@ -76,4 +71,4 @@ $$
 
 where $K$ is the number of rounds and $N_i$ is the number of player's actions in $i$-th round.
 
-The calculation is very basic and the result has a high variance. It probably shouldn't be considered a reliable measure.
+The calculation is essentially a basic min-max scaling and the result has a high variance. It is also directly tied to the output dynamic range of a specific engine (model). It shouldn't be considered a reliable measurement.
