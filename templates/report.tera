@@ -9,13 +9,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">
   <title>Replay Examination</title>
-  <script src="https://unpkg.com/katex@0.16.0/dist/katex.min.js" defer
-    integrity="sha256-6xggdIcWFnTnFwh8MX2xSsGmLa2uzMuAJJnOFzv+tzk=" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/katex@0.16.0/dist/contrib/auto-render.min.js" defer
-    integrity="sha256-y39Mpg7V3D4lhBX4x6O0bUqTV4pSrfgwEfGKfxkOdgI=" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/katex@0.16.4/dist/katex.min.js" defer
+    integrity="sha256-hj447pxoq07J81z91mvNVKDDo2MTZf370GozMVGIfIA=" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/katex@0.16.4/dist/contrib/auto-render.min.js" defer
+    integrity="sha256-nLjaz8CGwpZsnsS6VPSi3EO3y+KzPOwaJ0PYhsf7R6c=" crossorigin="anonymous"></script>
   {#- there is no need for a <noscript> fallback since katex won't work without js after all -#}
-  <link rel="preload" href="https://unpkg.com/katex@0.16.0/dist/katex.min.css"
-    integrity="sha256-uik/hNqHWZldXh/0K35nqOSCff9F61/ZOFReqNOBgB0=" crossorigin="anonymous"
+  <link rel="preload" href="https://unpkg.com/katex@0.16.4/dist/katex.min.css"
+    integrity="sha256-gMRN4/6qeELzO1wbFa8qQLU8kfuF2dnAPiUoI0ATjx8=" crossorigin="anonymous"
     as="style" onload="this.onload=null;this.rel='stylesheet'">
 
   {#- syntax highlighter is too dumb -#}
@@ -31,6 +31,8 @@
   </p>
 
   <p>
+    <a class="no-visit" href="" download>Save this page</a>
+    <br>
     <span style="font-weight: bold">Layout:</span>
     <label><input type="radio" name="style" id="radio_style_v" onclick="toggleStyle()" checked>Vertical</label>
     <label><input type="radio" name="style" id="radio_style_h" onclick="toggleStyle()">Horizontal</label>
@@ -39,10 +41,10 @@
   <details class="collapse" open>
     <summary>Game Summary</summary>
     <div class="kyoku-toc">
-      <ol class="kyoku-list">
+      <ol>
         {%- for item in review.kyokus -%}
-          <li class="kyoku-item">
-            <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}">
+          <li>
+            <a class="no-visit" href="#kyoku-{{ item.kyoku }}-{{ item.honba }}">
               {{- kyoku_to_string(kyoku=item.kyoku, honba=item.honba) -}}
             </a>
           </li>

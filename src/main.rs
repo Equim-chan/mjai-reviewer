@@ -206,7 +206,7 @@ fn main() -> Result<()> {
         }
         LogSource::File(filename) => {
             let mut file = File::open(filename)
-                .with_context(|| format!("failed to open tenhou.net/6 log file {:?}", filename))?;
+                .with_context(|| format!("failed to open tenhou.net/6 log file {filename:?}"))?;
             let mut body = String::new();
             file.read_to_string(&mut body)?;
             json::from_str(&body).context("failed to parse tenhou.net/6 log")?

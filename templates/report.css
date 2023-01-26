@@ -43,7 +43,7 @@ section {
   background: #f2f2f2;
 }
 
-.kyoku-item a {
+a.no-visit {
   color: inherit;
 }
 

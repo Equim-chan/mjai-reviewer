@@ -3,6 +3,7 @@
 
 #![deny(
     rust_2018_idioms,
+    let_underscore_drop,
     clippy::must_use_candidate,
     clippy::redundant_else,
     clippy::manual_assert,
@@ -17,7 +18,6 @@
     clippy::suboptimal_flops,
     clippy::inefficient_to_string,
     clippy::let_unit_value,
-    clippy::let_underscore_drop,
     clippy::cloned_instead_of_copied,
     clippy::debug_assert_with_mut_call,
     clippy::equatable_if_let,

@@ -4,7 +4,7 @@ use anyhow::{ensure, Result};
 use ureq::AgentBuilder;
 
 pub fn tenhou_log(log_id: &str) -> Result<String> {
-    let url = format!("https://tenhou.net/5/mjlog2json.cgi?{}", log_id);
+    let url = format!("https://tenhou.net/5/mjlog2json.cgi?{log_id}");
 
     let agent = AgentBuilder::new()
         .timeout_connect(Duration::from_secs(10))

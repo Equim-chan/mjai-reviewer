@@ -11,10 +11,9 @@ fn test_parse_and_convert() {
              data,
          }| {
             let tenhou_log = tenhou::Log::from_json_str(data)
-                .unwrap_or_else(|_| panic!("failed to parse tenhou log (case: {})", description));
-            let mjai_log = tenhou_to_mjai(&tenhou_log).unwrap_or_else(|_| {
-                panic!("failed to transform tenhou log (case: {})", description)
-            });
+                .unwrap_or_else(|_| panic!("failed to parse tenhou log (case: {description})"));
+            let mjai_log = tenhou_to_mjai(&tenhou_log)
+                .unwrap_or_else(|_| panic!("failed to transform tenhou log (case: {description})"));
 
             assert!(mjai_log.len() >= 4);
         },
