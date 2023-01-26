@@ -31,7 +31,7 @@
   </p>
 
   <p>
-    <a class="no-visit" href="" download>Save this page</a>
+    <a class="no-visit" href="." download>Save this page</a>
     <br>
     <span style="font-weight: bold">Layout:</span>
     <label><input type="radio" name="style" id="radio_style_v" onclick="toggleStyle()" checked>Vertical</label>
@@ -120,8 +120,8 @@
     {%- set kyoku_str = kyoku_to_string(kyoku=item.kyoku, honba=item.honba) -%}
     <section {{ "style" }}="z-index: {{ 10 * k_id }}">
       <h1 id="kyoku-{{ item.kyoku }}-{{ item.honba }}" class="kyoku-heading">
-        <div class="kyoku-item">
-          <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}" class="chapter">
+        <div>
+          <a href="#kyoku-{{ item.kyoku }}-{{ item.honba }}" class="no-visit chapter">
             {{- kyoku_str -}}
           </a>
         </div>
