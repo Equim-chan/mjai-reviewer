@@ -31,8 +31,6 @@
   </p>
 
   <p>
-    <a class="no-visit" href="." download>Save this page</a>
-    <br>
     <span style="font-weight: bold">Layout:</span>
     <label><input type="radio" name="style" id="radio_style_v" onclick="toggleStyle()" checked>Vertical</label>
     <label><input type="radio" name="style" id="radio_style_h" onclick="toggleStyle()">Horizontal</label>
