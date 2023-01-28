@@ -30,7 +30,11 @@
     <a href="https://github.com/Equim-chan/mjai-reviewer" target="_blank" rel="noreferrer noopener">mjai-reviewer</a>
   </p>
 
-  <p>
+  <fieldset>
+    <legend>Panel</legend>
+    {# https://github.com/wilsonzlin/minify-html/issues/130 #}
+    <a id="download" download>💾 Save this page</a>
+    <br>
     <span style="font-weight: bold">Layout:</span>
     <label><input type="radio" name="layout" id="layout-vertical" onclick="toggleLayout()" checked>Vertical</label>
     <label><input type="radio" name="layout" onclick="toggleLayout()">Horizontal</label>
@@ -38,7 +42,7 @@
     <span style="font-weight: bold">Diff only:</span>
     <label><input type="radio" name="diff-only" onclick="toggleDiffOnly()">No</label>
     <label><input type="radio" name="diff-only" id="diff-only-yes" onclick="toggleDiffOnly()" checked>Yes</label>
-  </p>
+  </fieldset>
 
   <details class="collapse" open>
     <summary>Game Summary</summary>
