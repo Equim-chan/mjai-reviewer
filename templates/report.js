@@ -1,5 +1,6 @@
-function toggleStyle() {
-  if (document.querySelector('#radio_style_v').checked) {
+function toggleLayout() {
+  const layoutVertical = document.querySelector('#layout-vertical').checked
+  if (layoutVertical) {
     document.body.removeAttribute('horizontal')
     const lboxes = document.querySelectorAll('.l-box')
     for (let i = 0; i < lboxes.length; i++) {
@@ -22,7 +23,22 @@ function toggleStyle() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function toggleDiffOnly() {
+  const diffOnly = document.querySelector('#diff-only-yes').checked
+  const turnList = document.querySelectorAll('details.collapse')
+  for (const turn of turnList) {
+    const turnInfo = turn.querySelector('.turn-info')
+    if (turnInfo) {
+      if (diffOnly && !turnInfo.querySelector('.order-loss')) {
+        turn.removeAttribute('open')
+      } else {
+        turn.setAttribute('open', '')
+      }
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
   const elems = document.querySelectorAll('.latex')
   for (const elem of elems) {
     renderMathInElement(elem)

@@ -31,6 +31,7 @@ pub struct KyokuReview {
 #[derive(Debug, Clone, Serialize)]
 pub struct Entry {
     junme: u8,
+    tiles_left: u8,
     last_actor: u8,
     tile: Tile,
 
@@ -141,6 +142,7 @@ impl Reviewer<'_> {
         let mut kyoku_review = KyokuReview::default();
         let mut state = State::new(player_id);
         let mut junme = 0;
+        let mut tiles_left = 70;
         let mut entries = vec![];
         let mut is_riichied = false;
 
@@ -168,6 +170,7 @@ impl Reviewer<'_> {
                     kyoku_review.kyoku = kyoku;
                     kyoku_review.honba = honba;
                     is_riichied = false;
+                    tiles_left = 70;
 
                     continue;
                 }
@@ -195,6 +198,7 @@ impl Reviewer<'_> {
                 }
 
                 Event::Tsumo { actor, .. } => {
+                    tiles_left -= 1;
                     if actor != player_id {
                         continue;
                     }
@@ -363,6 +367,7 @@ impl Reviewer<'_> {
 
             let entry = Entry {
                 junme,
+                tiles_left,
                 last_actor,
                 tile,
                 state: state.clone(),

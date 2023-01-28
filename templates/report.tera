@@ -32,8 +32,12 @@
 
   <p>
     <span style="font-weight: bold">Layout:</span>
-    <label><input type="radio" name="style" id="radio_style_v" onclick="toggleStyle()" checked>Vertical</label>
-    <label><input type="radio" name="style" id="radio_style_h" onclick="toggleStyle()">Horizontal</label>
+    <label><input type="radio" name="layout" id="layout-vertical" onclick="toggleLayout()" checked>Vertical</label>
+    <label><input type="radio" name="layout" onclick="toggleLayout()">Horizontal</label>
+    <br>
+    <span style="font-weight: bold">Diff only:</span>
+    <label><input type="radio" name="diff-only" onclick="toggleDiffOnly()">No</label>
+    <label><input type="radio" name="diff-only" id="diff-only-yes" onclick="toggleDiffOnly()" checked>Yes</label>
   </p>
 
   <details class="collapse" open>
@@ -203,7 +207,7 @@
             {%- set mark_red = not entry.is_equal -%}
             <details class="collapse" {% if mark_red %} open {% endif %}>
               <summary>
-                Turn {{ entry.junme }}
+                Turn {{ entry.junme }} (×{{ entry.tiles_left }})
                 <span class="turn-info">
                   &nbsp;&nbsp;&nbsp;
                   {%- if entry.shanten == 0 -%}
@@ -227,7 +231,7 @@
             {%- set mark_red = entry.acceptance == "disagree" -%}
             <details class="collapse" {% if mark_red %} open {% endif %}>
               <summary>
-                Turn {{ entry.junme }}
+                Turn {{ entry.junme }} (×{{ entry.tiles_left }})
                 {%- if entry.acceptance == "disagree" -%}
                   &nbsp;&nbsp;&nbsp;❌
                 {%- elif entry.acceptance == "tolerable" -%}
