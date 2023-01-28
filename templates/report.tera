@@ -33,7 +33,7 @@
   <fieldset>
     <legend>Panel</legend>
     {# https://github.com/wilsonzlin/minify-html/issues/130 #}
-    <a id="download" download>💾 Save this page</a>
+    <a id="download" class="no-visit" download>💾Save this page</a>
     <br>
     <span style="font-weight: bold">Layout:</span>
     <label><input type="radio" name="layout" id="layout-vertical" onclick="toggleLayout()" checked>Vertical</label>
