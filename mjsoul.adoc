@@ -10,6 +10,9 @@ However, the heroku instance where tensoul is deployed (`\https://tensoul.heroku
 
 As a result, the public service (`\https://akochan.ekyu.moe`) will no longer support mjsoul logs. You will need a akochan-reviewer running locally to review mjsoul logs. Downloads for pre-built Windows binary can be found https://github.com/Equim-chan/akochan-reviewer/releases[here,window=_blank].
 
+== Warning
+**It highly recommended to set up a separate environment and use a sub account for this task.**
+
 == Instructions (Browser)
 === Install tampermonkey extension on your browser
 https://www.tampermonkey.net/[Here,window=_blank]
