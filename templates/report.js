@@ -36,6 +36,5 @@ function toggleDiffOnly() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelector('#download').setAttribute('href', '')
   document.querySelectorAll('.latex').forEach(renderMathInElement)
 })
