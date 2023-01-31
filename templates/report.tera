@@ -82,8 +82,10 @@
       <dd>{{ game_length }}</dd>
       <dt>player id</dt>
       <dd>{{ player_id }}</dd>
-      <dt>log id</dt>
-      <dd>{%- if log_id -%}{{log_id}}{%- else -%}N/A{%- endif -%}</dd>
+      {%- if log_id -%}
+        <dt>log id</dt>
+        <dd>{{log_id}}</dd>
+      {%- endif -%}
       <dt>loading time</dt>
       <dd>{{ loading_time }}</dd>
       <dt>review time</dt>
