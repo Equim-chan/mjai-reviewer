@@ -4,6 +4,8 @@
 #![deny(
     rust_2018_idioms,
     let_underscore_drop,
+    clippy::uninlined_format_args,
+    clippy::unseparated_literal_suffix,
     clippy::must_use_candidate,
     clippy::redundant_else,
     clippy::manual_assert,
@@ -38,6 +40,7 @@
     clippy::unicode_not_nfc,
     clippy::unneeded_field_pattern,
     clippy::unnested_or_patterns,
+    clippy::unused_async,
     clippy::useless_let_if_seq,
     clippy::mut_mut,
     clippy::nonstandard_macro_braces,

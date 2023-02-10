@@ -250,8 +250,8 @@ pub fn tile_set_eq(a: &[Tile], b: &[Tile], ignore_aka: bool) -> bool {
         return false;
     }
 
-    let mut a_bits = 0u64;
-    let mut b_bits = 0u64;
+    let mut a_bits = 0_u64;
+    let mut b_bits = 0_u64;
     for &t in a {
         let id = if ignore_aka { t.deaka() } else { t }.as_u8();
         a_bits |= 0b1 << id;

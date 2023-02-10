@@ -227,7 +227,7 @@ impl Reviewer<'_> {
                 kyoku_review.kyoku,
                 kyoku_review.honba,
                 junme,
-                (i as f32) / (events_len as f32) * 100f32,
+                (i as f32) / (events_len as f32) * 100.,
             );
 
             // should have at least 4, e.g. dahai -> ryukyoku -> end_kyoku -> end_game

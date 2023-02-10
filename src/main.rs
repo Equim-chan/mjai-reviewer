@@ -1,6 +1,8 @@
 #![deny(
     rust_2018_idioms,
     let_underscore_drop,
+    clippy::uninlined_format_args,
+    clippy::unseparated_literal_suffix,
     clippy::must_use_candidate,
     clippy::redundant_else,
     clippy::manual_assert,

@@ -249,7 +249,7 @@ impl Reviewer<'_> {
                 kyoku_review.kyoku,
                 kyoku_review.honba,
                 junme,
-                i as f32 / events_len as f32 * 100f32,
+                i as f32 / events_len as f32 * 100.,
             );
 
             let output: RawAction =
