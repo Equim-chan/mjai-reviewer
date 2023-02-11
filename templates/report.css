@@ -10,7 +10,7 @@ body {
   line-height: 1.2;
 }
 
-body[horizontal] {
+body[data-horizontal] {
   max-width: 1600px;
 }
 
@@ -234,11 +234,11 @@ table.data td {
   text-align: left;
 }
 
-.l-box[horizontal] {
+.l-box[data-horizontal] {
   float: left;
   width: 50%;
 }
 
-.r-box[horizontal] {
+.r-box[data-horizontal] {
   margin-left: 50%;
 }

@@ -30,17 +30,18 @@
     <a href="https://github.com/Equim-chan/mjai-reviewer" target="_blank" rel="noreferrer noopener">mjai-reviewer</a>
   </p>
 
-  <fieldset>
+  <fieldset id="panel">
     <legend>Panel</legend>
     <a class="no-visit" href="" download>💾Save this page</a>
     <br>
     <span style="font-weight: bold">Layout:</span>
-    <label><input type="radio" name="layout" id="layout-vertical" onclick="toggleLayout()" checked>Vertical</label>
-    <label><input type="radio" name="layout" onclick="toggleLayout()">Horizontal</label>
+    <label><input type="radio" name="layout" onclick="toggleLayout()" value="vertical" checked>Vertical</label>
+    <label><input type="radio" name="layout" onclick="toggleLayout()" value="horizontal">Horizontal</label>
     <br>
-    <span style="font-weight: bold">Diff only:</span>
-    <label><input type="radio" name="diff-only" onclick="toggleDiffOnly()">No</label>
-    <label><input type="radio" name="diff-only" id="diff-only-yes" onclick="toggleDiffOnly()" checked>Yes</label>
+    <span style="font-weight: bold">Expand:</span>
+    <label><input type="radio" name="expand" onclick="toggleExpand()" value="all">All</label>
+    <label><input type="radio" name="expand" onclick="toggleExpand()" value="diff-only" checked>Diff only</label>
+    <label><input type="radio" name="expand" onclick="toggleExpand()" value="none">None</label>
   </fieldset>
 
   <details class="collapse" open>

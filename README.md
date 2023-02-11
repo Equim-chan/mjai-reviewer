@@ -5,17 +5,15 @@
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Equim-chan/mjai-reviewer)
 [![License](https://img.shields.io/github/license/Equim-chan/mjai-reviewer)](https://github.com/Equim-chan/mjai-reviewer/blob/master/LICENSE)
 
-<!-- [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Equim-chan/mjai-reviewer?include_prereleases)](https://github.com/Equim-chan/mjai-reviewer/releases) -->
-
-Review mahjong game log with mjai-compatible mahjong AI, supported engines are [Mortal](https://github.com/Equim-chan/Mortal) and [akochan](https://github.com/critter-mj/akochan).
+Review your mahjong gameplay with the help of mjai-compatible mahjong AI engines, including [Mortal](https://github.com/Equim-chan/Mortal) and [akochan](https://github.com/critter-mj/akochan).
 
 **[Try it online](https://mjai.ekyu.moe)** | [Demo result page](https://gh.ekyu.moe/mjai-reviewer-demo.html)
 
 It is recommended to just use the [online version](https://mjai.ekyu.moe), which works for Mahjong Soul games out-of-the-box, no download, no install, no extension, and it is free to use.
 
-mjai-reviewer 1.x.x is incompatible with 0.x.x versions, previously known as akochan-reviewer. If you prefer the old version, check out [v0 branch](https://github.com/Equim-chan/mjai-reviewer/tree/v0).
+mjai-reviewer 1.x.x is incompatible with 0.x.x versions, which were previously known as akochan-reviewer. If you prefer the old version, check out [v0 branch](https://github.com/Equim-chan/mjai-reviewer/tree/v0).
 
-### [How to Review Mahjong Soul Logs (updated 2021-09-26)](https://github.com/Equim-chan/mjai-reviewer/blob/master/mjsoul.adoc)
+[Guide on reviewing mahjong soul logs locally](https://github.com/Equim-chan/mjai-reviewer/blob/master/mjsoul.adoc).
 
 ## Usage
 ```console
@@ -39,7 +37,7 @@ $ mjai-reviewer -e mortal -k E2.1,E3 -u "https://tenhou.net/0/?log=2019050417gm-
 Use the `--help` argument for more details.
 
 ## FAQ
-See [FAQ](https://github.com/Equim-chan/mjai-reviewer/blob/master/faq.md)
+See [FAQ](https://github.com/Equim-chan/mjai-reviewer/blob/master/faq.md).
 
 ## Troubleshooting
 ### (akochan) `Assertion failed` errors on Windows

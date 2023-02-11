@@ -1,36 +1,42 @@
 function toggleLayout() {
-  const layoutVertical = document.querySelector('#layout-vertical').checked
-  if (layoutVertical) {
-    document.body.removeAttribute('horizontal')
+  const layout = document.querySelector('#panel input[name="layout"]:checked').value
+  if (layout === 'vertical') {
+    document.body.removeAttribute('data-horizontal')
     const lboxes = document.querySelectorAll('.l-box')
     for (const box of lboxes) {
-      box.removeAttribute('horizontal')
+      box.removeAttribute('data-horizontal')
     }
     const rboxes = document.querySelectorAll('.r-box')
     for (const box of rboxes) {
-      box.removeAttribute('horizontal')
+      box.removeAttribute('data-horizontal')
     }
   } else {
-    document.body.setAttribute('horizontal', '1')
+    document.body.setAttribute('data-horizontal', '')
     const lboxes = document.querySelectorAll('.l-box')
     for (const box of lboxes) {
-      box.setAttribute('horizontal', '1')
+      box.setAttribute('data-horizontal', '')
     }
     const rboxes = document.querySelectorAll('.r-box')
     for (const box of rboxes) {
-      box.setAttribute('horizontal', '1')
+      box.setAttribute('data-horizontal', '')
     }
   }
 }
 
-function toggleDiffOnly() {
-  const diffOnly = document.querySelector('#diff-only-yes').checked
+function toggleExpand() {
+  const expand = document.querySelector('#panel input[name="expand"]:checked').value
   const entries = document.querySelectorAll('details.collapse.entry')
   for (const entry of entries) {
-    if (diffOnly && !entry.hasAttribute('data-mark-red')) {
-      entry.removeAttribute('open')
-    } else {
-      entry.setAttribute('open', '')
+    switch (expand) {
+      case 'all':
+        entry.open = true
+        break
+      case 'diff-only':
+        entry.open = entry.hasAttribute('data-mark-red')
+        break
+      case 'none':
+        entry.open = false
+        break
     }
   }
 }
