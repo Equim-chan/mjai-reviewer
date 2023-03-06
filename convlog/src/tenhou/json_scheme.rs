@@ -159,7 +159,7 @@ impl RawLog {
 
 impl From<RawPartialLog<'_>> for RawLog {
     fn from(partial_log: RawPartialLog<'_>) -> Self {
-        RawLog {
+        Self {
             logs: partial_log.logs.to_vec(),
             ..partial_log.parent.clone()
         }

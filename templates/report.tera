@@ -191,7 +191,7 @@
                     {%- for prob in player_probs -%}
                       <td>
                         <span title="{{ prob * 100 }}">
-                          {{- macros::render_decimal(num=prob * 100) -}}
+                          {{- macros::render_decimal(num=prob * 100, prec=3) -}}
                         </span>
                       </td>
                     {%- endfor -%}

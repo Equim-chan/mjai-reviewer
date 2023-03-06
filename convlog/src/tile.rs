@@ -21,10 +21,9 @@ const MJAI_PAI_STRINGS: [&str; MJAI_PAI_STRINGS_LEN] = [
 ];
 
 static MJAI_PAI_STRINGS_MAP: Lazy<BoomHashMap<&'static str, Tile>> = Lazy::new(|| {
-    let mut values = vec![];
-    for id in 0..MJAI_PAI_STRINGS_LEN {
-        values.push(Tile::try_from(id).unwrap());
-    }
+    let values = (0..MJAI_PAI_STRINGS_LEN)
+        .map(|id| Tile::try_from(id).unwrap())
+        .collect();
     BoomHashMap::new(MJAI_PAI_STRINGS.to_vec(), values)
 });
 
@@ -98,7 +97,16 @@ impl Tile {
 
     #[inline]
     #[must_use]
+    pub const fn is_unknown(self) -> bool {
+        self.0 >= tu8!(?)
+    }
+
+    #[inline]
+    #[must_use]
     pub const fn next(self) -> Self {
+        if self.is_unknown() {
+            return self;
+        }
         let tile = self.deaka();
         let kind = tile.0 / 9;
         let num = tile.0 % 9;
@@ -115,6 +123,9 @@ impl Tile {
     #[inline]
     #[must_use]
     pub const fn prev(self) -> Self {
+        if self.is_unknown() {
+            return self;
+        }
         let tile = self.deaka();
         let kind = tile.0 / 9;
         let num = tile.0 % 9;
@@ -164,7 +175,7 @@ impl TryFrom<usize> for Tile {
     type Error = InvalidTile;
 
     fn try_from(v: usize) -> Result<Self, Self::Error> {
-        if v > Tile::MAX {
+        if v > Self::MAX {
             Err(InvalidTile::Number(v))
         } else {
             // SAFETY: `v` has been proven to be in bound.

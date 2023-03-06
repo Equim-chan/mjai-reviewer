@@ -135,7 +135,7 @@ macro_rules! tu8 {
 
     ($($_:tt)*) => {
         ::std::compile_error!("invalid tile pattern");
-    };
+    }
 }
 
 /// Used for making const tile IDs in usize.
@@ -153,6 +153,7 @@ macro_rules! tuz {
 #[macro_export]
 macro_rules! t {
     ($s:tt) => {
+        // SAFETY: All possible values of `tu8!` are valid for `Tile`.
         unsafe { $crate::Tile::new_unchecked($crate::tu8!($s)) }
     };
     ($first:tt, $($left:tt),*) => {

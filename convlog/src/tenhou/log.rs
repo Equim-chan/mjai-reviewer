@@ -173,7 +173,7 @@ impl TryFrom<RawLog> for Log {
             kyokus.push(kyoku);
         }
 
-        Ok(Log {
+        Ok(Self {
             names,
             game_length,
             has_aka,

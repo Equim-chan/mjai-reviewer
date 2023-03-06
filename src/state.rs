@@ -15,7 +15,7 @@ pub struct State {
 impl State {
     #[inline]
     pub fn new(actor: u8) -> Self {
-        State {
+        Self {
             actor,
             ..Self::default()
         }

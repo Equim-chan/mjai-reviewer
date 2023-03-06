@@ -110,7 +110,7 @@ impl Reviewer<'_> {
             log!(
                 "$ {akochan_exe:?}{}",
                 args.iter()
-                    .fold("".to_owned(), |acc, p| format!("{acc} {p:?}")),
+                    .fold(String::new(), |acc, p| format!("{acc} {p:?}")),
             );
         }
 

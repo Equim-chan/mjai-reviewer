@@ -255,11 +255,7 @@ impl Reviewer<'_> {
             let output: RawAction =
                 json::from_str(&line).context("failed to parse JSON output of engine")?;
 
-            let meta = match output.meta {
-                Some(meta) => meta,
-                // rule-based eval, no meta, nothing to review
-                None => continue,
-            };
+            let Some(meta) = output.meta else { continue };
             let mask_bits = meta.mask_bits.context("missing mask_bits")?;
             if mask_bits.count_ones() <= 1 {
                 // cannot act, or there is only one candidate
@@ -270,15 +266,13 @@ impl Reviewer<'_> {
             let can_agari = masks[43];
             let can_ryukyoku = masks[44];
 
-            let actual = if let Some(ev) = next_action(
+            let Some(actual) = next_action(
                 &events[i + 1..],
                 player_id,
                 can_pon_or_daiminkan,
                 can_agari,
                 can_ryukyoku,
-            ) {
-                ev
-            } else {
+            ) else {
                 // interrupted
                 continue;
             };
@@ -465,22 +459,26 @@ fn masks_from_bits(bits: u64) -> [bool; 46] {
 /// It assumes they have the same actor.
 fn equal_ignore_aka_consumed(a: &Event, b: &Event) -> bool {
     match (a, b) {
-        (Event::Dahai { pai: l, .. }, Event::Dahai { pai: r, .. }) => l == r,
-        (Event::Reach { .. }, Event::Reach { .. }) => true,
+        (Event::Dahai { pai: l, .. }, Event::Dahai { pai: r, .. })
+        | (Event::Kakan { pai: l, .. }, Event::Kakan { pai: r, .. }) => l == r,
+
         (Event::Chi { consumed: l, .. }, Event::Chi { consumed: r, .. })
         | (Event::Pon { consumed: l, .. }, Event::Pon { consumed: r, .. }) => {
             tile_set_eq(l, r, true)
         }
+
         (Event::Daiminkan { consumed: l, .. }, Event::Daiminkan { consumed: r, .. }) => {
             tile_set_eq(l, r, true)
         }
         (Event::Ankan { consumed: l, .. }, Event::Ankan { consumed: r, .. }) => {
             tile_set_eq(l, r, true)
         }
-        (Event::Kakan { pai: l, .. }, Event::Kakan { pai: r, .. }) => l == r,
-        (Event::Hora { .. }, Event::Hora { .. })
+
+        (Event::Reach { .. }, Event::Reach { .. })
+        | (Event::Hora { .. }, Event::Hora { .. })
         | (Event::Ryukyoku { .. }, Event::Ryukyoku { .. })
         | (Event::None, Event::None) => true,
+
         _ => false,
     }
 }
