@@ -2,9 +2,10 @@ use crate::mjai::Event;
 use crate::t;
 use crate::tenhou::{ActionItem, EndStatus, Kyoku, Log, TenhouTile};
 use crate::Tile;
+use std::array;
 use std::collections::hash_map::Entry;
-use std::collections::HashMap;
 
+use ahash::AHashMap;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -88,18 +89,18 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
         .unzip();
 
     // Prepare for backtracks.
-    let mut backtracks = HashMap::new();
+    let mut backtracks = AHashMap::new();
 
     // Then emit the events in order.
     let oya = kyoku.meta.kyoku_num % 4;
     let bakaze = match kyoku.meta.kyoku_num / 4 {
-        0 => t![E],
-        1 => t![S],
-        2 => t![W],
-        _ => t![N],
+        0 => t!(E),
+        1 => t!(S),
+        2 => t!(W),
+        _ => t!(N),
     };
 
-    let attempt = |backtracks: &mut HashMap<Tile, BackTrack>| -> Result<Vec<Event>> {
+    let attempt = |backtracks: &mut AHashMap<Tile, BackTrack>| -> Result<Vec<Event>> {
         let mut events = vec![];
 
         let mut dora_feed = kyoku.dora_indicators.clone().into_iter();
@@ -116,17 +117,12 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
                 })?,
             oya,
             scores: kyoku.scoreboard,
-            tehais: [
-                kyoku.action_tables[0].haipai,
-                kyoku.action_tables[1].haipai,
-                kyoku.action_tables[2].haipai,
-                kyoku.action_tables[3].haipai,
-            ],
+            tehais: array::from_fn(|i| kyoku.action_tables[i].haipai),
         });
 
         let mut discard_sets: Vec<_> = (0..4)
             .map(|a| {
-                let mut m = HashMap::new();
+                let mut m = AHashMap::new();
                 for discard in &discard_events[a] {
                     if let Event::Dahai { pai, .. } = *discard {
                         m.entry(pai).and_modify(|v| *v += 1).or_insert(1);
@@ -135,11 +131,11 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
                 m
             })
             .collect();
-        let mut take_i = [0; 4];
-        let mut discard_i = [0; 4];
+        let mut take_idxs = [0; 4];
+        let mut discard_idxs = [0; 4];
 
         let mut reach_flag: Option<usize> = None;
-        let mut last_discard = t![?];
+        let mut last_discard = t!(?);
         let mut last_actor: Option<u8> = None;
         let mut need_new_dora_at_discard = false;
         // This is for Kakan only because chankan is possible until an actual
@@ -150,19 +146,20 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
 
         loop {
             // Start to process a take event.
-            let take =
-                take_events[actor]
-                    .get(take_i[actor])
-                    .ok_or(ConvertError::InsufficientTakes {
-                        kyoku: kyoku.meta.kyoku_num,
-                        honba: kyoku.meta.honba,
-                        actor: actor as u8,
-                    })?;
-            take_i[actor] += 1;
+            let take = take_events[actor].get(take_idxs[actor]).ok_or(
+                ConvertError::InsufficientTakes {
+                    kyoku: kyoku.meta.kyoku_num,
+                    honba: kyoku.meta.honba,
+                    actor: actor as u8,
+                },
+            )?;
+            take_idxs[actor] += 1;
 
             if let Some((target, pai)) = take.naki_info() {
                 if pai != last_discard
-                    || matches!(last_actor, Some(a) if a != target || a == actor as u8)
+                    || last_actor
+                        .filter(|&a| a != target || a == actor as u8)
+                        .is_some()
                 {
                     return Err(ConvertError::UnexpectedNaki {
                         action: take.clone(),
@@ -184,6 +181,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
             // from the same actor.
             match *take {
                 Event::Daiminkan { .. } => {
+                    // Not sure if this is really needed.
                     if need_new_dora_at_discard {
                         events.push(Event::Dora {
                             dora_marker: dora_feed.next().ok_or(
@@ -222,21 +220,21 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
 
             // Check if the kyoku ends here, can be ryukyoku (九種九牌) or tsumo.
             // Here it simply checks if there is no more discard for current actor.
-            if discard_i[actor] >= discard_events[actor].len() {
+            if discard_idxs[actor] >= discard_events[actor].len() {
                 end_kyoku(&mut events, kyoku);
                 break;
             }
 
             // Start to process a discard event.
             let discard = discard_events[actor]
-                .get(discard_i[actor])
+                .get(discard_idxs[actor])
                 .ok_or(ConvertError::InsufficientDiscards {
                     kyoku: kyoku.meta.kyoku_num,
                     honba: kyoku.meta.honba,
                     actor: actor as u8,
                 })?
                 .clone();
-            discard_i[actor] += 1;
+            discard_idxs[actor] += 1;
 
             // Record the pai to check if someone naki it.
             if let Event::Dahai { pai, .. } = discard {
@@ -277,14 +275,14 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
                 reach_flag = Some(actor);
 
                 let dahai = discard_events[actor]
-                    .get(discard_i[actor])
+                    .get(discard_idxs[actor])
                     .ok_or(ConvertError::InsufficientDiscards {
                         kyoku: kyoku.meta.kyoku_num,
                         honba: kyoku.meta.honba,
                         actor: actor as u8,
                     })?
                     .clone();
-                discard_i[actor] += 1;
+                discard_idxs[actor] += 1;
                 if let Event::Dahai { pai, .. } = dahai {
                     last_discard = pai;
                     discard_sets[actor].entry(pai).and_modify(|v| *v -= 1);
@@ -296,7 +294,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
             //
             // Here it simply checks if there is no more take for every single
             // actor.
-            if (0..4).all(|a| take_i[a] >= take_events[a].len()) {
+            if (0..4).all(|a| take_idxs[a] >= take_events[a].len()) {
                 end_kyoku(&mut events, kyoku);
                 break;
             }
@@ -338,7 +336,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
                 // First pass, filter the naki that takes the specific tile from the
                 // specific target.
                 .filter_map(|a| {
-                    if let Some(take) = take_events[a].get(take_i[a]) {
+                    if let Some(take) = take_events[a].get(take_idxs[a]) {
                         if let Some((target, pai)) = take.naki_info() {
                             if target == (actor as u8) && pai == last_discard {
                                 return Some((a, take.naki_to_ord()));
@@ -375,14 +373,16 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
                 //
                 // I really can't think of a better way to solve this.
                 .and_then(|a| {
-                    if discard_i[actor] >= discard_events[actor].len() {
+                    if discard_idxs[actor] >= discard_events[actor].len() {
                         // There is no more discard for this actor, so no chance for
                         // the problem to exist.
                         return Some(a);
                     }
 
-                    let has_same_dahai_in_future =
-                        matches!(discard_sets[actor].get(&last_discard), Some(&v) if v > 0);
+                    let has_same_dahai_in_future = discard_sets[actor]
+                        .get(&last_discard)
+                        .filter(|&&v| v > 0)
+                        .is_some();
                     if !has_same_dahai_in_future {
                         // no candidate
                         return Some(a);
@@ -477,7 +477,7 @@ fn finalize_discards(takes: &[Event], discards: &mut Vec<Event>) {
                         actor,
                     }
                 }
-            } else if pai == t![?] {
+            } else if pai == t!(?) {
                 // `take` is daiminkan, skip one discard and immediately consume
                 // the next take.
                 discards.remove(di);
@@ -639,7 +639,7 @@ fn discard_action_to_events(actor: u8, discards: &[ActionItem]) -> Result<Vec<Ev
             ActionItem::Tsumogiri(_) => {
                 let ev = Event::Dahai {
                     actor,
-                    pai: t![?], // must be filled later
+                    pai: t!(?), // must be filled later
                     tsumogiri: true,
                 };
 
@@ -731,7 +731,7 @@ fn discard_action_to_events(actor: u8, discards: &[ActionItem]) -> Result<Vec<Ev
                     }
 
                     let pai = if &naki[1..3] == b"60" {
-                        t![?]
+                        t!(?)
                     } else {
                         tiles_from_tenhou_bytes(&naki[1..3])?
                     };
@@ -740,7 +740,7 @@ fn discard_action_to_events(actor: u8, discards: &[ActionItem]) -> Result<Vec<Ev
                     ret.push(Event::Dahai {
                         actor,
                         pai, // must be filled later if it is tsumogiri
-                        tsumogiri: pai == t![?],
+                        tsumogiri: pai == t!(?),
                     });
                 }
             }

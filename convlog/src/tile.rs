@@ -1,12 +1,11 @@
 // This file is a derived version of Mortal:/libriichi/src/tile.rs
 
 use crate::{matches_tu8, t, tu8};
-use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt;
 use std::str::FromStr;
 
-use boomphf::hashmap::BoomHashMap;
+use ahash::AHashMap;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -20,19 +19,18 @@ const MJAI_PAI_STRINGS: [&str; MJAI_PAI_STRINGS_LEN] = [
     "?",   // unknown
 ];
 
-static MJAI_PAI_STRINGS_MAP: Lazy<BoomHashMap<&'static str, Tile>> = Lazy::new(|| {
-    let values = (0..MJAI_PAI_STRINGS_LEN)
-        .map(|id| Tile::try_from(id).unwrap())
-        .collect();
-    BoomHashMap::new(MJAI_PAI_STRINGS.to_vec(), values)
+static MJAI_PAI_STRINGS_MAP: Lazy<AHashMap<&'static str, Tile>> = Lazy::new(|| {
+    MJAI_PAI_STRINGS
+        .iter()
+        .enumerate()
+        .map(|(id, &s)| (s, Tile::try_from(id).unwrap()))
+        .collect()
 });
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Tile(u8);
 
 impl Tile {
-    const MAX: usize = MJAI_PAI_STRINGS_LEN - 1;
-
     /// # Safety
     /// Calling this method with an out-of-bounds tile ID is undefined behavior.
     #[inline]
@@ -138,21 +136,24 @@ impl Tile {
         }
     }
 
-    const fn as_ord(self) -> impl Ord {
-        let id = self.0;
-        match id {
-            tu8!(5mr) => 4,
-            tu8!(5pr) => 14,
-            tu8!(5sr) => 24,
-            _ => {
-                let kind = id / 9;
-                let num = id % 9;
-                let ord_id = kind * 10 + num;
-                match ord_id {
-                    4..=8 | 14..=18 | 24..=28 => ord_id + 1,
-                    _ => ord_id,
-                }
-            }
+    #[inline]
+    #[must_use]
+    pub const fn augment(self) -> Self {
+        if self.is_unknown() {
+            return self;
+        }
+        let tile = self.deaka();
+        let tid = tile.0;
+        let kind = tid / 9;
+        let ret = match kind {
+            0 => Self(tid + 9),
+            1 => Self(tid - 9),
+            _ => tile,
+        };
+        if self.is_aka() {
+            ret.akaize()
+        } else {
+            ret
         }
     }
 }
@@ -175,7 +176,7 @@ impl TryFrom<usize> for Tile {
     type Error = InvalidTile;
 
     fn try_from(v: usize) -> Result<Self, Self::Error> {
-        if v > Self::MAX {
+        if v >= MJAI_PAI_STRINGS_LEN {
             Err(InvalidTile::Number(v))
         } else {
             // SAFETY: `v` has been proven to be in bound.
@@ -231,18 +232,6 @@ impl Serialize for Tile {
     }
 }
 
-impl Ord for Tile {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.as_ord().cmp(&other.as_ord())
-    }
-}
-
-impl PartialOrd for Tile {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 impl fmt::Display for InvalidTile {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("not a valid tile: ")?;
@@ -254,6 +243,73 @@ impl fmt::Display for InvalidTile {
 }
 
 impl Error for InvalidTile {}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn convert() {
+        "E".parse::<Tile>().unwrap();
+        "5mr".parse::<Tile>().unwrap();
+        "?".parse::<Tile>().unwrap();
+        Tile::try_from(0_u8).unwrap();
+        Tile::try_from(36_u8).unwrap();
+        Tile::try_from(37_u8).unwrap();
+
+        "".parse::<Tile>().unwrap_err();
+        "0s".parse::<Tile>().unwrap_err();
+        "!".parse::<Tile>().unwrap_err();
+        Tile::try_from(38_u8).unwrap_err();
+        Tile::try_from(u8::MAX).unwrap_err();
+    }
+
+    #[test]
+    fn next_prev() {
+        MJAI_PAI_STRINGS.iter().take(37).for_each(|&s| {
+            let tile: Tile = s.parse().unwrap();
+            assert_eq!(tile.prev().next(), tile.deaka());
+            assert_eq!(tile.next().prev(), tile.deaka());
+        });
+    }
+}
+
+/**
+ * Added in mjai-reviewer
+ */
+use std::cmp::Ordering;
+
+impl Tile {
+    const fn as_ord(self) -> impl Ord {
+        let id = self.0;
+        match id {
+            tu8!(5mr) => 4,
+            tu8!(5pr) => 14,
+            tu8!(5sr) => 24,
+            _ => {
+                let kind = id / 9;
+                let num = id % 9;
+                let ord_id = kind * 10 + num;
+                match ord_id {
+                    4..=8 | 14..=18 | 24..=28 => ord_id + 1,
+                    _ => ord_id,
+                }
+            }
+        }
+    }
+}
+
+impl PartialOrd for Tile {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Tile {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_ord().cmp(&other.as_ord())
+    }
+}
 
 #[must_use]
 pub fn tile_set_eq(a: &[Tile], b: &[Tile], ignore_aka: bool) -> bool {
@@ -273,18 +329,4 @@ pub fn tile_set_eq(a: &[Tile], b: &[Tile], ignore_aka: bool) -> bool {
     }
 
     a_bits == b_bits
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn next_prev() {
-        MJAI_PAI_STRINGS.iter().take(37).for_each(|&s| {
-            let tile: Tile = s.parse().unwrap();
-            assert_eq!(tile.prev().next(), tile.deaka());
-            assert_eq!(tile.next().prev(), tile.deaka());
-        });
-    }
 }

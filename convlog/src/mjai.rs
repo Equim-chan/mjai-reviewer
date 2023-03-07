@@ -123,7 +123,7 @@ impl Event {
     }
 
     #[inline]
-    pub(crate) fn naki_to_ord(&self) -> isize {
+    pub(crate) fn naki_to_ord(&self) -> i8 {
         match *self {
             Self::Chi { .. } => 0,
             Self::Pon { .. } => 1,
