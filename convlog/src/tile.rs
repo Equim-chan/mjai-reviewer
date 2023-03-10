@@ -27,8 +27,14 @@ static MJAI_PAI_STRINGS_MAP: Lazy<AHashMap<&'static str, Tile>> = Lazy::new(|| {
         .collect()
 });
 
-#[derive(Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Tile(u8);
+
+#[derive(Debug)]
+pub enum InvalidTile {
+    Number(usize),
+    String(String),
+}
 
 impl Tile {
     /// # Safety
@@ -158,10 +164,10 @@ impl Tile {
     }
 }
 
-#[derive(Debug)]
-pub enum InvalidTile {
-    Number(usize),
-    String(String),
+impl Default for Tile {
+    fn default() -> Self {
+        t!(?)
+    }
 }
 
 impl TryFrom<u8> for Tile {
