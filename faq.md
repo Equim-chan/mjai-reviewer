@@ -6,9 +6,9 @@ No, it can't. Three-player mahjong is a completely different game.
 pt refers to the same concept of Tenhou ranking pt. Simply put, they are the weighted version of final placements at the end of the game. $[90,45,0,-135]$ is the pt distribution for a 7 dan player in Tenhou houou hanchan.
 
 ## How good are the engines in mahjong?
-I have **absolutely no idea** on how strong Mortal or akochan is in general human criteria such as "xxx dan on Tenhou". The reason is obvious and simple: Tenhou (and Mahjong Soul too) probably won't allow an AI that is developed by an individual, to play on their platforms in ranked lobbies.
+Unfortunately, I don't know, because I can't find a legitimate way to test it.
 
-If you really want to know the answer, you could ask Tenhou or Mahjong Soul officials to let them permit individual developed AIs (preferably Mortal) to legitimately play in their ranked lobbies.
+Tenhou rejected my AI account request for Mortal because Mortal was developed by an individual rather than a company.
 
 ### But I have seen some accounts claim to be Mortal/akochan on some online platforms?
 I (Equim) have no affiliation to them. I am not running any AI in ranked lobbies and will not do so until an official permission is granted.
@@ -36,9 +36,9 @@ For instance, if the game has pt setting $w$ and the players' scores are $[29000
 | West | 27200 | 24.857 | 29.048 | 31.777 | 14.317 |
 | North | 29600 | 37.990 | 28.533 | 23.800 | 9.677 |
 
-Note that these probabilities are esitmates of the **final** rankings at the end of the *game*, not after the current *kyoku*.
+Note that these probabilities are esitmates of the **final** rankings at the end of the whole *game*, not after the current *kyoku*.
 
-To get the $\Phi_k$​ value for South 1, we multiply the probabilities with the pt setting: $[0.29532, 0.32512, 0.27416, 0.10539] \cdot w$.
+To get the $\Phi_k$​ value for the player sitting in the East seat at South 1, we multiply the probabilities with the pt setting, specifically $[0.29532, 0.32512, 0.27416, 0.10539] \cdot w$.
 It's important to note that Mortal models do not guarantee to use a fixed pt setting throughout its training.
 
 $\hat Q^\pi(s, a)$ is the [Q values](https://en.wikipedia.org/wiki/Q-learning) evaluated by the model,
