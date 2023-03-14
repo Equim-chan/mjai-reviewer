@@ -163,17 +163,17 @@
         {%- if engine == "Mortal" -%}
           <details class="collapse" open>
             <summary>
-              <th>Final placement EV at {{ kyoku_str }} start</th>
+              <th>Final ranking probs at the start of {{ kyoku_str }}</th>
             </summary>
             <table border="1" cellspacing="0" cellpadding="0" class="data">
               <thead>
                 <tr>
                   <th>Player</th>
-                  <th>score</th>
-                  <th>1st prob%</th>
-                  <th>2nd prob%</th>
-                  <th>3rd prob%</th>
-                  <th>4th prob%</th>
+                  <th>Score</th>
+                  <th>1st place (%)</th>
+                  <th>2nd place (%)</th>
+                  <th>3rd place (%)</th>
+                  <th>4th place (%)</th>
                 </tr>
               </thead>
               <tbody>
@@ -190,9 +190,8 @@
                     </td>
                     {%- for prob in player_probs -%}
                       <td>
-                        <span title="{{ prob * 100 }}">
-                          {{- macros::render_decimal(num=prob * 100, prec=3) -}}
-                        </span>
+                        {# <span title="{{ prob * 100 }}"> #}
+                        {{- macros::render_decimal(num=prob * 100, prec=3) -}}
                       </td>
                     {%- endfor -%}
                   </tr>
@@ -289,14 +288,12 @@
                           {{- macros::render_action(action=detail.action) -}}
                         </td>
                         <td>
-                          <span title="{{ detail.q_value }}">
-                            {{- macros::render_decimal(num=detail.q_value) -}}
-                          </span>
+                          {# <span title="{{ detail.q_value }}"> #}
+                          {{- macros::render_decimal(num=detail.q_value) -}}
                         </td>
                         <td>
-                          <span title="{{ detail.prob * 100 }}">
-                            {{- macros::render_decimal(num=detail.prob * 100) -}}
-                          </span>
+                          {# <span title="{{ detail.prob * 100 }}"> #}
+                          {{- macros::render_decimal(num=detail.prob * 100) -}}
                         </td>
                       {%- elif engine == "Akochan" -%}
                         <td>
@@ -305,18 +302,16 @@
                         <td>
                           {%- if detail.review.pt_exp_total is number -%}
                             {%- set val = detail.review.pt_exp_total -%}
-                            <span title="{{ val }}">
-                              {{- macros::render_decimal(num=val) -}}
-                            </span>
+                            {# <span title="{{ val }}"> #}
+                            {{- macros::render_decimal(num=val) -}}
                           {%- else -%}
                             N/A
                           {%- endif -%}
                         </td>
                         <td>
                           {%- if detail.review.total_houjuu_hai_prob_now is number -%}
-                            <span title="{{ detail.review.total_houjuu_hai_prob_now * 100 }}">
-                              {{- macros::render_decimal(num=detail.review.total_houjuu_hai_prob_now * 100) -}}
-                            </span>
+                            {# <span title="{{ detail.review.total_houjuu_hai_prob_now * 100 }}"> #}
+                            {{- macros::render_decimal(num=detail.review.total_houjuu_hai_prob_now * 100) -}}
                           {%- else -%}
                             N/A
                           {%- endif -%}
@@ -324,9 +319,8 @@
                         <td>
                           {%- if detail.review.total_houjuu_hai_value_now is number -%}
                             {%- set val = detail.review.total_houjuu_hai_value_now -%}
-                            <span title="{{ val }}">
-                              {{- macros::render_decimal(num=val) -}}
-                            </span>
+                            {# <span title="{{ val }}"> #}
+                            {{- macros::render_decimal(num=val) -}}
                           {%- else -%}
                             N/A
                           {%- endif -%}
@@ -334,9 +328,8 @@
                         <td>
                           {%- if detail.review.pt_exp_after is number -%}
                             {%- set val = detail.review.pt_exp_after -%}
-                            <span title="{{ val }}">
-                              {{- macros::render_decimal(num=val) -}}
-                            </span>
+                            {# <span title="{{ val }}"> #}
+                            {{- macros::render_decimal(num=val) -}}
                           {%- else -%}
                             N/A
                           {%- endif -%}

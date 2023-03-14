@@ -25,17 +25,32 @@ If you're referring to the deal-in rate column in akochan, Mortal does not have 
 ## (Mortal) What do the notations mean?
 $P_k^p$ is a vector that consists of 4 possibility values for player $p$ to achieve the 4 corresponding placements, estimated at the start of kyoku $k$ in this game.
 
-$\Phi_k$ is the pt EV, estimated at the start of kyoku $k$ in this game.
+$\Phi_k$​ represents the estimated pt EV at the start of kyoku $k$ in a game. This value is determined using a separate model that takes into account the current scores pf all players, as well as basic board status such as kyoku, honba and kyotaku.
+
+For instance, if the game has pt setting $w$ and the players' scores are $[29000,14200,27200,29600]$ in South 1, then the estimation is shown in the table below:
+
+| Player | Score | 1st place (%) | 2nd place (%) | 3rd place (%) | 4th place (%) |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| East | 29000 | 29.532 | 32.512 | 27.416 | 10.539 |
+| South | 14200 | 7.621 | 9.907 | 17.006 | 65.466 |
+| West | 27200 | 24.857 | 29.048 | 31.777 | 14.317 |
+| North | 29600 | 37.990 | 28.533 | 23.800 | 9.677 |
+
+Note that these probabilities are esitmates of the **final** rankings at the end of the *game*, not after the current *kyoku*.
+
+To get the $\Phi_k$​ value for South 1, we multiply the probabilities with the pt setting: $[0.29532, 0.32512, 0.27416, 0.10539] \cdot w$.
+It's important to note that Mortal models do not guarantee to use a fixed pt setting throughout its training.
 
 $\hat Q^\pi(s, a)$ is the [Q values](https://en.wikipedia.org/wiki/Q-learning) evaluated by the model,
-at the $i$-th state of kyoku $k$ in this game,
-with $\pi$ representing the policy of the model. The target of Q value optimization for Mortal is $\Phi_{k+1} - \Phi_k$,
-so theoretically $\hat Q^\pi(s, a) + \Phi_k$ is an estimation to the pt EV.
+at state $s$ in kyoku $k$,
+where $\pi$ is the policy of the agent.
+The optimization target for $\hat Q^\pi(s, a)$ is
+$\Phi_{k+1} - \Phi_k$​, which is the delta of pt EV between two consecutive kyokus.
 
 $\pi_\tau(a|s)$, in simple terms, can be thought of something similar to the heights of the bar on each tile in hand in NAGA's reviewer, though technically Mortal differs from NAGA in terms of how this distribution is produced and used. It is the output of a softmax function which takes categorical Q values produced by Mortal and then transforms them into a discrete probability distribution, calculated as
 
 $$\pi_\tau(a|s) = \frac{\exp(\hat Q^\pi(s, a) / \tau)}{\sum_i \exp(\hat Q^\pi(s, a_i) / \tau)}$$
-where $\tau$ is a parameter representing temperature.
+where $\tau$ is temperature.
 
 Wrapping up, $\hat Q^\pi(s, a)$ is only for advanced users, because it can be very misleading if the user does not understand the subtle details of how Mortal works under the hood. I have been considering whether to just remove the column or not, but in the end I decided to keep it as is. <ins>Just look up $\pi_\tau(a|s)$ as it is easier to understand.</ins>
 
