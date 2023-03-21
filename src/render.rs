@@ -103,10 +103,13 @@ fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {
         .and_then(|n| n.as_f64())
         .ok_or_else(|| tera::Error::msg("missing or invalid argument `num`"))?;
 
-    let prec = args.get("prec").and_then(|p| p.as_u64()).unwrap_or(5) as usize;
+    let prec = args.get("prec").and_then(|p| p.as_u64()).unwrap_or(5);
     let split = args.get("split").and_then(|p| p.as_bool()).unwrap_or(false);
 
-    let s = format!("{num:.prec$}");
+    let multiplier = 10_f64.powi(prec as i32);
+    let num = (num * multiplier).round() / multiplier;
+
+    let s = format!("{num:.0$}", prec as usize);
     if !split {
         return Ok(Value::String(s));
     }
