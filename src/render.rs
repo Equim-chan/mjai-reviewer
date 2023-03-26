@@ -1,6 +1,7 @@
 use crate::opts::Engine;
 use crate::review::Review;
 use convlog::tenhou::{GameLength, RawPartialLog};
+use fluent_templates::{loader::langid, Loader, FluentLoader};
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::time::Duration;
@@ -13,12 +14,25 @@ use serde_json::Value;
 use serde_with::skip_serializing_none;
 use tera::Tera;
 
+fluent_templates::static_loader! {
+    // Declare our `StaticLoader` named `LOCALES`.
+    static LOCALES = {
+        // The directory of localisations and fluent resources.
+        locales: "./locales",
+        // The language to falback on if something is not present.
+        fallback_language: "en-US",
+        // Optional: A fluent resource that is shared with every locale.
+        // core_locales: "./tests/locales/core.ftl",
+    };
+}
+
 static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
     let mut tera = Tera::default();
     tera.autoescape_on(vec![".tera", ".html"]);
 
     tera.register_function("kyoku_to_string", kyoku_to_string);
     tera.register_function("pretty_round", pretty_round);
+    tera.register_function("fluent", FluentLoader::new(&*LOCALES).with_default_lang(langid!("ja")));
 
     tera.add_raw_templates([
         ("macros.tera", include_str!("../templates/macros.tera")),
@@ -89,12 +103,18 @@ fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
         .ok_or_else(|| tera::Error::msg("missing or invalid argument `honba`"))?
         as usize;
 
-    let s = if honba == 0 {
-        format!("{} {}", BAKAZE[kyoku / 4], kyoku % 4 + 1)
-    } else {
-        format!("{} {}-{}", BAKAZE[kyoku / 4], kyoku % 4 + 1, honba)
+    let args = {
+        let mut map = HashMap::new();
+        map.insert(String::from("bakaze"), BAKAZE[kyoku / 4].into());
+        map.insert(String::from("kyoku"), (kyoku % 4 + 1).into());
+        map.insert(String::from("honba"), honba.into());
+        map
     };
-    Ok(Value::String(s))
+    if let Some(s) = LOCALES.lookup_with_args(&langid!("ja"), "kyoku", &args) {
+        Ok(Value::String(s))
+    } else {
+        Err(tera::Error::msg("failed to lookup kyoku"))
+    }
 }
 
 fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {

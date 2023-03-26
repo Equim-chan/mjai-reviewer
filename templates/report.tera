@@ -203,7 +203,7 @@
 
         {%- if item.entries | length == 0 -%}
           <details class="collapse">
-            <summary>Turn 0</summary>
+            <summary>{{- fluent(key = "turn", junme = 0, tiles_left = 0) -}}</summary>
           </details>
         {%- endif -%}
 
@@ -212,7 +212,7 @@
             {%- set mark_red = not entry.is_equal -%}
             <details class="collapse entry" {% if mark_red %} data-mark-red open {% endif %}>
               <summary>
-                Turn {{ entry.junme }} (×{{ entry.tiles_left }})
+                {{- fluent(key = "turn", junme = entry.junme, tiles_left = entry.tiles_left) -}}
                 <span class="turn-info">
                   &nbsp;&nbsp;&nbsp;
                   {%- if entry.shanten == 0 -%}
@@ -236,7 +236,7 @@
             {%- set mark_red = entry.acceptance == "disagree" -%}
             <details class="collapse entry" {% if mark_red %} data-mark-red open {% endif %}>
               <summary>
-                Turn {{ entry.junme }} (×{{ entry.tiles_left }})
+                {{- fluent(key = "turn", junme = entry.junme, tiles_left = entry.tiles_left) -}}
                 {%- if entry.acceptance == "disagree" -%}
                   &nbsp;&nbsp;&nbsp;❌
                 {%- elif entry.acceptance == "tolerable" -%}
