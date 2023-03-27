@@ -116,7 +116,7 @@ use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, ensure, Context, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use serde_json as json;
 
 macro_rules! canonicalize {
@@ -165,6 +165,7 @@ fn main() -> Result<()> {
                 without_log_viewer,
                 anonymous,
                 no_open,
+                lang,
             },
         mortal_opts:
             MortalOptions {
@@ -412,6 +413,7 @@ fn main() -> Result<()> {
     let loading_time =
         (begin_review.trunc_subsecs(3) - begin_convert_log.trunc_subsecs(3)).to_std()?;
     let review_time = (now.trunc_subsecs(3) - begin_review.trunc_subsecs(3)).to_std()?;
+    let lang_value = lang.to_possible_value().unwrap();
 
     // render the HTML report page or JSON
     let view = View {
@@ -427,6 +429,7 @@ fn main() -> Result<()> {
         player_id,
 
         splited_logs: splitted_raw_logs.as_deref(),
+        lang: lang_value.get_name(),
     };
     log!("writing output...");
     if json {

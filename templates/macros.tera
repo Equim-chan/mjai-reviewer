@@ -15,6 +15,15 @@
   {{- self::seat_rel(target=rel) -}}
 {%- endmacro seat -%}
 
+{%- macro kyoku_to_string(kyoku, honba) -%}
+  {{- fluent(
+    key = "kyoku",
+    bakaze = kyoku_to_bakaze(kyoku = kyoku),
+    kyoku_in_bakaze = kyoku_to_kyoku_in_bakaze(kyoku = kyoku),
+    honba = honba,
+  ) -}}
+{%- endmacro kyoku_to_string -%}
+
 {%- macro render_tile(tile) -%}
   {%- if tile == "back" -%}
     <svg class="tile">
@@ -119,20 +128,20 @@
         <li>{{ self::render_tile(tile=tile) }}</li>
       {%- elif entry.at_self_riichi -%}
         {#- right after a riichi declare -#}
-        <li class="tsumo" before="Draw " after=" and declares riichi">{{ self::render_tile(tile=tile) }}</li>
+        <li class="tsumo" before="{{ fluent(key = "tehai-draw") }} " after=" and declares riichi">{{ self::render_tile(tile=tile) }}</li>
       {%- elif entry.last_actor == player_id -%}
         {#- nothing special, just a self tsumo -#}
-        <li class="tsumo" before="Draw ">{{ self::render_tile(tile=tile) }}</li>
+        <li class="tsumo" before="{{ fluent(key = "tehai-draw") }} ">{{ self::render_tile(tile=tile) }}</li>
       {%- else -%}
         {#- fuuro review in which the last active player is not self -#}
         <li>{{ self::render_tile(tile=tile) }}</li>
         {%- set content = self::seat(target=entry.last_actor) -%}
         {%- if entry.at_opponent_kakan -%}
-          {%- set content = content ~ " kans " -%}
+          {%- set content = fluent(key = "tehai-kans", player = content) -%}
         {%- else -%}
-          {%- set content = content ~ " cuts " -%}
+          {%- set content = fluent(key = "tehai-cuts", player = content) -%}
         {%- endif -%}
-        <li class="tsumo" before="{{ content }}">{{ self::render_tile(tile=entry.tile) }}</li>
+        <li class="tsumo" before="{{ content }} ">{{ self::render_tile(tile=entry.tile) }}</li>
       {%- endif -%}
     {%- endfor -%}
 

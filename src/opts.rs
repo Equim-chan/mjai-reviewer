@@ -109,6 +109,10 @@ pub struct OutputOptions {
     #[clap(long)]
     pub json: bool,
 
+    /// The language to use for the generated HTML report.
+    #[clap(long, default_value = "en")]
+    pub lang: Language,
+
     /// Whether or not to include rating.
     #[clap(long)]
     pub show_rating: bool,
@@ -124,6 +128,18 @@ pub struct OutputOptions {
     /// Do not automatically open the output file in browser.
     #[clap(long)]
     pub no_open: bool,
+}
+
+#[derive(Debug, Clone, Serialize, ValueEnum)]
+pub enum Language {
+  #[clap(name = "en")]
+  En,
+  #[clap(name = "en-US")]
+  EnUS,
+  #[clap(name = "ja")]
+  Ja,
+  #[clap(name = "ja-JP")]
+  JaJP,
 }
 
 #[derive(Debug, Args)]
