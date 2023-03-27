@@ -12,9 +12,9 @@ action-tsumo = Tsumo
 
 donate-header = Donate
 
-end-status-ron = {action-ron} by {$seat}{$delta}
+end-status-ron = {action-ron} by{"\u00a0"}{$seat}{$delta}
 end-status-ryuukyoku = {action-ryuukyoku}
-end-status-tsumo = {action-tsumo} by {$seat}{$delta}
+end-status-tsumo = {action-tsumo} by{"\u00a0"}{$seat}{$delta}
 
 final-ranking-probs-at-the-start-of-kyoku = Final ranking probs at the start of {$kyoku}
 
@@ -78,7 +78,7 @@ title = Replay Examination
 turn =
     Turn {$junme}{$junme ->
         [0] {""}
-        *[other] (×{$tiles-left})
+        *[other] {" "}(×{$tiles-left})
     }
 
 turn-info-furiten = (furiten)

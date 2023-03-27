@@ -45,7 +45,7 @@
   {%- if action.type == "none" -%}
     {{- fluent(key = "action-pass") -}}
   {%- elif action.type == "dahai" -%}
-    {{- fluent(key = "action-discard") -}}
+    {{- fluent(key = "action-discard") }}
     {{ self::render_tile(tile=action.pai) }}
   {%- elif action.type == "reach" -%}
     {{- fluent(key = "action-riichi") -}}
@@ -59,17 +59,17 @@
     {%- for tile in action.consumed -%}
       {{- self::render_tile(tile=tile) -}}
     {% endfor %}
-    {{- fluent(key = "action-chii") -}}
+    {{ fluent(key = "action-chii") -}}
   {%- elif action.type == "pon" -%}
     {%- for tile in action.consumed -%}
       {{- self::render_tile(tile=tile) -}}
     {% endfor %}
-    {{- fluent(key = "action-pon") -}}
+    {{ fluent(key = "action-pon") -}}
   {%- elif action.type == "kakan" or action.type == "daiminkan" -%}
-    {{- fluent(key = "action-kan") -}}
+    {{- fluent(key = "action-kan") }}
     {{ self::render_tile(tile=action.pai) }}
   {%- elif action.type == "ankan" -%}
-    {{- fluent(key = "action-kan") -}}
+    {{- fluent(key = "action-kan") }}
     {{ self::render_tile(tile=action.consumed[0]) }}
   {%- elif action.type == "ryukyoku" -%}
     {{- fluent(key = "action-ryuukyoku") -}}
@@ -78,20 +78,20 @@
 
 {%- macro render_action_tuple(actions) -%}
   {%- if actions[0].type == "reach" -%}
-    {{- fluent(key = "action-discard") -}}
+    {{- fluent(key = "action-discard") }}
     {{ self::render_tile(tile=actions[1].pai) }}
-    {{- fluent(key = "action-riichi") -}}
+    {{ fluent(key = "action-riichi") -}}
   {%- elif actions[0].type == "chi" -%}
     {%- for tile in actions[0].consumed -%}
       {{- self::render_tile(tile=tile) -}}
     {% endfor %}
-    {{- fluent(key = "action-chiicut") -}}
+    {{ fluent(key = "action-chiicut") }}
     {{ self::render_tile(tile=actions[1].pai) }}
   {%- elif actions[0].type == "pon" -%}
     {%- for tile in actions[0].consumed -%}
       {{- self::render_tile(tile=tile) -}}
     {% endfor %}
-    {{- fluent(key = "action-poncut") -}}
+    {{ fluent(key = "action-poncut") }}
     {{ self::render_tile(tile=actions[1].pai) }}
   {%- else -%}
     {{- self::render_action(action=actions[0]) -}}

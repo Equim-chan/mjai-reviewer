@@ -11,9 +11,9 @@ action-tsumo = ツモ
 
 donate-header = 寄付
 
-end-status-ron = {$seat} {action-ron} {$delta}
+end-status-ron = {$seat}{"\u00a0"}{action-ron} {$delta}
 end-status-ryuukyoku = {action-ryuukyoku}
-end-status-tsumo = {$seat} {action-tsumo} {$delta}
+end-status-tsumo = {$seat}{"\u00a0"}{action-tsumo} {$delta}
 
 final-ranking-probs-at-the-start-of-kyoku = {$kyoku}開始時点の最終順位確率
 

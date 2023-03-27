@@ -15,14 +15,10 @@ use serde_with::skip_serializing_none;
 use tera::Tera;
 
 fluent_templates::static_loader! {
-    // Declare our `StaticLoader` named `LOCALES`.
     static LOCALES = {
-        // The directory of localisations and fluent resources.
         locales: "./locales",
-        // The language to falback on if something is not present.
         fallback_language: "en-US",
-        // Optional: A fluent resource that is shared with every locale.
-        // core_locales: "./tests/locales/core.ftl",
+        customise: |bundle| bundle.set_use_isolating(false),
     };
 }
 
