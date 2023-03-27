@@ -17,7 +17,7 @@ end-status-tsumo = {$seat}{"\u00a0"}{action-tsumo} {$delta}
 
 final-ranking-probs-at-the-start-of-kyoku = {$kyoku}開始時点の最終順位確率
 
-game-summary-header = 対局の概要
+game-summary-header = 目次
 
 help-header = ヘルプ
 
@@ -74,7 +74,7 @@ tenhou-net-6-json-log-header = tenhou.net/6 JSON ログ
 tenhou-net-6-paste-instruction-before-link = {""}
 tenhou-net-6-paste-instruction-after-link = {" "}の EDIT AS TEXT に貼り付けられます。
 
-title = 牌譜レビュー
+title = 牌譜検討
 
 turn =
     {$junme}巡目 {$junme ->

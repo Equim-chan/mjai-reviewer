@@ -50,10 +50,10 @@ panel-layout-vertical = Vertical
 panel-save-this-page = 💾Save this page
 
 place-percentage =
-    {NUMBER($rank, type: "ordinal") ->
-        [one] {$rank}st
-        [two] {$rank}nd
-        [few] {$rank}rd
+    {$rank ->
+        [1] {$rank}st
+        [2] {$rank}nd
+        [3] {$rank}rd
         *[other] {$rank}th
     } place (%)
 

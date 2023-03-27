@@ -8,7 +8,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">
-  <title>Replay Examination</title>
+  <title>{{- fluent(key = "title") -}}</title>
   <script src="https://unpkg.com/katex@0.16.4/dist/katex.min.js" defer
     integrity="sha256-hj447pxoq07J81z91mvNVKDDo2MTZf370GozMVGIfIA=" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/katex@0.16.4/dist/contrib/auto-render.min.js" defer
