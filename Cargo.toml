@@ -22,6 +22,7 @@ humantime-serde = "1"
 url = "2"
 serde_with = "2"
 minify-html = "0.10"
+fluent-templates = { version = "0.8.0", features = ["tera"] }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 

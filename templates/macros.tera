@@ -1,12 +1,12 @@
 {%- macro seat_rel(target) -%}
   {%- if target == 0 -%}
-    Self👇
+    {{ fluent(key = "seat-self") }}
   {%- elif target == 1 -%}
-    Shimocha👉
+    {{ fluent(key = "seat-shimocha") }}
   {%- elif target == 2 -%}
-    Toimen👆
+    {{ fluent(key = "seat-toimen") }}
   {%- else -%}
-    Kamicha👈
+    {{ fluent(key = "seat-kamicha") }}
   {%- endif -%}
 {%- endmacro seat_rel -%}
 
@@ -14,6 +14,15 @@
   {%- set rel = (target + 4 - player_id) % 4 -%}
   {{- self::seat_rel(target=rel) -}}
 {%- endmacro seat -%}
+
+{%- macro kyoku_to_string(kyoku, honba) -%}
+  {{- fluent(
+    key = "kyoku",
+    bakaze = kyoku_to_bakaze(kyoku = kyoku),
+    kyoku_in_bakaze = kyoku_to_kyoku_in_bakaze(kyoku = kyoku),
+    honba = honba,
+  ) -}}
+{%- endmacro kyoku_to_string -%}
 
 {%- macro render_tile(tile) -%}
   {%- if tile == "back" -%}
@@ -34,55 +43,55 @@
 
 {%- macro render_action(action) -%}
   {%- if action.type == "none" -%}
-    Pass
+    {{- fluent(key = "action-pass") -}}
   {%- elif action.type == "dahai" -%}
-    Discard
+    {{- fluent(key = "action-discard") }}
     {{ self::render_tile(tile=action.pai) }}
   {%- elif action.type == "reach" -%}
-    Riichi
+    {{- fluent(key = "action-riichi") -}}
   {%- elif action.type == "hora" -%}
     {%- if action.target == action.actor -%}
-      Tsumo
+      {{- fluent(key = "action-tsumo") -}}
     {%- else -%}
-      Ron
+      {{- fluent(key = "action-ron") -}}
     {%- endif -%}
   {%- elif action.type == "chi" -%}
     {%- for tile in action.consumed -%}
       {{- self::render_tile(tile=tile) -}}
     {% endfor %}
-    Chii
+    {{ fluent(key = "action-chii") -}}
   {%- elif action.type == "pon" -%}
     {%- for tile in action.consumed -%}
       {{- self::render_tile(tile=tile) -}}
     {% endfor %}
-    Pon
+    {{ fluent(key = "action-pon") -}}
   {%- elif action.type == "kakan" or action.type == "daiminkan" -%}
-    Kan
+    {{- fluent(key = "action-kan") }}
     {{ self::render_tile(tile=action.pai) }}
   {%- elif action.type == "ankan" -%}
-    Kan
+    {{- fluent(key = "action-kan") }}
     {{ self::render_tile(tile=action.consumed[0]) }}
   {%- elif action.type == "ryukyoku" -%}
-    Ryuukyoku
+    {{- fluent(key = "action-ryuukyoku") -}}
   {%- endif -%}
 {%- endmacro render_action -%}
 
 {%- macro render_action_tuple(actions) -%}
   {%- if actions[0].type == "reach" -%}
-    Discard
+    {{- fluent(key = "action-discard") }}
     {{ self::render_tile(tile=actions[1].pai) }}
-    Riichi
+    {{ fluent(key = "action-riichi") -}}
   {%- elif actions[0].type == "chi" -%}
     {%- for tile in actions[0].consumed -%}
       {{- self::render_tile(tile=tile) -}}
     {% endfor %}
-    Chii, cut
+    {{ fluent(key = "action-chiicut") }}
     {{ self::render_tile(tile=actions[1].pai) }}
   {%- elif actions[0].type == "pon" -%}
     {%- for tile in actions[0].consumed -%}
       {{- self::render_tile(tile=tile) -}}
     {% endfor %}
-    Pon, cut
+    {{ fluent(key = "action-poncut") }}
     {{ self::render_tile(tile=actions[1].pai) }}
   {%- else -%}
     {{- self::render_action(action=actions[0]) -}}
@@ -98,15 +107,12 @@
 
     {%- if s.type == "hora" -%}
       {%- if s.target == s.actor -%}
-        Tsumo by
+        {{- fluent(key = "end-status-tsumo", seat = self::seat(target=s.actor), delta = s.deltas[s.actor]) -}}
       {%- else -%}
-        Ron by
+        {{- fluent(key = "end-status-ron", seat = self::seat(target=s.actor), delta = s.deltas[s.actor]) -}}
       {%- endif -%}
-      &nbsp;
-      {{- self::seat(target=s.actor) -}}
-      {{- s.deltas[s.actor] -}}
     {%- else -%}
-      Ryuukyoku
+      {{- fluent(key = "end-status-ryuukyoku") -}}
     {%- endif -%}
   {%- endfor -%}
 {%- endmacro render_end_status -%}
@@ -122,20 +128,20 @@
         <li>{{ self::render_tile(tile=tile) }}</li>
       {%- elif entry.at_self_riichi -%}
         {#- right after a riichi declare -#}
-        <li class="tsumo" before="Draw " after=" and declares riichi">{{ self::render_tile(tile=tile) }}</li>
+        <li class="tsumo" before="{{ fluent(key = "tehai-draw") }} " after=" {{ fluent(key = "tehai-riichi") }}">{{ self::render_tile(tile=tile) }}</li>
       {%- elif entry.last_actor == player_id -%}
         {#- nothing special, just a self tsumo -#}
-        <li class="tsumo" before="Draw ">{{ self::render_tile(tile=tile) }}</li>
+        <li class="tsumo" before="{{ fluent(key = "tehai-draw") }} ">{{ self::render_tile(tile=tile) }}</li>
       {%- else -%}
         {#- fuuro review in which the last active player is not self -#}
         <li>{{ self::render_tile(tile=tile) }}</li>
         {%- set content = self::seat(target=entry.last_actor) -%}
         {%- if entry.at_opponent_kakan -%}
-          {%- set content = content ~ " kans " -%}
+          {%- set content = fluent(key = "tehai-kans", player = content) -%}
         {%- else -%}
-          {%- set content = content ~ " cuts " -%}
+          {%- set content = fluent(key = "tehai-cuts", player = content) -%}
         {%- endif -%}
-        <li class="tsumo" before="{{ content }}">{{ self::render_tile(tile=entry.tile) }}</li>
+        <li class="tsumo" before="{{ content }} ">{{ self::render_tile(tile=entry.tile) }}</li>
       {%- endif -%}
     {%- endfor -%}
 

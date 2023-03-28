@@ -1,23 +1,32 @@
 use crate::opts::Engine;
 use crate::review::Review;
 use convlog::tenhou::{GameLength, RawPartialLog};
+use fluent_templates::FluentLoader;
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::time::Duration;
 
 use anyhow::Result;
 use minify_html::{minify, Cfg};
-use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::Value;
 use serde_with::skip_serializing_none;
 use tera::Tera;
 
-static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
+fluent_templates::static_loader! {
+    static LOCALES = {
+        locales: "./locales",
+        fallback_language: "en",
+        customise: |bundle| bundle.set_use_isolating(false),
+    };
+}
+
+fn base_templates() -> Result<Tera> {
     let mut tera = Tera::default();
     tera.autoescape_on(vec![".tera", ".html"]);
 
-    tera.register_function("kyoku_to_string", kyoku_to_string);
+    tera.register_function("kyoku_to_bakaze", kyoku_to_bakaze);
+    tera.register_function("kyoku_to_kyoku_in_bakaze", kyoku_to_kyoku_in_bakaze);
     tera.register_function("pretty_round", pretty_round);
 
     tera.add_raw_templates([
@@ -26,11 +35,10 @@ static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
         ("report.css", include_str!("../templates/report.css")),
         ("report.js", include_str!("../templates/report.js")),
         ("pai.svg", include_str!("../assets/pai.svg")),
-    ])
-    .expect("failed to parse template");
+    ])?;
 
-    tera
-});
+    Ok(tera)
+}
 
 #[skip_serializing_none]
 #[derive(Serialize)]
@@ -52,6 +60,8 @@ pub struct View<'a> {
     pub player_id: u8,
 
     pub splited_logs: Option<&'a [RawPartialLog<'a>]>,
+
+    pub lang: &'a str,
 }
 
 impl View<'_> {
@@ -59,8 +69,14 @@ impl View<'_> {
     where
         W: Write,
     {
+        let mut templates = base_templates()?;
+        let lang_id = self.lang.parse()?;
+        templates.register_function(
+            "fluent",
+            FluentLoader::new(&*LOCALES).with_default_lang(lang_id),
+        );
         let ctx = tera::Context::from_serialize(self)?;
-        let original = TEMPLATES.render("report.tera", &ctx)?;
+        let original = templates.render("report.tera", &ctx)?;
 
         let cfg = Cfg {
             keep_comments: true,
@@ -75,7 +91,7 @@ impl View<'_> {
     }
 }
 
-fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
+fn kyoku_to_bakaze(args: &HashMap<String, Value>) -> tera::Result<Value> {
     const BAKAZE: &[&str] = &["East", "South", "West", "North"];
 
     let kyoku = args
@@ -83,18 +99,18 @@ fn kyoku_to_string(args: &HashMap<String, Value>) -> tera::Result<Value> {
         .and_then(|p| p.as_u64())
         .ok_or_else(|| tera::Error::msg("missing or invalid argument `kyoku`"))?
         as usize;
-    let honba = args
-        .get("honba")
+
+    Ok(BAKAZE[kyoku / 4].into())
+}
+
+fn kyoku_to_kyoku_in_bakaze(args: &HashMap<String, Value>) -> tera::Result<Value> {
+    let kyoku = args
+        .get("kyoku")
         .and_then(|p| p.as_u64())
-        .ok_or_else(|| tera::Error::msg("missing or invalid argument `honba`"))?
+        .ok_or_else(|| tera::Error::msg("missing or invalid argument `kyoku`"))?
         as usize;
 
-    let s = if honba == 0 {
-        format!("{} {}", BAKAZE[kyoku / 4], kyoku % 4 + 1)
-    } else {
-        format!("{} {}-{}", BAKAZE[kyoku / 4], kyoku % 4 + 1, honba)
-    };
-    Ok(Value::String(s))
+    Ok((kyoku % 4 + 1).into())
 }
 
 fn pretty_round(args: &HashMap<String, Value>) -> tera::Result<Value> {
@@ -123,6 +139,6 @@ mod test {
 
     #[test]
     fn template_compile() {
-        let _ = &*TEMPLATES;
+        base_templates().expect("failed to parse template");
     }
 }
