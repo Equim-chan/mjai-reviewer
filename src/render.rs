@@ -139,6 +139,7 @@ mod test {
 
     #[test]
     fn template_compile() {
+        let _ = &*LOCALES;
         base_templates().expect("failed to parse template");
     }
 }

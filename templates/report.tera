@@ -205,12 +205,6 @@
           </details>
         {%- endif -%}
 
-        {%- if item.entries | length == 0 -%}
-          <details class="collapse">
-            <summary>{{- fluent(key = "turn", junme = 0, tiles_left = 0) -}}</summary>
-          </details>
-        {%- endif -%}
-
         {%- for entry in item.entries -%}
           {%- if engine == "Mortal" -%}
             {%- set mark_red = not entry.is_equal -%}

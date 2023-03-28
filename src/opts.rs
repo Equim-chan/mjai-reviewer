@@ -136,10 +136,16 @@ pub enum Language {
     En,
     #[clap(name = "en-US")]
     EnUS,
+
     #[clap(name = "ja")]
     Ja,
     #[clap(name = "ja-JP")]
     JaJP,
+
+    #[clap(name = "zh")]
+    Zh,
+    #[clap(name = "zh-CN")]
+    ZhCN,
 }
 
 #[derive(Debug, Args)]

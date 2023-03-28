@@ -75,11 +75,7 @@ tenhou-net-6-paste-instruction-after-link = {" "}- EDIT AS TEXT.
 
 title = Replay Examination
 
-turn =
-    Turn {$junme}{$junme ->
-        [0] {""}
-        *[other] {" "}(×{$tiles-left})
-    }
+turn = Turn {$junme} (×{$tiles-left})
 
 turn-info-furiten = (furiten)
 turn-info-shanten = {$shanten} shanten

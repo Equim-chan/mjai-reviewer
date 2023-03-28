@@ -55,6 +55,8 @@ panel-expand-all = 全て
 panel-expand-diff-only = 差分のみ
 panel-expand-none = なし
 panel-layout = レイアウト:
+panel-layout-horizontal = 横向
+panel-layout-vertical = 縦向
 panel-save-this-page = このページを保存
 
 place-percentage = {$rank}位率 (%)
@@ -77,11 +79,7 @@ tenhou-net-6-paste-instruction-after-link = {" "}の EDIT AS TEXT に貼り付�
 
 title = 牌譜検討
 
-turn =
-    {$junme}巡目 {$junme ->
-        [0] {""}
-        *[other] (残り{$tiles-left})
-    }
+turn = {$junme}巡目 (残り{$tiles-left})
 turn-info-furiten = (振り聴)
 turn-info-shanten = {$shanten}向聴
 turn-info-tenpai = 聴牌
