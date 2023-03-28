@@ -2,6 +2,7 @@ action-chii = チー
 action-chiicut = チー、打
 action-discard = 打
 action-kan = カン
+action-pass = スルー
 action-pon = ポン
 action-poncut = ポン、打
 action-riichi = 立直
@@ -56,7 +57,7 @@ panel-expand-none = なし
 panel-layout = レイアウト:
 panel-save-this-page = このページを保存
 
-place-percentage = {$rank}位 (%)
+place-percentage = {$rank}位率 (%)
 
 player = プレイヤー
 
