@@ -128,7 +128,7 @@
         <li>{{ self::render_tile(tile=tile) }}</li>
       {%- elif entry.at_self_riichi -%}
         {#- right after a riichi declare -#}
-        <li class="tsumo" before="{{ fluent(key = "tehai-draw") }} " after=" and declares riichi">{{ self::render_tile(tile=tile) }}</li>
+        <li class="tsumo" before="{{ fluent(key = "tehai-draw") }} " after=" {{ fluent(key = "tehai-riichi") }}">{{ self::render_tile(tile=tile) }}</li>
       {%- elif entry.last_actor == player_id -%}
         {#- nothing special, just a self tsumo -#}
         <li class="tsumo" before="{{ fluent(key = "tehai-draw") }} ">{{ self::render_tile(tile=tile) }}</li>

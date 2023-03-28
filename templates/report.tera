@@ -32,7 +32,7 @@
 
   <fieldset id="panel">
     <legend>Panel</legend>
-    <a class="no-visit" href="" download>{{- fluent(key = "panel-save-this-page") -}}</a>
+    <a class="no-visit" href="" download>💾{{- fluent(key = "panel-save-this-page") -}}</a>
     <br>
     <span style="font-weight: bold">{{- fluent(key = "panel-layout") -}}</span>
     <label><input type="radio" name="layout" onclick="toggleLayout()" value="vertical" checked>{{- fluent(key = "panel-layout-vertical") -}}</label>

@@ -54,7 +54,7 @@ panel-expand-all = 全て
 panel-expand-diff-only = 差分のみ
 panel-expand-none = なし
 panel-layout = レイアウト:
-panel-save-this-page = 💾このページを保存
+panel-save-this-page = このページを保存
 
 place-percentage = {$rank}位 (%)
 

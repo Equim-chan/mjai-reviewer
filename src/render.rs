@@ -1,14 +1,13 @@
-use crate::opts::{Engine};
+use crate::opts::Engine;
 use crate::review::Review;
 use convlog::tenhou::{GameLength, RawPartialLog};
-use fluent_templates::{FluentLoader, LanguageIdentifier};
-use std::{collections::HashMap, str::FromStr};
+use fluent_templates::FluentLoader;
+use std::collections::HashMap;
 use std::io::prelude::*;
 use std::time::Duration;
 
 use anyhow::Result;
 use minify_html::{minify, Cfg};
-use once_cell::sync::Lazy;
 use serde::Serialize;
 use serde_json::Value;
 use serde_with::skip_serializing_none;
@@ -17,12 +16,12 @@ use tera::Tera;
 fluent_templates::static_loader! {
     static LOCALES = {
         locales: "./locales",
-        fallback_language: "en-US",
+        fallback_language: "en",
         customise: |bundle| bundle.set_use_isolating(false),
     };
 }
 
-static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
+fn templates() -> Tera {
     let mut tera = Tera::default();
     tera.autoescape_on(vec![".tera", ".html"]);
 
@@ -40,7 +39,7 @@ static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
     .expect("failed to parse template");
 
     tera
-});
+}
 
 #[skip_serializing_none]
 #[derive(Serialize)]
@@ -71,9 +70,12 @@ impl View<'_> {
     where
         W: Write,
     {
-        let mut templates = TEMPLATES.clone();
-        let langid = LanguageIdentifier::from_str(self.lang)?;
-        templates.register_function("fluent", FluentLoader::new(&*LOCALES).with_default_lang(langid));
+        let mut templates = templates();
+        let lang_id = self.lang.parse()?;
+        templates.register_function(
+            "fluent",
+            FluentLoader::new(&*LOCALES).with_default_lang(lang_id),
+        );
         let ctx = tera::Context::from_serialize(self)?;
         let original = templates.render("report.tera", &ctx)?;
 
@@ -138,6 +140,6 @@ mod test {
 
     #[test]
     fn template_compile() {
-        let _ = &*TEMPLATES;
+        templates();
     }
 }

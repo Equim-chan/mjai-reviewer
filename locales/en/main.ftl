@@ -47,7 +47,7 @@ panel-expand-none = None
 panel-layout = Layout:
 panel-layout-horizontal = Horizontal
 panel-layout-vertical = Vertical
-panel-save-this-page = 💾Save this page
+panel-save-this-page = Save this page
 
 place-percentage =
     {$rank ->

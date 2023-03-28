@@ -132,14 +132,14 @@ pub struct OutputOptions {
 
 #[derive(Debug, Clone, Serialize, ValueEnum)]
 pub enum Language {
-  #[clap(name = "en")]
-  En,
-  #[clap(name = "en-US")]
-  EnUS,
-  #[clap(name = "ja")]
-  Ja,
-  #[clap(name = "ja-JP")]
-  JaJP,
+    #[clap(name = "en")]
+    En,
+    #[clap(name = "en-US")]
+    EnUS,
+    #[clap(name = "ja")]
+    Ja,
+    #[clap(name = "ja-JP")]
+    JaJP,
 }
 
 #[derive(Debug, Args)]
