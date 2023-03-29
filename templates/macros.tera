@@ -43,7 +43,7 @@
 
 {%- macro render_action(action) -%}
   {%- if action.type == "none" -%}
-    {{- fluent(key = "action-pass") -}}
+    {{- fluent(key = "action-skip") -}}
   {%- elif action.type == "dahai" -%}
     {{- fluent(key = "action-discard") }}
     {{ self::render_tile(tile=action.pai) }}

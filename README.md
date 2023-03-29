@@ -11,7 +11,7 @@ Review your mahjong gameplay with the help of mjai-compatible mahjong AI engines
 
 **[Try it online](https://mjai.ekyu.moe)** | [Demo result page](https://gh.ekyu.moe/mjai-reviewer-demo.html)
 
-It is recommended to just use the [online version](https://mjai.ekyu.moe), which works for Mahjong Soul games out-of-the-box, no download, no install, no extension, and it is free to use.
+It is recommended to just use the [web app](https://mjai.ekyu.moe), which works for Mahjong Soul games out-of-the-box, no download, no install, no extension, and it is free to use.
 
 mjai-reviewer 1.x.x is incompatible with 0.x.x versions, which were previously known as akochan-reviewer. If you prefer the old version, check out [v0 branch](https://github.com/Equim-chan/mjai-reviewer/tree/v0).
 

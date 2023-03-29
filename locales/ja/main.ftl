@@ -2,7 +2,7 @@ action-chii = チー
 action-chiicut = チー、打
 action-discard = 打
 action-kan = カン
-action-pass = スルー
+action-skip = スルー
 action-pon = ポン
 action-poncut = ポン、打
 action-riichi = 立直
@@ -31,7 +31,7 @@ kyoku =
         *[other] {$bakaze}
     }{$kyoku-in-bakaze}局{$honba ->
         [0] {""}
-        *[other] {$honba}本場
+        *[other] {" "}{$honba}本場
     }
 
 metadata-engine-header = AI
@@ -70,7 +70,7 @@ score-header = 点数
 tehai-cuts = {$player}打
 tehai-draw = 自摸
 tehai-kans = {$player}加槓
-tehai-riichi = 立直
+tehai-riichi = 立直中
 
 tenhou-net-6-json-log-header = tenhou.net/6 JSON ログ
 
@@ -84,7 +84,7 @@ turn-info-furiten = (振り聴)
 turn-info-shanten = {$shanten}向聴
 turn-info-tenpai = 聴牌
 
-seat-kamicha = 上家
 seat-self = 自家
+seat-kamicha = 上家
 seat-shimocha = 下家
 seat-toimen = 対面

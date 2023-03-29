@@ -2,17 +2,17 @@ action-chii = 吃
 action-chiicut = 吃、打
 action-discard = 打
 action-kan = 杠
-action-pass = 跳过
+action-skip = 跳过
 action-pon = 碰
 action-poncut = 碰、打
 action-riichi = 立直
-action-ron = 荣
+action-ron = 和
 action-ryuukyoku = 流局
 action-tsumo = 自摸
 
 donate-header = 打赏
 
-end-status-ron = {$seat}{"\u00a0"}{action-ron} {$delta}
+end-status-ron = {$seat}{"\u00a0"}荣和 {$delta}
 end-status-ryuukyoku = {action-ryuukyoku}
 end-status-tsumo = {$seat}{"\u00a0"}{action-tsumo} {$delta}
 
@@ -31,10 +31,10 @@ kyoku =
         *[other] {$bakaze}
     }{$kyoku-in-bakaze}局{$honba ->
         [0] {""}
-        *[other] {$honba}本场
+        *[other] {" "}{$honba}本场
     }
 
-metadata-engine-header = 引擎
+metadata-engine-header = AI 引擎
 metadata-game-length-header = 对局长度
 metadata-game-length-value = {$length ->
     [Hanchan] 半庄
@@ -70,7 +70,7 @@ score-header = 点数
 tehai-cuts = {$player}打
 tehai-draw = 自摸
 tehai-kans = {$player}加杠
-tehai-riichi = 立直
+tehai-riichi = 并宣告立直
 
 tenhou-net-6-json-log-header = tenhou.net/6 JSON 牌谱
 
@@ -84,7 +84,7 @@ turn-info-furiten = (振听)
 turn-info-shanten = {$shanten}向听
 turn-info-tenpai = 听牌
 
-seat-kamicha = 上家
 seat-self = 自家
+seat-kamicha = 上家
 seat-shimocha = 下家
 seat-toimen = 对家

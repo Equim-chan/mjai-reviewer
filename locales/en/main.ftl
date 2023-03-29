@@ -2,7 +2,7 @@ action-chii = Chii
 action-chiicut = Chii, cut
 action-discard = Discard
 action-kan = Kan
-action-pass = Pass
+action-skip = Skip
 action-pon = Pon
 action-poncut = Pon, cut
 action-riichi = Riichi
@@ -28,7 +28,7 @@ kyoku =
         *[other] -{$honba}
     }
 
-metadata-engine-header = engine
+metadata-engine-header = AI engine
 metadata-game-length-header = game length
 metadata-game-length-value = {$length}
 metadata-generated-at-header = generated at
@@ -51,9 +51,9 @@ panel-save-this-page = Save this page
 
 place-percentage =
     {$rank ->
-        [1] {$rank}st
-        [2] {$rank}nd
-        [3] {$rank}rd
+        [1] 1st
+        [2] 2nd
+        [3] 3rd
         *[other] {$rank}th
     } place (%)
 
@@ -66,7 +66,7 @@ score-header = Score
 tehai-cuts = {$player} cuts
 tehai-draw = Draw
 tehai-kans = {$player} kans
-tehai-riichi = and declares riichi
+tehai-riichi = and declare riichi
 
 tenhou-net-6-json-log-header = tenhou.net/6 JSON log
 
@@ -81,7 +81,7 @@ turn-info-furiten = (furiten)
 turn-info-shanten = {$shanten} shanten
 turn-info-tenpai = tenpai
 
-seat-kamicha = Kamicha👈
 seat-self = Self👇
+seat-kamicha = Kamicha👈
 seat-shimocha = Shimocha👉
 seat-toimen = Toimen👆
