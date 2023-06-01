@@ -157,9 +157,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
 
             if let Some((target, pai)) = take.naki_info() {
                 if pai != last_discard
-                    || last_actor
-                        .filter(|&a| a != target || a == actor as u8)
-                        .is_some()
+                    || last_actor.is_some_and(|a| a != target || a == actor as u8)
                 {
                     return Err(ConvertError::UnexpectedNaki {
                         action: take.clone(),
@@ -381,8 +379,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
 
                     let has_same_dahai_in_future = discard_sets[actor]
                         .get(&last_discard)
-                        .filter(|&&v| v > 0)
-                        .is_some();
+                        .is_some_and(|&v| v > 0);
                     if !has_same_dahai_in_future {
                         // no candidate
                         return Some(a);
