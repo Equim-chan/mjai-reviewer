@@ -395,7 +395,7 @@ fn tenhou_kyoku_to_mjai_events(kyoku: &Kyoku) -> Result<Vec<Event>> {
                         }
                         Entry::Occupied(mut o) => {
                             // This is where the backtrack happens.
-                            let mut bc = o.get_mut();
+                            let bc = o.get_mut();
                             if bc.use_the_first_branch {
                                 // When this branch is reached, it is likely the
                                 // first branch has failed, that is, the real naki

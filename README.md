@@ -7,6 +7,8 @@
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Equim-chan/mjai-reviewer)
 [![License](https://img.shields.io/github/license/Equim-chan/mjai-reviewer)](https://github.com/Equim-chan/mjai-reviewer/blob/master/LICENSE)
 
+[![Donate](https://img.shields.io/badge/Donate-%E2%9D%A4%EF%B8%8F-blue?style=social)](https://mortal.ekyu.moe/donate.html)
+
 Review your mahjong gameplay with the help of mjai-compatible mahjong AI engines, including [Mortal](https://github.com/Equim-chan/Mortal) and [akochan](https://github.com/critter-mj/akochan).
 
 **[Try it online](https://mjai.ekyu.moe)** | [Demo result page](https://gh.ekyu.moe/mjai-reviewer-demo.html)
