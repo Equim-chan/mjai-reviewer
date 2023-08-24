@@ -166,9 +166,7 @@
       <div class="r-box">
         {%- if engine == "Mortal" -%}
           <details class="collapse" open>
-            <summary>
-              <th>{{- fluent(key = "final-ranking-probs-at-the-start-of-kyoku", kyoku = kyoku_str) -}}</th>
-            </summary>
+            <summary>{{- fluent(key = "final-ranking-probs-at-the-start-of-kyoku", kyoku = kyoku_str) -}}</summary>
             <table border="1" cellspacing="0" cellpadding="0" class="data">
               <thead>
                 <tr>

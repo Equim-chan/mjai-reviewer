@@ -20,7 +20,8 @@ pub fn softmax(arr: &mut [f32], temperature: f32) {
     let sum: f32 = arr.iter().copied().map(|x| (x - max).exp()).sum();
 
     let offset = max + sum.ln();
-    arr.iter_mut().for_each(|x| *x = (*x - offset).exp());
+    arr.iter_mut()
+        .for_each(|x| *x = (*x - offset).exp().clamp(0., 1.));
 }
 
 #[cfg(test)]

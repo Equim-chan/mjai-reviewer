@@ -65,6 +65,13 @@ ELI5: <ins>Mortal is optimized for playing, not reviewing or attribution.</ins>
 ## (Mortal) Can Mortal's decisions be attributed?
 Mortal is an end-to-end deep learning model that deploys model-free reinforcement learning, therefore we are unlikely to be able to do any significant attribution work on it. If you insist on wanting a reason for a decision made by Mortal, I would say that in contrast to how humans play, Mortal is not based on so-called "precise calculations", but rather just "intuition".
 
+## (Mortal) The single-line output and the table are in conflict, is it a bug?
+![figure](res/agarasu.webp)
+
+This is an intentional feature, and in the case shown in the figure, it is a rule-based fail-safe strategy against アガラス (win-to-last-place) in the all-last round.
+
+The single-line output (starting with `Mortal:`) is the actual final decision made by the AI, while the expanded table provides additional, intermediate information that is totally optional and may be altered or even removed in a future version. When they are in conflict, <ins>the single-line output should take precedence.</ins> Furthermore, the table is just a by-product of the AI, and focusing too much on building it may hinder finding better ways to achieve its goal.
+
 ## (akochan) How to configure the pt distribution?
 Edit `jun_pt` in `tactics.json`. Note that there is a hard-coded bound of $[-200, 200]$ for every element.
 
