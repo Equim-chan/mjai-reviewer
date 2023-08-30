@@ -1,6 +1,7 @@
 //! Provides methods to transform mahjong logs from tenhou.net/6 format into
 //! mjai format.
 
+#![allow(clippy::manual_range_patterns)] // because of matches_tu8
 #![deny(
     rust_2018_idioms,
     let_underscore_drop,
