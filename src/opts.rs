@@ -146,6 +146,11 @@ pub enum Language {
     Zh,
     #[clap(name = "zh-CN")]
     ZhCN,
+
+    #[clap(name = "ko")]
+    Ko,
+    #[clap(name = "ko-KR")]
+    KoKR,
 }
 
 #[derive(Debug, Args)]
