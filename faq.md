@@ -17,7 +17,7 @@ I (Equim) have no affiliation to them. I am not running any AI in ranked lobbies
 Check [Mortal's documentation](https://mortal.ekyu.moe/perf/strength.html#mortal-vs-akochan) for details.
 
 ## What information do the engines base their decisions on?
-Technically, all visible information on the board is taken into account, including discard sequences with tedashi info, current points, round number and so on, but information such as each player's level and the room type are not.
+Technically, all visible information on the board is taken into account, including discard sequences with tedashi info, current points, round number and so on, but not information such as each player's level, historical stats, thinking time of each move, game lobby type, etc.
 
 ## (Mortal) Where is the deal-in rate column?
 If you're referring to the deal-in rate column in akochan, Mortal does not have it; in fact, it was never explicitly calculated by Mortal in the first place. Mortal and akochan are two entirely different mahjong AI engines, created by different developers with different designs. So you probably shouldn't expect them to share any features.
@@ -36,7 +36,7 @@ For instance, if the game has pt setting $w$ and the players' scores are $[29000
 | West | 27200 | 24.857 | 29.048 | 31.777 | 14.317 |
 | North | 29600 | 37.990 | 28.533 | 23.800 | 9.677 |
 
-Note that these probabilities are esitmates of the **final** rankings at the end of the whole *game*, not after the current *kyoku*.
+Note that these probabilities are estimates of the **final** rankings at the end of the whole *game*, not after the current *kyoku*.
 
 To get the $\Phi_k$​ value for the player sitting in the East seat at South 1, we multiply the probabilities with the pt setting, specifically $[0.29532, 0.32512, 0.27416, 0.10539] \cdot w$.
 It's important to note that Mortal models do not guarantee to use a fixed pt setting throughout its training.
@@ -52,7 +52,13 @@ $\pi_\tau(a|s)$, in simple terms, can be thought of something similar to the hei
 $$\pi_\tau(a|s) = \frac{\exp(\hat Q^\pi(s, a) / \tau)}{\sum_i \exp(\hat Q^\pi(s, a_i) / \tau)}$$
 where $\tau$ is temperature.
 
-Wrapping up, $\hat Q^\pi(s, a)$ is only for advanced users, because it can be very misleading if the user does not understand the subtle details of how Mortal works under the hood. I have been considering whether to just remove the column or not, but in the end I decided to keep it as is. <ins>Just look up $\pi_\tau(a|s)$ as it is easier to understand.</ins>
+Wrapping up, $\hat Q^\pi(s, a)$ is only for advanced users, because it can be very misleading if the user does not understand the subtle details of how Mortal works under the hood. It is not an intuitive concept. To make it clear:
+
+- $\hat Q^\pi(s, a)$ is not 局収支 (round EV).
+- $\hat Q^\pi(s, a)$ is not pt.
+- $\hat Q^\pi(s, a)$ is not 清算ポイント (end game score).
+
+I have been considering whether to just remove the column or not, but in the end I decided to keep it as is. <ins>Just look up $\pi_\tau(a|s)$ as it is easier to understand.</ins>
 
 ## (Mortal) Why do all actions except the best sometimes have significantly lower Q values than that of the best?
 As mentioned above, $\hat Q^\pi(s, a) + \Phi_k$ is an estimation to the pt EV. However, the evaluation for this value is <ins>the means but not the objective</ins>. To be clear, the real fundamental objective for Mortal as a mahjong AI is to achieve the best performance in a mahjong game, but not to calculate accurate scores for all actions. As a result, the evaluated values of all actions but the best may be inaccurate; they only serve as a means to determine its preference for exploration in training.
@@ -66,9 +72,9 @@ ELI5: <ins>Mortal is optimized for playing, not reviewing or attribution.</ins>
 Mortal is an end-to-end deep learning model that deploys model-free reinforcement learning, therefore we are unlikely to be able to do any significant attribution work on it. If you insist on wanting a reason for a decision made by Mortal, I would say that in contrast to how humans play, Mortal is not based on so-called "precise calculations", but rather just "intuition".
 
 ## (Mortal) The single-line output and the table are in conflict, is it a bug?
-![figure](res/agarasu.webp)
+![agarasu](res/agarasu.webp)
 
-This is an intentional feature, and in the case shown in the figure, it is a rule-based fail-safe strategy against アガラス (win-to-last-place) in the all-last round.
+Not really. This is an intentional feature, and in the case shown in the figure, it is a rule-based fail-safe strategy against アガラス (win-to-be-last-place) in the all-last round.
 
 The single-line output (starting with `Mortal:`) is the actual final decision made by the AI, while the expanded table provides additional, intermediate information that is totally optional and may be altered or even removed in a future version. When they are in conflict, <ins>the single-line output should take precedence.</ins> Furthermore, the table is just a by-product of the AI, and focusing too much on building it may hinder finding better ways to achieve its goal.
 
@@ -92,5 +98,7 @@ $$
 $$
 
 where $K$ is the number of rounds and $N_i$ is the number of player's actions in $i$-th round.
+
+Why square? Nothing special but just to please the human eye. Since the raw calculated value is usually very close to 1, squaring it makes it harder to get closer to 1.
 
 The calculation is essentially a basic min-max scaling and the result has a high variance. It is also directly tied to the output dynamic range of a specific engine (model). It shouldn't be considered a reliable measurement.
