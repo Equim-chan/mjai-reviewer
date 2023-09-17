@@ -102,6 +102,14 @@ details[open].collapse summary {
   display: flex;
 }
 
+.custom-float {
+  position: fixed;
+  top: 0;
+  left: 0;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
 .end-status-list {
   list-style: none;
   padding-left: 0;
