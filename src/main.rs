@@ -428,7 +428,7 @@ fn main() -> Result<()> {
         review,
         player_id,
 
-        splited_logs: splitted_raw_logs.as_deref(),
+        split_logs: splitted_raw_logs.as_deref(),
         lang: lang_value.get_name(),
     };
     log!("writing output...");

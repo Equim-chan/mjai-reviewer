@@ -140,11 +140,11 @@
         </div>
       </h1>
 
-      {%- if splited_logs is defined -%}
+      {%- if split_logs is defined -%}
         <div class="sticky l-box" {{ "style" }}="z-index: {{ 10 * k_id + 5 }}">
           <details class="collapse">
             <summary>{{- fluent(key = "replay-viewer") -}}</summary>
-            <iframe src="https://tenhou.net/5/?tw={{ player_id }}#json={{ splited_logs[k_id] | json_encode() }}"
+            <iframe src="https://tenhou.net/5/?tw={{ player_id }}#json={{ split_logs[k_id] | json_encode() }}"
               class="tenhou" loading="lazy" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>
           </details>
         </div>
@@ -158,7 +158,7 @@
               <a href="https://tenhou.net/6" target="_blank" rel="noreferrer noopener">tenhou.net/6</a>
               {{- fluent(key = "tenhou-net-6-paste-instruction-after-link") -}}
             </p>
-            <textarea style="width: 100%" rows="5" onclick="this.select()" readonly>{{ splited_logs[k_id] | json_encode() }}</textarea>
+            <textarea style="width: 100%" rows="5" onclick="this.select()" readonly>{{ split_logs[k_id] | json_encode() }}</textarea>
           </details>
         </div>
       {%- endif -%}

@@ -59,7 +59,7 @@ pub struct View<'a> {
     pub review: Review,
     pub player_id: u8,
 
-    pub splited_logs: Option<&'a [RawPartialLog<'a>]>,
+    pub split_logs: Option<&'a [RawPartialLog<'a>]>,
 
     pub lang: &'a str,
 }
