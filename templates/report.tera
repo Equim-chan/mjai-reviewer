@@ -30,6 +30,8 @@
     <a href="https://github.com/Equim-chan/mjai-reviewer" target="_blank" rel="noreferrer noopener">mjai-reviewer</a>
   </p>
 
+  <button id="top-button" onclick="goToTop()" title="Go to top"></button>
+
   <fieldset id="panel">
     <legend>Panel</legend>
     <a class="no-visit" href="" download>💾{{- fluent(key = "panel-save-this-page") -}}</a>
