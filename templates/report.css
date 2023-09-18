@@ -258,14 +258,8 @@ table.data td {
   opacity: 0;
   visibility: hidden;
   z-index: 1000;
-}
-#top-button::after {
-  content: "⬆";
-  font-weight: normal;
-  font-style: normal;
-  font-size: 2em;
-  line-height: 50px;
-  color: #fff;
+  color: white;
+  font-size: 30px;
 }
 #top-button:hover {
   cursor: pointer;
