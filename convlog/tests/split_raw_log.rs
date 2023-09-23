@@ -11,11 +11,11 @@ fn test_split_by_kyoku() {
     TESTDATA.iter().for_each(|TestCase { desc, data }| {
         let raw_log: RawLog = json::from_str(data)
             .unwrap_or_else(|_| panic!("failed to parse tenhou log (case: {desc})"));
-        let splited_raw_logs = raw_log.split_by_kyoku();
+        let split_raw_logs = raw_log.split_by_kyoku();
 
         let log =
             Log::try_from(raw_log.clone()).unwrap_or_else(|_| panic!("invalid log (case: {desc})"));
-        let joined_kyokus: Vec<_> = splited_raw_logs
+        let joined_kyokus: Vec<_> = split_raw_logs
             .into_iter()
             .map(RawLog::from)
             .map(|l| Log::try_from(l).unwrap_or_else(|_| panic!("invalid log (case: {desc})")))

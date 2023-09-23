@@ -1,6 +1,6 @@
 #[inline]
 fn eq(l: f32, r: f32) -> bool {
-    (l - r).abs() < f32::EPSILON
+    (l - r).abs() <= f32::EPSILON
 }
 
 pub fn softmax(arr: &mut [f32], temperature: f32) {

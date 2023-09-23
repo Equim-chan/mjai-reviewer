@@ -21,7 +21,7 @@ fluent_templates::static_loader! {
     };
 }
 
-fn base_templates() -> Result<Tera> {
+fn build_base_templates() -> Result<Tera> {
     let mut tera = Tera::default();
     tera.autoescape_on(vec![".tera", ".html"]);
 
@@ -69,7 +69,7 @@ impl View<'_> {
     where
         W: Write,
     {
-        let mut templates = base_templates()?;
+        let mut templates = build_base_templates()?;
         let lang_id = self.lang.parse()?;
         templates.register_function(
             "fluent",
@@ -140,6 +140,6 @@ mod test {
     #[test]
     fn template_compile() {
         let _ = &*LOCALES;
-        base_templates().expect("failed to parse template");
+        build_base_templates().expect("failed to parse template");
     }
 }
