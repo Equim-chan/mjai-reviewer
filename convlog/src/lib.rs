@@ -51,6 +51,7 @@
     clippy::map_unwrap_or,
     clippy::match_bool,
     clippy::match_same_arms,
+    clippy::missing_const_for_fn,
     clippy::mut_mut,
     clippy::mutex_atomic,
     clippy::mutex_integer,

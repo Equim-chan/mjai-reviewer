@@ -96,7 +96,7 @@ pub enum Event {
 impl Event {
     #[inline]
     #[must_use]
-    pub fn actor(&self) -> Option<u8> {
+    pub const fn actor(&self) -> Option<u8> {
         match *self {
             Self::Tsumo { actor, .. }
             | Self::Dahai { actor, .. }
@@ -113,7 +113,7 @@ impl Event {
     }
 
     #[inline]
-    pub(crate) fn naki_info(&self) -> Option<(u8, Tile)> {
+    pub(crate) const fn naki_info(&self) -> Option<(u8, Tile)> {
         match *self {
             Self::Chi { target, pai, .. }
             | Self::Pon { target, pai, .. }
@@ -123,7 +123,7 @@ impl Event {
     }
 
     #[inline]
-    pub(crate) fn naki_to_ord(&self) -> i8 {
+    pub(crate) const fn naki_to_ord(&self) -> i8 {
         match *self {
             Self::Chi { .. } => 0,
             Self::Pon { .. } => 1,

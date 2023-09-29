@@ -47,6 +47,7 @@
     clippy::map_unwrap_or,
     clippy::match_bool,
     clippy::match_same_arms,
+    clippy::missing_const_for_fn,
     clippy::mut_mut,
     clippy::mutex_atomic,
     clippy::mutex_integer,
@@ -295,7 +296,7 @@ fn main() -> Result<()> {
 
     // clone the parsed raw log for possible reuse (split)
     let cloned_raw_log;
-    let splitted_raw_logs = if without_log_viewer {
+    let split_raw_logs = if without_log_viewer {
         None
     } else {
         cloned_raw_log = raw_log.clone();
@@ -428,7 +429,7 @@ fn main() -> Result<()> {
         review,
         player_id,
 
-        split_logs: splitted_raw_logs.as_deref(),
+        split_logs: split_raw_logs.as_deref(),
         lang: lang_value.get_name(),
     };
     log!("writing output...");

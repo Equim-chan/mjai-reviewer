@@ -105,7 +105,7 @@ pub(super) struct Rule {
 
 impl RawLog {
     #[must_use]
-    pub fn get_names(&self) -> &[String; 4] {
+    pub const fn get_names(&self) -> &[String; 4] {
         &self.names
     }
 

@@ -509,7 +509,7 @@ fn to_label(ev: &Event) -> usize {
     }
 }
 
-fn to_kan_label(ev: &Event) -> Option<usize> {
+const fn to_kan_label(ev: &Event) -> Option<usize> {
     // Kan label is not needed for Daiminkan
     match ev {
         Event::Ankan { consumed, .. } => Some(consumed[0].deaka().as_usize()),
