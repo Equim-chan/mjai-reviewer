@@ -76,7 +76,7 @@ Mortal is an end-to-end deep learning model that deploys model-free reinforcemen
 
 Not really. This is an intentional feature, and in the case shown in the figure, it is a rule-based fail-safe strategy against アガラス (win-to-be-last-place) in the all-last round.
 
-The single-line output (starting with `Mortal:`) is the actual final decision made by the AI, while the expanded table provides additional, intermediate information that is totally optional and may be altered or even removed in a future version. When they are in conflict, <ins>the single-line output should take precedence.</ins> Furthermore, the table is just a by-product of the AI, and focusing too much on building it may hinder finding better ways to achieve its goal.
+The single-line output (starting with `Mortal:`) is the actual final decision made by the AI, while the expanded table provides additional, intermediate information that is totally optional and may be altered or even removed in a future version. When they are in conflict, <ins>the single-line output should take precedence.</ins> Furthermore, the table is just a by-product of the AI, and focusing too much on building it may hinder finding better ways to build a stronger AI.
 
 ## (akochan) How to configure the pt distribution?
 Edit `jun_pt` in `tactics.json`. Note that there is a hard-coded bound of $[-200, 200]$ for every element.
