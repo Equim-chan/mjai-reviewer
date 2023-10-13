@@ -4,9 +4,9 @@ use crate::state::State;
 use convlog::{must_tile, t, tile_set_eq, tu8, Event, Tile};
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::mem;
 use std::path::Path;
 use std::process::{Command, Stdio};
+use std::{array, mem};
 
 use anyhow::{bail, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -284,8 +284,8 @@ impl Reviewer<'_> {
             let at_furiten = meta.at_furiten.context("missing at_furiten")?;
             let mut q_values = meta.q_values.context("missing q_values")?;
             let mut details = Vec::with_capacity(q_values.len());
-            let mut min = f64::INFINITY;
-            let mut max = f64::NEG_INFINITY;
+            let mut min = f64::MAX;
+            let mut max = f64::MIN;
             for (label, m) in masks.into_iter().enumerate().rev() {
                 if !m {
                     continue;
@@ -302,7 +302,7 @@ impl Reviewer<'_> {
                 details.push(Detail {
                     action,
                     q_value,
-                    prob: 0.,
+                    prob: 0., // will be calculated later
                     label: Label::General(label),
                 });
             }
@@ -341,6 +341,7 @@ impl Reviewer<'_> {
 
                     let action =
                         to_event(&state, kan_label, last_actor, last_tsumo_or_discard, true)?;
+                    // I REALLY want to get rid of the rating and the table...
                     if num_kans > 1 && matches!(actual_kan_label, Some(l) if l == kan_label) {
                         actual_q_value_opt = Some(q_value as f64);
                     }
@@ -348,7 +349,7 @@ impl Reviewer<'_> {
                     details.push(Detail {
                         action,
                         q_value,
-                        prob: 0.,
+                        prob: 0., // will be calculated later
                         label: Label::KanSelect(kan_label),
                     });
                 }
@@ -376,13 +377,12 @@ impl Reviewer<'_> {
             let is_equal = equal_ignore_aka_consumed(&output.event, &actual);
             let actual_q_value = actual_q_value_opt
                 .with_context(|| format!("failed to find q value of actual action {actual:?}"))?;
-            let rating = if is_equal {
-                1.
+            if is_equal {
+                raw_rating += 1.;
+                total_matches += 1;
             } else {
-                (actual_q_value - min) / (max - min).max(1e-6)
-            };
-            raw_rating += rating;
-            total_matches += (order == 0) as usize;
+                raw_rating += (actual_q_value - min) / (max - min).max(1e-6);
+            }
             total_reviewed += 1;
 
             let tile = last_tsumo_or_discard.context("missing last tsumo or discard")?;
@@ -449,11 +449,7 @@ impl Reviewer<'_> {
 }
 
 fn masks_from_bits(bits: u64) -> [bool; 46] {
-    let mut ret = [false; 46];
-    for (i, v) in ret.iter_mut().enumerate() {
-        *v = (bits >> i) & 0b1 == 0b1;
-    }
-    ret
+    array::from_fn(|i| (bits >> i) & 0b1 == 0b1)
 }
 
 /// It assumes they have the same actor.
@@ -535,8 +531,7 @@ fn to_event(
 
     if at_kan_select {
         ensure!(label < 34, "invalid kan label {label}");
-        // unwrap is safe because the bound check above.
-        let tile = Tile::try_from(label).unwrap();
+        let tile = must_tile!(label);
         let consumed = [tile; 4];
         let event = Event::Ankan { actor, consumed };
         return Ok(event);
@@ -546,7 +541,7 @@ fn to_event(
         0..=36 => Event::Dahai {
             actor,
             pai: must_tile!(label),
-            tsumogiri: matches!(last_tsumo_or_discard, Some(t) if t.as_usize() == label),
+            tsumogiri: last_tsumo_or_discard.is_some_and(|t| t.as_usize() == label),
         },
         37 => Event::Reach { actor },
         38 => {
@@ -691,6 +686,8 @@ fn next_action(
 
         _ => match ev.actor() {
             Some(actual_actor) if actual_actor != player_id => {
+                // Chi, Pon, Ron etc by other players. Tsumo was already handled
+                // above.
                 if can_agari || can_pon_or_daiminkan {
                     // actively denied to ron, pon or daiminkan
                     Some(Event::None)
