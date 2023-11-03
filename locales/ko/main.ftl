@@ -1,6 +1,6 @@
 action-chii = 치
 action-chiicut = 치, 넘기기
-action-discard = 타패
+action-discard = 타
 action-kan = 깡
 action-skip = 스킵
 action-pon = 퐁
@@ -41,17 +41,18 @@ metadata-generated-at-header = 생성 시각
 metadata-header = 메타데이터
 metadata-loading-time-header = 로딩 시간
 metadata-log-id-header = 로그 ID
+metadata-match-rate-header = AI 일치율
 metadata-mjai-reviewer-version-header = mjai-reviewer 버전
 metadata-player-id-header = 작사 ID
 metadata-review-time-header = 복기 소요시간
 
 panel-expand = 상세보기:
-panel-expand-all = 모두 펼치기
-panel-expand-diff-only = 다른 곳만 펼치기
-panel-expand-none = 모두 접기
-panel-layout = 배치:
-panel-layout-horizontal = 수평
-panel-layout-vertical = 수직
+panel-expand-all = 모두 펼침
+panel-expand-diff-only = 다른 곳만 펼침
+panel-expand-none = 모두 접음
+panel-layout = 다시보기 위치:
+panel-layout-horizontal = 복기 왼쪽
+panel-layout-vertical = 복기 위쪽
 panel-save-this-page = 복기 저장
 
 place-percentage = {$rank}위 확률 (%)
@@ -62,7 +63,7 @@ replay-viewer = 다시보기
 
 score-header = 점수
 
-tehai-cuts = {$player} 타패
+tehai-cuts = {$player} 타
 tehai-draw = 쯔모
 tehai-kans = {$player} 깡
 tehai-riichi = 후 리치
@@ -72,7 +73,7 @@ tenhou-net-6-json-log-header = tenhou.net/6 JSON log
 tenhou-net-6-paste-instruction-before-link = Paste it in{" "}
 tenhou-net-6-paste-instruction-after-link = {" "}- EDIT AS TEXT.
 
-title = 패보 복기
+title = AI 복기
 
 turn = {$junme}순 (남은 패 {$tiles-left}장)
 
@@ -83,4 +84,4 @@ turn-info-tenpai = 텐파이
 seat-self = 나👇
 seat-kamicha = 상가👈
 seat-shimocha = 하가👉
-seat-toimen = 대가👆
+seat-toimen = 대면👆
