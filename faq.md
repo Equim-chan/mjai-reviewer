@@ -60,6 +60,10 @@ Wrapping up, $\hat Q^\pi(s, a)$ is only for advanced users, because it can be ve
 
 I have been considering whether to just remove the column or not, but in the end I decided to keep it as is. <ins>Just look up $\pi_\tau(a|s)$ as it is easier to understand.</ins>
 
+A lower $\pi_\tau(a|s)$ value suggests:
+- (❌) This move is worse.
+- (✅) The AI is less interested in trying this move.
+
 ## (Mortal) Why do all actions except the best sometimes have significantly lower Q values than that of the best?
 As mentioned above, $\hat Q^\pi(s, a) + \Phi_k$ is an estimation to the pt EV. However, the evaluation for this value is <ins>the means but not the objective</ins>. To be clear, the real fundamental objective for Mortal as a mahjong AI is to achieve the best performance in a mahjong game, but not to calculate accurate scores for all actions. As a result, the evaluated values of all actions but the best may be inaccurate; they only serve as a means to determine its preference for exploration in training.
 
