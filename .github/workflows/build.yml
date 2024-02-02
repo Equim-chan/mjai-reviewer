@@ -10,6 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Run typos
+        uses: crate-ci/typos@v1.18.0
+
       - name: Install Rust stable
         run: |
           set -x

@@ -33,7 +33,7 @@ pub enum GameLength {
     Tonpuu = 4,
 }
 
-/// Contains infomation about a kyoku.
+/// Contains information about a kyoku.
 #[derive(Debug, Clone)]
 pub struct Kyoku {
     pub meta: KyokuMeta,
@@ -133,14 +133,14 @@ impl TryFrom<RawLog> for Log {
                 },
             };
 
-            if let Some(ResultItem::Status(status_text)) = log.results.get(0) {
+            if let Some(ResultItem::Status(status_text)) = log.results.first() {
                 if status_text == "和了" {
                     let mut details = vec![];
                     for detail_tuple in log.results[1..].chunks_exact(2) {
                         if let [ResultItem::ScoreDeltas(score_deltas), ResultItem::HoraDetail(who_target_tuple)] =
                             detail_tuple
                         {
-                            let who = if let Some(Value::Number(n)) = who_target_tuple.get(0) {
+                            let who = if let Some(Value::Number(n)) = who_target_tuple.first() {
                                 n.as_u64().unwrap_or(0) as u8
                             } else {
                                 return Err(ParseError::InvalidHoraDetail);

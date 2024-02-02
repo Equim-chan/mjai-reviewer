@@ -250,36 +250,6 @@ impl fmt::Display for InvalidTile {
 
 impl Error for InvalidTile {}
 
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn convert() {
-        "E".parse::<Tile>().unwrap();
-        "5mr".parse::<Tile>().unwrap();
-        "?".parse::<Tile>().unwrap();
-        Tile::try_from(0_u8).unwrap();
-        Tile::try_from(36_u8).unwrap();
-        Tile::try_from(37_u8).unwrap();
-
-        "".parse::<Tile>().unwrap_err();
-        "0s".parse::<Tile>().unwrap_err();
-        "!".parse::<Tile>().unwrap_err();
-        Tile::try_from(38_u8).unwrap_err();
-        Tile::try_from(u8::MAX).unwrap_err();
-    }
-
-    #[test]
-    fn next_prev() {
-        MJAI_PAI_STRINGS.iter().take(37).for_each(|&s| {
-            let tile: Tile = s.parse().unwrap();
-            assert_eq!(tile.prev().next(), tile.deaka());
-            assert_eq!(tile.next().prev(), tile.deaka());
-        });
-    }
-}
-
 /**
  * Added in mjai-reviewer
  */
@@ -335,4 +305,37 @@ pub fn tile_set_eq(a: &[Tile], b: &[Tile], ignore_aka: bool) -> bool {
     }
 
     a_bits == b_bits
+}
+/**
+ * End
+ */
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn convert() {
+        "E".parse::<Tile>().unwrap();
+        "5mr".parse::<Tile>().unwrap();
+        "?".parse::<Tile>().unwrap();
+        Tile::try_from(0_u8).unwrap();
+        Tile::try_from(36_u8).unwrap();
+        Tile::try_from(37_u8).unwrap();
+
+        "".parse::<Tile>().unwrap_err();
+        "0s".parse::<Tile>().unwrap_err();
+        "!".parse::<Tile>().unwrap_err();
+        Tile::try_from(38_u8).unwrap_err();
+        Tile::try_from(u8::MAX).unwrap_err();
+    }
+
+    #[test]
+    fn next_prev() {
+        MJAI_PAI_STRINGS.iter().take(37).for_each(|&s| {
+            let tile: Tile = s.parse().unwrap();
+            assert_eq!(tile.prev().next(), tile.deaka());
+            assert_eq!(tile.next().prev(), tile.deaka());
+        });
+    }
 }
