@@ -430,6 +430,7 @@ fn main() -> Result<()> {
         player_id,
 
         split_logs: split_raw_logs.as_deref(),
+        mjai_log: &events,
         lang: lang_value.get_name(),
     };
     log!("writing output...");

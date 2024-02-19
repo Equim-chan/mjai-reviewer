@@ -1,6 +1,7 @@
 use crate::opts::Engine;
 use crate::review::Review;
 use convlog::tenhou::{GameLength, RawPartialLog};
+use convlog::Event;
 use fluent_templates::FluentLoader;
 use std::collections::HashMap;
 use std::io::prelude::*;
@@ -60,6 +61,7 @@ pub struct View<'a> {
     pub player_id: u8,
 
     pub split_logs: Option<&'a [RawPartialLog<'a>]>,
+    pub mjai_log: &'a [Event],
 
     pub lang: &'a str,
 }
