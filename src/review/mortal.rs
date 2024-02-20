@@ -66,7 +66,8 @@ struct Detail {
     q_value: f32,
     prob: f32,
 
-    // not displayed
+    // not displayed, for sorting only
+    #[serde(skip)]
     label: Label,
 }
 
