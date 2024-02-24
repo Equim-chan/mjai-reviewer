@@ -57,7 +57,7 @@ pub struct Entry {
 
     shanten: i8,
     at_furiten: bool,
-    order: usize,
+    actual_index: usize,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -362,7 +362,7 @@ impl Reviewer<'_> {
 
             // this sort is better to be stable
             details.sort_by(|l, r| r.q_value.total_cmp(&l.q_value));
-            let order = details
+            let actual_index = details
                 .iter()
                 .enumerate()
                 .find(|(_, d)| match (d.label, actual_kan_label) {
@@ -404,7 +404,7 @@ impl Reviewer<'_> {
                 details,
                 shanten,
                 at_furiten,
-                order,
+                actual_index,
             };
             entries.push(entry);
         }

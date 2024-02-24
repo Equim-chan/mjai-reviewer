@@ -223,9 +223,9 @@
                     {{- fluent(key = "turn-info-furiten") -}}
                     &nbsp;&nbsp;&nbsp;
                   {%- endif -%}
-                  {%- if mark_red and entry.order > 0 -%}
+                  {%- if mark_red and entry.actual_index > 0 -%}
                     <span class="order-loss">
-                      #{{- entry.order + 1 -}}
+                      #{{- entry.actual_index + 1 -}}
                     </span>/{{- entry.details | length -}}
                   {%- endif -%}
                 </span>
