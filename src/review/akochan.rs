@@ -176,7 +176,7 @@ impl Reviewer<'_> {
                 }
 
                 Event::EndKyoku => {
-                    kyoku_review.entries = entries.clone();
+                    kyoku_review.entries.clone_from(&entries);
                     entries.clear();
 
                     kyoku_reviews.push(kyoku_review.clone());
