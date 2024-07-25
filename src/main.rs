@@ -96,7 +96,6 @@ mod download;
 mod log;
 mod log_source;
 mod opts;
-mod raw_log_ext;
 mod render;
 mod review;
 mod softmax;

@@ -4,9 +4,9 @@ use crate::{matches_tu8, t, tu8};
 use std::error::Error;
 use std::fmt;
 use std::str::FromStr;
+use std::sync::LazyLock;
 
 use ahash::AHashMap;
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 const MJAI_PAI_STRINGS_LEN: usize = 3 * 9 + 4 + 3 + 3 + 1;
@@ -19,7 +19,7 @@ const MJAI_PAI_STRINGS: [&str; MJAI_PAI_STRINGS_LEN] = [
     "?",   // unknown
 ];
 
-static MJAI_PAI_STRINGS_MAP: Lazy<AHashMap<&'static str, Tile>> = Lazy::new(|| {
+static MJAI_PAI_STRINGS_MAP: LazyLock<AHashMap<&'static str, Tile>> = LazyLock::new(|| {
     MJAI_PAI_STRINGS
         .iter()
         .enumerate()
