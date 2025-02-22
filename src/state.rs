@@ -1,7 +1,7 @@
 use crate::tehai::Tehai;
 
 use anyhow::{Context, Result};
-use convlog::{tile_set_eq, Event, Tile};
+use convlog::{Event, Tile, tile_set_eq};
 use serde::Serialize;
 
 #[derive(Debug, Clone, Default, Serialize)]

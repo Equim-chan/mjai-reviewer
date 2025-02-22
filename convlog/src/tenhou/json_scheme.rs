@@ -4,7 +4,7 @@ use crate::{KyokuFilter, Tile};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_tuple::{Deserialize_tuple as DeserializeTuple, Serialize_tuple as SerializeTuple};
-use serde_with::{serde_as, FromInto};
+use serde_with::{FromInto, serde_as};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RawLog {

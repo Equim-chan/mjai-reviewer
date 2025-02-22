@@ -1,7 +1,7 @@
+use crate::Tile;
 use crate::mjai::Event;
 use crate::t;
 use crate::tenhou::{ActionItem, EndStatus, Kyoku, Log, TenhouTile};
-use crate::Tile;
 use std::array;
 use std::collections::hash_map::Entry;
 

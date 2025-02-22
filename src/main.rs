@@ -106,7 +106,7 @@ mod tehai;
 use crate::log_source::LogSource;
 use crate::opts::{AkochanOptions, Engine, InputOptions, MortalOptions, Options, OutputOptions};
 use crate::render::View;
-use crate::review::{akochan, mortal, Review};
+use crate::review::{Review, akochan, mortal};
 use chrono::SubsecRound;
 use convlog::tenhou::{GameLength, Log, RawLog};
 use convlog::tenhou_to_mjai;
@@ -115,7 +115,7 @@ use std::io;
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use clap::{Parser, ValueEnum};
 use serde_json as json;
 

@@ -2,7 +2,7 @@ mod testdata;
 
 use convlog::tenhou::{Log, RawLog};
 use convlog::tenhou_to_mjai;
-use testdata::{TestCase, TESTDATA};
+use testdata::{TESTDATA, TestCase};
 
 use serde_json as json;
 

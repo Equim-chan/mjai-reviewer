@@ -137,8 +137,10 @@ impl TryFrom<RawLog> for Log {
                 if status_text == "和了" {
                     let mut details = vec![];
                     for detail_tuple in log.results[1..].chunks_exact(2) {
-                        if let [ResultItem::ScoreDeltas(score_deltas), ResultItem::HoraDetail(who_target_tuple)] =
-                            detail_tuple
+                        if let [
+                            ResultItem::ScoreDeltas(score_deltas),
+                            ResultItem::HoraDetail(who_target_tuple),
+                        ] = detail_tuple
                         {
                             let who = if let Some(Value::Number(n)) = who_target_tuple.first() {
                                 n.as_u64().unwrap_or(0) as u8

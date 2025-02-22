@@ -1,12 +1,12 @@
 use crate::log;
 use crate::state::State;
-use convlog::{tile_set_eq, tu8, Event, Tile};
-use std::io::prelude::*;
+use convlog::{Event, Tile, tile_set_eq, tu8};
 use std::io::BufReader;
+use std::io::prelude::*;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_json as json;
 
@@ -427,12 +427,14 @@ fn next_action_strict(rough_action: &[Event], player_id: u8) -> Vec<Event> {
         Event::Tsumo { .. } => vec![Event::None],
 
         // filter the actor's hora from multiple horas
-        Event::Hora { .. } => vec![rough_action
-            .iter()
-            .take(3)
-            .find(|&a| matches!(*a, Event::Hora { actor, .. } if actor == player_id))
-            .cloned()
-            .unwrap_or(Event::None)],
+        Event::Hora { .. } => vec![
+            rough_action
+                .iter()
+                .take(3)
+                .find(|&a| matches!(*a, Event::Hora { actor, .. } if actor == player_id))
+                .cloned()
+                .unwrap_or(Event::None),
+        ],
 
         _ => match rough_action[0].actor() {
             // not the target actor, who did nothing (passed a possible naki)

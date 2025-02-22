@@ -1,14 +1,14 @@
 use crate::opts::Engine;
 use crate::review::Review;
-use convlog::tenhou::{GameLength, RawPartialLog};
 use convlog::Event;
+use convlog::tenhou::{GameLength, RawPartialLog};
 use fluent_templates::FluentLoader;
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::time::Duration;
 
 use anyhow::Result;
-use minify_html::{minify, Cfg};
+use minify_html::{Cfg, minify};
 use serde::Serialize;
 use serde_json::Value;
 use serde_with::skip_serializing_none;

@@ -156,11 +156,7 @@ impl Tile {
             1 => Self(tid - 9),
             _ => tile,
         };
-        if self.is_aka() {
-            ret.akaize()
-        } else {
-            ret
-        }
+        if self.is_aka() { ret.akaize() } else { ret }
     }
 }
 
@@ -306,9 +302,8 @@ pub fn tile_set_eq(a: &[Tile], b: &[Tile], ignore_aka: bool) -> bool {
 
     a_bits == b_bits
 }
-/**
- * End
- */
+
+// End
 
 #[cfg(test)]
 mod test {

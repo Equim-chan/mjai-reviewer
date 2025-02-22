@@ -2,7 +2,7 @@
 name = "mjai-reviewer"
 version = "1.5.10"
 authors = ["Equim"]
-edition = "2021"
+edition = "2024"
 repository = "https://github.com/Equim-chan/mjai-reviewer"
 license = "Apache-2.0"
 description = "🔍🀄️ Review your Tenhou or Mahjong Soul (Jantama) log with mjai-compatible mahjong AIs."
@@ -14,14 +14,14 @@ anyhow = "1"
 serde_json = "1"
 tera = "1"
 chrono = "0.4"
-ureq = "2"
+ureq = "3"
 opener = "0.7"
 dunce = "1"
 humantime-serde = "1"
 url = "2"
 serde_with = "3"
 minify-html = "0.15"
-fluent-templates = { version = "0.9.0", features = ["tera"] }
+fluent-templates = { version = "0.13", features = ["tera"] }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 

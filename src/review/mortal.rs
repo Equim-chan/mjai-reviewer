@@ -1,14 +1,14 @@
 use crate::log;
 use crate::softmax::softmax;
 use crate::state::State;
-use convlog::{must_tile, t, tile_set_eq, tu8, Event, Tile};
-use std::io::prelude::*;
+use convlog::{Event, Tile, must_tile, t, tile_set_eq, tu8};
 use std::io::BufReader;
+use std::io::prelude::*;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::{array, mem};
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use serde::{Deserialize, Serialize};
 use serde_json as json;
 use serde_with::skip_serializing_none;

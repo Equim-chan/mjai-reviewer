@@ -1,7 +1,7 @@
 mod testdata;
 
 use convlog::*;
-use testdata::{TestCase, TESTDATA};
+use testdata::{TESTDATA, TestCase};
 
 #[test]
 fn test_parse_and_convert() {
